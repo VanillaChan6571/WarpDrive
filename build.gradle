@@ -1,192 +1,152 @@
-
-
 buildscript {
     repositories {
-        jcenter()
-        maven {
-            name = "forge"
-            url = "https://files.minecraftforge.net/maven"
-        }
-        maven {
-            url "https://plugins.gradle.org/m2/"
-        }
+        maven { url = 'https://maven.minecraftforge.net' }
+        mavenCentral()
     }
     dependencies {
-        classpath "net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT"
-        classpath "gradle.plugin.com.matthewprenger:CurseGradle:1.1.2"
-        classpath "com.wynprice.cursemaven:CurseMaven:1.2.3"
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.77', changing: false
     }
 }
-apply plugin: "net.minecraftforge.gradle.forge"
-apply plugin: "com.matthewprenger.cursegradle"
-apply plugin: "com.wynprice.cursemaven"
 
-// define the properties file
+plugins {
+    id 'eclipse'
+    id 'maven-publish'
+}
+
+apply plugin: 'net.minecraftforge.gradle'
+
+// Load properties
 ext.configFile = file "build.properties"
-
 configFile.withReader {
-    // read config.  it shall from now on be referenced as simply config or as project.config
     def prop = new Properties()
     prop.load(it)
     ext.config = new ConfigSlurper().parse prop
 }
 
-group = "cr0s.warpdrive" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-version = "${config.minecraft_version}-${config.mod_version}.${System.getenv("BUILD_NUMBER") ?: 'SNAPSHOT'}"
-archivesBaseName = "WarpDrive"
+group = 'cr0s.warpdrive'
+version = "${config.minecraft_version}-${config.mod_version}.${System.getenv('BUILD_NUMBER') ?: 'SNAPSHOT'}"
+archivesBaseName = 'WarpDrive'
 
-// Enforce Java version explicitly so eclipse task generates correctly.
-sourceCompatibility = compileJava.sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = compileJava.targetCompatibility = JavaVersion.VERSION_1_8
+java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 
 minecraft {
-    version = config.minecraft_version + "-" + config.forge_version
-    runDir = "run"
-    
-    // The mappings can be changed at any time, and must be in the following format.
-    // snapshot_YYYYMMDD   Snapshot are built nightly.
-    // stable_#            Stables are built at the discretion of the MCP team.
-    // Use non-default mappings at your own risk. they may not allways work.
-    // Simply re-run your setup task after changing the mappings to update your workspace.
-    mappings = "${config.mappings_version}"
-    // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
-    
-    // replacing
-    replace "@version@", project.version
-    replaceIn "WarpDrive.java"
-    replaceIn "MyDummyModContainer.java"
-}
+    mappings channel: 'official', version: config.minecraft_version
 
-curseforge {
-    // get token from gradle.properties (development space) or default to private environment variable (Travis CI & such)
-    if (project.hasProperty('token_curseforge')) {
-        apiKey = "${token_curseforge}"
-    } else {
-        apiKey = System.getenv('token_curseforge')
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+
+            mods {
+                warpdrive {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        server {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+
+            mods {
+                warpdrive {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        data {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+
+            args '--mod', 'warpdrive', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+
+            mods {
+                warpdrive {
+                    source sourceSets.main
+                }
+            }
+        }
     }
 }
+
+sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
     mavenCentral()
-    maven { // JEI & Tinkers
-        name 'DVS1 Maven FS'
-        url 'http://dvs1.progwml6.com/files/maven'
-    }
-    maven { // JEI fallback
-        name = "ModMaven"
-        url = "https://modmaven.k-4u.nl"
-    }
-    maven { // CCC/NEI (for WAILA)
-        name 'CB Repo'
-        url "http://chickenbones.net/maven/"
-    }
-    maven { // WAILA
-        name "ProfMobius Maven FS"
-        url "http://mobiusstrip.eu/maven"
-    }
-    maven { // OpenComputers
-        name "OpenComputers"
-        url "http://maven.cil.li/"
-    }
-    maven { // TOP
-        name 'tterrag maven'
-        url "http://maven.tterrag.com/"
-    }
-    maven { // CraftTweaker (aka MineTweaker3), Immersive Engineering, Patchouli
-        name 'jared maven'
-        url "http://blamejared.com/maven"
-    }
-    maven { // MCMultiPart
-        name 'amadornes maven'
-        url "http://maven.amadornes.com/"
-    }
+
+    // CC:Tweaked
     maven {
-        name = "CoFH Maven"
-        url = "http://maven.covers1624.net"
+        name = "SquidDev"
+        url = "https://squiddev.cc/maven/"
     }
-//    maven {
-//        name = "dmod's BuildBroken maven"
-//        url = "http://api.dmodoomsirius.me"
-//    }
+
+    // Applied Energistics 2
+    maven {
+        name = "Modmaven"
+        url = "https://modmaven.dev/"
+    }
+
+    // JEI
+    maven {
+        name = "Progwml6 maven"
+        url = "https://dvs1.progwml6.com/files/maven/"
+    }
+
+    // Curse Maven (for mods not on other repos)
     maven {
         name = "CurseForge"
-        url = "https://minecraft.curseforge.com/api/maven/"
+        url = "https://cursemaven.com"
     }
-    ivy {
-        name "GalacticraftCore"
-        url "https://micdoodle8.com/new-builds/"
-        layout 'pattern', {
-            artifact "[organization]/${config.Galacticraft_build}/[module]-[revision].jar"
-        }
-        metadataSources {
-            artifact()
-        }
-    }
-//    mavenLocal()
 }
 
 dependencies {
-    // You may put jars on which you depend on in ./libs or you may define them like so..
-    //compile "some.group:artifact:version:classifier"
-    //compile "some.group:artifact:version"
-    
-    // Real examples
-    //compile 'com.mod-buildcraft:buildcraft:6.0.8:dev'  // adds buildcraft to the dev env
-    //compile 'com.googlecode.efficient-java-matrix-library:ejml:0.24' // adds ejml to the dev env
-    
-    // For more info...
-    // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
-    // http://www.gradle.org/docs/current/userguide/dependency_management.html
-    
-    // Using deobfCompile will include in run environment
-    provided "blusunrize:ImmersiveEngineering:${config.ImmersiveEngineering_version}:deobf"
-    provided "cofh:CoFHCore:${config.CoFHCore_version}:universal"
-    provided "cofh:RedstoneFlux:${config.RedstoneFlux_version}:universal"
-    provided "codechicken:CodeChickenLib:${config.CodeChickenLib_version}:universal"
-	provided "GC-1.12-dev:GalacticraftCore-Dev:${config.Galacticraft_version}.${config.Galacticraft_build}"
-    // provided "com.builtbroken.icbm-classic:ICBM-classic:${config.ICBMclassic_version}"
-    provided curse.resolve("icbm-classic", "${config.ICBMclassic_fileid}")
-    provided "li.cil.oc:OpenComputers:${config.OpenComputers_version}"
-    provided "vazkii.patchouli:Patchouli:${config.Patchouli_version}"
-    provided curse.resolve("matteroverdrive", "${config.MatterOverdrive_fileid}") // "${config.MatterOverdrive_version}"
-    
-//  compileOnly "mezz.jei:jei_1.10.2:3.13.+"
-//  compileOnly "mcp.mobius.waila:Waila:1.7.0-B3_1.9.4"
-//  compileOnly "mcjty.theoneprobe:TheOneProbe:1.10-1.0.13-26"
-//  compileOnly "MineTweaker3:MineTweaker3-API:3.0.14.59"
-//  compileOnly "MCMultiPart2:MCMultiPart-exp:2.5.1+"
-//  compileOnly "slimeknights.mantle:Mantle:1.10.2-1.+"
-//  compileOnly "slimeknights:TConstruct:1.10.2-2.5.6.+"
+    minecraft "net.minecraftforge:forge:${config.minecraft_version}-${config.forge_version}"
+
+    // CC:Tweaked for 1.16.5
+    compileOnly fg.deobf("org.squiddev:cc-tweaked-${config.minecraft_version}:${config.CCTweaked_version}")
+    runtimeOnly fg.deobf("org.squiddev:cc-tweaked-${config.minecraft_version}:${config.CCTweaked_version}")
+
+    // Applied Energistics 2 for 1.16.5 (commented out until we reach Phase 4)
+    // compileOnly fg.deobf("appeng:appliedenergistics2:${config.AE2_version}")
+    // runtimeOnly fg.deobf("appeng:appliedenergistics2:${config.AE2_version}")
+
+    // JEI for reference/testing
+    // compileOnly fg.deobf("mezz.jei:jei-${config.minecraft_version}:${config.JEI_version}")
+    // runtimeOnly fg.deobf("mezz.jei:jei-${config.minecraft_version}:${config.JEI_version}")
 }
 
 processResources {
-    // this will ensure that this task is redone when the versions change.
-    inputs.property "version", project.version
-    inputs.property "mcversion", config.minecraft_version
-    
+    inputs.property 'version', project.version
+    inputs.property 'mcversion', config.minecraft_version
+
     // skip source assets
     exclude '**/*.pdn'
     exclude '**/*.psd'
-    
-    // replace stuff in mcmod.info, nothing else
+
+    // Process mods.toml
     from(sourceSets.main.resources.srcDirs) {
-        include 'mcmod.info'
-        
-        // replace version and mcversion
-        expand 'version':project.version, 'mcversion':config.minecraft_version
+        include 'META-INF/mods.toml'
+
+        expand 'version': project.version, 'mcversion': config.minecraft_version
     }
-    
-    // copy everything else, that's not the mcmod.info
+
+    // copy everything else
     from(sourceSets.main.resources.srcDirs) {
-        exclude 'mcmod.info'
+        exclude 'META-INF/mods.toml'
+        exclude 'mcmod.info' // Old format, no longer used
     }
 }
 
-// build the storage space for each computer scripts
+// Lua script copying tasks (keep for now, may need adjustment)
 task copyShipControllerCommons1(type: Copy) {
     from 'src/main/resources/assets/warpdrive/lua.ComputerCraft/warpdriveShipController'
     into('build/resources/main/assets/warpdrive/lua.ComputerCraft/warpdriveShipCore')
 }
+
 task copyShipControllerCommons2(type: Copy) {
     from 'src/main/resources/assets/warpdrive/lua.OpenComputers/warpdriveShipController'
     into('build/resources/main/assets/warpdrive/lua.OpenComputers/warpdriveShipCore')
@@ -225,45 +185,24 @@ task copyOpenComputersCommons6(type: Copy) {
 jar {
     dependsOn copyShipControllerCommons1, copyShipControllerCommons2
     dependsOn copyOpenComputersCommons1, copyOpenComputersCommons2, copyOpenComputersCommons3, copyOpenComputersCommons4, copyOpenComputersCommons5, copyOpenComputersCommons6
-    
+
     manifest {
         attributes([
-            "FMLAT": "warpdrive_at.cfg",
-            "FMLCorePlugin": "cr0s.warpdrive.core.FMLLoadingPlugin",
-            "FMLCorePluginContainsFMLMod": "true",
+            "Specification-Title": "WarpDrive",
+            "Specification-Vendor": "WarpDrive Team",
+            "Specification-Version": "1",
+            "Implementation-Title": project.name,
+            "Implementation-Version": project.version,
+            "Implementation-Vendor": "WarpDrive Team"
+            // Note: Removed FMLCorePlugin entries - coremods no longer supported in 1.13+
         ])
     }
-    classifier = ''
-    destinationDir = file 'output'
-}
 
-task signJar(type: SignJar, dependsOn: reobfJar) {
-    onlyIf { // Skip the task if our secret data isn't available
-        project.hasProperty('keyStore')
-    }
-    
-    if (project.hasProperty('keyStore')) { // This needs to be a path to the keystore file
-        keyStore = project.keyStore
-        alias = project.alias
-        storePass = project.storePass
-        keyPass = project.keyPass
-        inputFile = jar.archivePath
-        outputFile = jar.archivePath
-    }
+    finalizedBy 'reobfJar'
 }
-
-build.dependsOn signJar
 
 idea {
     module {
         inheritOutputDirs = true
     }
-}
-
-runClient {
-    jvmArgs "-Xmx3192m", "-Xms3192m", "-ea"
-}
-
-runServer {
-    jvmArgs "-Xmx3192m", "-Xms3192m", "-ea"
 }

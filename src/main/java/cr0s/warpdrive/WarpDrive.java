@@ -209,26 +209,9 @@ import com.mojang.authlib.GameProfile;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-@Mod(modid = WarpDrive.MODID,
-     name = "WarpDrive",
-     version = WarpDrive.VERSION,
-     dependencies = ""
-                  + "required-after:forge@[14.23.5.2817,);"
-                  + "after:appliedenergistics;"
-                  + "after:cofhcore;"
-                  + "after:ccturtle;"
-                  + "after:computercraft@[1.82.1,);"
-                  + "after:enderio@[5.1.52,);"
-                  + "after:gregtech;"
-                  + "after:ic2;"
-                  + "after:icbmclassic@[1.12.2-4.0.0,);"
-                  + "after:matteroverdrive;"
-                  + "after:metalchests@[v5.8.1,);"
-                  + "after:opencomputers;"
-//                + "after:sgcraft@[2.0.0,);"
-		,
-     certificateFingerprint = "f7be6b40743c6a8205df86c5e57547d578605d8a"
-)
+@Mod(WarpDrive.MODID)
+// Note: Removed dependencies string and certificateFingerprint for 1.16.5
+// Dependencies are now declared in mods.toml
 public class WarpDrive {
 	public static final String MODID = "warpdrive";
 	public static final String VERSION = "@version@";

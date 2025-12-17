@@ -1,0 +1,39 @@
+# WarpDrive mod metadata for Forge 1.16.5
+modLoader="javafml"
+loaderVersion="[36,)"
+license="MIT"
+issueTrackerURL="https://github.com/LemADEC/WarpDrive/issues"
+
+[[mods]]
+modId="warpdrive"
+version="${version}"
+displayName="WarpDrive"
+updateJSONURL=""
+displayURL="https://www.minecraftforum.net/forums/mapping-and-modding-java-edition/minecraft-mods/2510855"
+logoFile=""
+credits="Original concept and implementation by Cr0s, modified by ZLOFENIX, DarkholmeTenk & drpepper240. Merged, bugfixed and ported to WWM by LemADEC. Migrated to 1.16.5."
+authors="Cr0s, DarkholmeTenk, drpepper240, ZLOFENIX, LemADEC"
+description='''
+Create your own space ship from any blocks (excluding bedrock) and sail it through space.
+Explore the space dimension: asteroids (filled with ores), asteroid fields, gas clouds, planetoids, stars, and NPC-ships.
+Jump to hyperspace for long-range traveling!
+Set up laser cannons on your ship to fight with other players' ships, or craft a mining laser to collect valuable resources on Earth or in space.
+Cloak your ship, base or a space station from your enemies!
+And lots more!
+
+NOTE: This is a work-in-progress migration to Minecraft 1.16.5. Many features are not yet implemented.
+'''
+
+[[dependencies.warpdrive]]
+modId="forge"
+mandatory=true
+versionRange="[36,37)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.warpdrive]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.16.5]"
+ordering="NONE"
+side="BOTH"
