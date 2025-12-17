@@ -27,7 +27,8 @@ group = 'cr0s.warpdrive'
 version = "${config.minecraft_version}-${config.mod_version}.${System.getenv('BUILD_NUMBER') ?: 'SNAPSHOT'}"
 archivesBaseName = 'WarpDrive'
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+// Note: Minecraft 1.16.5 requires Java 16+ for ForgeGradle 5.1
+java.toolchain.languageVersion = JavaLanguageVersion.of(16)
 
 minecraft {
     mappings channel: 'official', version: config.minecraft_version
@@ -201,8 +202,5 @@ jar {
     finalizedBy 'reobfJar'
 }
 
-idea {
-    module {
-        inheritOutputDirs = true
-    }
-}
+// Note: idea {} block removed - incompatible with Gradle 7.6
+// Use 'eclipse' or 'idea' plugin configuration if needed

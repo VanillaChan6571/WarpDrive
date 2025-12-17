@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "WebSearch"
+      "WebSearch",
+      "Bash(./gradlew clean:*)",
+      "Bash(java:*)",
+      "Bash(export JAVA_HOME=\"/c/Java/jdk-17.0.13\")",
+      "Bash(export PATH=\"$JAVA_HOME/bin:$PATH\")",
+      "Bash(./gradlew build:*)",
+      "Bash(./gradlew --stop)"
     ]
   }
 }
