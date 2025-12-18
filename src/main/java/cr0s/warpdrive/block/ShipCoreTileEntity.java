@@ -5,6 +5,8 @@ import cr0s.warpdrive.data.Registration;
 import dan200.computercraft.api.lua.LuaException;
 import dan200.computercraft.api.lua.LuaFunction;
 import dan200.computercraft.api.peripheral.IPeripheral;
+import dan200.computercraft.shared.Capabilities;
+import dan200.computercraft.shared.peripheral.generic.GenericPeripheralProvider;
 import net.minecraft.block.BlockState;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.ITickableTileEntity;
@@ -148,6 +150,10 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		};
 	}
 
+	// ===== CC:Tweaked Peripheral Capability =====
+
+	private LazyOptional<IPeripheral> peripheralCap;
+
 	// ===== Energy Capability =====
 
 	private final LazyOptional<IEnergyStorage> energyHandler = LazyOptional.of(() -> new IEnergyStorage() {
@@ -193,6 +199,23 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		if (cap == CapabilityEnergy.ENERGY) {
 			return energyHandler.cast();
 		}
+
+		// CC:Tweaked peripheral capability
+		if (cap == Capabilities.CAPABILITY_PERIPHERAL) {
+			if (peripheralCap == null && level != null) {
+				IPeripheral peripheral = GenericPeripheralProvider.getPeripheral(level, worldPosition, side, invalidate -> {
+					if (peripheralCap != null) {
+						peripheralCap.invalidate();
+						peripheralCap = null;
+					}
+				});
+				if (peripheral != null) {
+					peripheralCap = LazyOptional.of(() -> peripheral);
+				}
+			}
+			return peripheralCap == null ? LazyOptional.empty() : peripheralCap.cast();
+		}
+
 		return super.getCapability(cap, side);
 	}
 
@@ -200,6 +223,10 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 	protected void invalidateCaps() {
 		super.invalidateCaps();
 		energyHandler.invalidate();
+		if (peripheralCap != null) {
+			peripheralCap.invalidate();
+			peripheralCap = null;
+		}
 	}
 
 	// ===== NBT Serialization =====

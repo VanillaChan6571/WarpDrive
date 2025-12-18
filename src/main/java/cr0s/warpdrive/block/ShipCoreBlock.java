@@ -1,6 +1,5 @@
 package cr0s.warpdrive.block;
 
-import cr0s.warpdrive.WarpDrive;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.material.Material;
@@ -28,7 +27,7 @@ public class ShipCoreBlock extends Block {
 				.harvestTool(ToolType.PICKAXE)
 				.harvestLevel(2)
 		);
-		setRegistryName(WarpDrive.MODID, "ship_core");
+		// Registry name is set automatically by DeferredRegister
 	}
 
 	@Override
