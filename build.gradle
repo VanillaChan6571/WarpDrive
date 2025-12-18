@@ -74,7 +74,7 @@ minecraft {
     }
 }
 
-sourceSets.main.resources { srcDir 'src/generated/resources' }
+// sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
     mavenCentral()
@@ -121,24 +121,19 @@ dependencies {
 }
 
 processResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
     inputs.property 'version', project.version
     inputs.property 'mcversion', config.minecraft_version
 
     // skip source assets
     exclude '**/*.pdn'
     exclude '**/*.psd'
+    exclude 'mcmod.info' // Old format
 
-    // Process mods.toml
-    from(sourceSets.main.resources.srcDirs) {
-        include 'META-INF/mods.toml'
-
+    // Process mods.toml with variable expansion
+    filesMatching('META-INF/mods.toml') {
         expand 'version': project.version, 'mcversion': config.minecraft_version
-    }
-
-    // copy everything else
-    from(sourceSets.main.resources.srcDirs) {
-        exclude 'META-INF/mods.toml'
-        exclude 'mcmod.info' // Old format, no longer used
     }
 }
 
