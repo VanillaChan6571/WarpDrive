@@ -152,8 +152,19 @@ Registry<DimensionType> dimensionRegistry = ...
 
 **Deliverable**: Working ship teleportation within same dimension
 
-### Phase 4: Space Dimension (Week 3-4)
+### Phase 4: Space Dimension (Week 3-4)  — NOT STARTED
 **Goal**: Custom Space dimension
+
+> **TODO: neither dimension exists yet.** `isInSpace()` / `isInHyperspace()` are already exposed on
+> the Ship Core and compare against `warpdrive:space` / `warpdrive:hyperspace`, so they answer
+> `false` today and become correct the moment the dimensions are registered — no Lua call site will
+> need changing. Still outstanding for this phase:
+> - register the Space and Hyperspace dimensions + dimension types
+> - void chunk generator
+> - asteroid feature + periodic placement
+> - vacuum / no-oxygen handling
+> - **cross-dimension jumps in `WarpEngine`** — it currently moves blocks within a single `World`
+>   only, so a dimension change is not merely a coordinate change
 
 **Tasks**:
 1. Register Space dimension
