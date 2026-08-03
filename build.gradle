@@ -27,8 +27,13 @@ group = 'cr0s.warpdrive'
 version = "${config.minecraft_version}-${config.mod_version}.${System.getenv('BUILD_NUMBER') ?: 'SNAPSHOT'}"
 archivesBaseName = 'WarpDrive'
 
-// Note: Minecraft 1.16.5 requires Java 16+ for ForgeGradle 5.1
-java.toolchain.languageVersion = JavaLanguageVersion.of(16)
+// Minecraft 1.16.5 runs on Java 8, so the mod MUST be compiled to class file version 52.
+// This was previously set to 16, which produced version 60 classes: fine under `runClient`
+// (a modern JVM) but rejected by a real 1.16.5 instance with
+// "UnsupportedClassVersionError ... class file version 60.0 ... only recognizes up to 52.0".
+// Java 16+ is required to *run* ForgeGradle 5.1 - that is org.gradle.java.home in
+// gradle.properties, a separate thing from the compile target set here.
+java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 
 minecraft {
     mappings channel: 'official', version: config.minecraft_version
@@ -86,10 +91,15 @@ repositories {
     }
 
     // Applied Energistics 2
-    maven {
-        name = "Modmaven"
-        url = "https://modmaven.dev/"
-    }
+    // DISABLED: modmaven.dev answers HTTP 200 + "Content-Type: application/zip" for artifacts
+    // it does not host, returning a 566-byte HTML redirect stub instead of the file. ForgeGradle
+    // takes the first 200 response and caches the HTML, which later fails as
+    // "zip END header not found" / "Invalid patcher dependency". Re-enable only when AE2 is
+    // actually needed (Phase 4), and put it AFTER maven.minecraftforge.net if so.
+    // maven {
+    //     name = "Modmaven"
+    //     url = "https://modmaven.dev/"
+    // }
 
     // JEI
     maven {
@@ -118,6 +128,12 @@ dependencies {
     // JEI for reference/testing
     // compileOnly fg.deobf("mezz.jei:jei-${config.minecraft_version}:${config.JEI_version}")
     // runtimeOnly fg.deobf("mezz.jei:jei-${config.minecraft_version}:${config.JEI_version}")
+}
+
+// Sources are UTF-8. Without this javac uses the platform default (windows-1252 on this machine),
+// which mangles the non-ASCII glyphs used in the action bar messages.
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
 }
 
 processResources {
@@ -195,6 +211,40 @@ jar {
     }
 
     finalizedBy 'reobfJar'
+}
+
+// Deploy the reobfuscated jar straight into a CurseForge (or any) instance mods folder.
+// Override the target with -PinstanceModsDir=... or an instance_mods_dir entry in build.properties.
+ext.instanceModsDir = project.findProperty('instanceModsDir')
+	?: config.instance_mods_dir
+	?: "${System.getProperty('user.home')}/Documents/CurseForge/Instances/WarpDrive Development/mods"
+
+task deployToInstance(type: Copy) {
+	description = 'Copies the built mod jar into the development instance mods folder'
+	group = 'warpdrive'
+
+	// reobfJar rewrites build/libs in place, so we must wait for it
+	dependsOn 'reobfJar'
+
+	from jar.archiveFile
+	into instanceModsDir
+
+	doFirst {
+		def target = file(instanceModsDir)
+		if (!target.isDirectory()) {
+			throw new GradleException("Instance mods folder not found: ${target}\n" +
+				"Pass a different one with -PinstanceModsDir=\"C:/path/to/mods\"")
+		}
+		// Remove older WarpDrive builds so Forge doesn't load two copies
+		target.listFiles({ f -> f.name ==~ /^WarpDrive-.*\.jar$/ } as FileFilter).each {
+			logger.lifecycle("Removing stale build: ${it.name}")
+			it.delete()
+		}
+	}
+
+	doLast {
+		logger.lifecycle("Deployed ${jar.archiveFileName.get()} -> ${instanceModsDir}")
+	}
 }
 
 // Note: idea {} block removed - incompatible with Gradle 7.6

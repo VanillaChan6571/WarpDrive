@@ -1,0 +1,33 @@
+# Copy to gradle.properties (which is gitignored, since these paths are machine-specific).
+#
+# ForgeGradle 5.1 must RUN on Java 16+, which is a separate thing from the mod's compile target.
+# The mod itself is compiled to Java 8 bytecode - see java.toolchain.languageVersion in build.gradle.
+# Getting that backwards produces:
+#   UnsupportedClassVersionError ... class file version 60.0 ... only recognizes up to 52.0
+
+org.gradle.jvmargs=-Xmx4G -XX:MaxMetaspaceSize=1G
+org.gradle.daemon=true
+org.gradle.parallel=true
+
+# JVM that runs Gradle itself (16+ required by ForgeGradle 5.1)
+org.gradle.java.home=C:/Java/jdk-17.0.13
+
+# Toolchain candidates. auto-detect is off because scanning C:/Java can pick up a JRE with no
+# javac/tools.jar ("Could not find tools.jar"). List real JDKs explicitly instead.
+# A JDK 8 must be present: ForgeGradle's HackyJavaCompile requests a Java 8 toolchain to compile
+# the decompiled Minecraft sources, and the mod targets Java 8 too.
+org.gradle.java.installations.auto-detect=false
+org.gradle.java.installations.auto-download=false
+org.gradle.java.installations.paths=C:/Java/jdk1.8.0_431,C:/Java/jdk-16.0.2,C:/Java/jdk-17.0.13
+
+# OPTIONAL - only needed on machines where AF_UNIX connect() fails inside %LOCALAPPDATA%\Temp.
+# Symptom: every Gradle invocation dies before the build starts with
+#   "A new daemon was started but could not be connected to"
+# and a standalone `Selector.open()` throws
+#   IOException: Unable to establish loopback connection
+#   Caused by: SocketException: Invalid argument: connect  (sun.nio.ch.UnixDomainSockets.connect0)
+# JDK 17's PipeImpl builds the selector's internal pipe over an AF_UNIX socket placed in the temp
+# directory. Pointing it at any other directory works. The property name is jdk.net.unixdomain.tmpdir
+# - jdk.nio.channels.unixdomain.tmpdir does NOT exist and fails silently, and -Djava.io.tmpdir has
+# no effect on it.
+#org.gradle.jvmargs=-Xmx4G -XX:MaxMetaspaceSize=1G -Djdk.net.unixdomain.tmpdir=D:/gradletmp

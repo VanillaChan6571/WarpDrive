@@ -9,7 +9,10 @@
       "Bash(./gradlew build:*)",
       "Bash(./gradlew --stop)",
       "Bash(./gradlew compileJava:*)",
-      "Bash(./gradlew processResources:*)"
+      "Bash(./gradlew processResources:*)",
+      "Bash(./gradlew runClient:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nPhase 1 Complete: Working Ship Core with CC:Tweaked integration\n\nImplemented and tested Ship Core block with full ComputerCraft integration:\n\nFeatures:\n- Ship Core block with TileEntity (energy storage, ship scanning, warp jumps)\n- CC:Tweaked peripheral detection using GenericPeripheralProvider\n- @LuaFunction API methods: scan(), jump(), setDestination(), getEnergyStored(), getEnergyRequired(), getShipSize()\n- Forge Energy capability (10M FE capacity, 10K FE/t transfer rate)\n- Energy calculation based on ship size and distance\n- NBT persistence for ship data and energy\n\nFixes:\n- Removed duplicate setRegistryName() call (DeferredRegister sets it automatically)\n- Added CC:Tweaked peripheral capability with LazyOptional pattern\n- Proper capability invalidation on TileEntity removal\n\nTesting verified:\n- Block loads in-game without crashes\n- Computer peripheral detection working\n- All Lua methods functional\n- Energy calculation correct (100 blocks * 100 + ~139 distance * 10 = 13897 FE)\n- Jump validation working (rejects insufficient energy)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n)\")"
     ]
   }
 }
