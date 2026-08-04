@@ -219,31 +219,46 @@ ext.instanceModsDir = project.findProperty('instanceModsDir')
 	?: config.instance_mods_dir
 	?: "${System.getProperty('user.home')}/Documents/CurseForge/Instances/WarpDrive Development/mods"
 
-task deployToInstance(type: Copy) {
+def deployBuiltJar = {
+	def target = file(instanceModsDir)
+	if (!target.isDirectory()) {
+		throw new GradleException("Instance mods folder not found: ${target}\n" +
+			"Pass a different one with -PinstanceModsDir=\"C:/path/to/mods\"")
+	}
+
+	// Remove older WarpDrive builds so Forge doesn't load two copies.
+	target.listFiles({ f -> f.name ==~ /^WarpDrive-.*\.jar$/ } as FileFilter).each {
+		logger.lifecycle("Removing stale build: ${it.name}")
+		if (!it.delete()) {
+			throw new GradleException("Unable to remove stale build: ${it}")
+		}
+	}
+
+	copy {
+		from jar.archiveFile
+		into target
+	}
+	logger.lifecycle("Deployed ${jar.archiveFileName.get()} -> ${target}")
+}
+
+task deployToInstance {
 	description = 'Copies the built mod jar into the development instance mods folder'
 	group = 'warpdrive'
 
 	// reobfJar rewrites build/libs in place, so we must wait for it
 	dependsOn 'reobfJar'
 
-	from jar.archiveFile
-	into instanceModsDir
-
-	doFirst {
-		def target = file(instanceModsDir)
-		if (!target.isDirectory()) {
-			throw new GradleException("Instance mods folder not found: ${target}\n" +
-				"Pass a different one with -PinstanceModsDir=\"C:/path/to/mods\"")
-		}
-		// Remove older WarpDrive builds so Forge doesn't load two copies
-		target.listFiles({ f -> f.name ==~ /^WarpDrive-.*\.jar$/ } as FileFilter).each {
-			logger.lifecycle("Removing stale build: ${it.name}")
-			it.delete()
-		}
-	}
-
 	doLast {
-		logger.lifecycle("Deployed ${jar.archiveFileName.get()} -> ${instanceModsDir}")
+		deployBuiltJar()
+	}
+}
+
+// A doLast action only runs when the complete build succeeds, so a failed compile or
+// reobfuscation can never deploy a stale jar. deployToInstance remains available for
+// an explicit deployment without running the full verification lifecycle again.
+tasks.named('build') {
+	doLast {
+		deployBuiltJar()
 	}
 }
 

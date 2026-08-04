@@ -1,5 +1,23 @@
 {
   "block.warpdrive.ship_core": "Ship Core",
   "block.warpdrive.creative_energy": "Creative Energy Source",
-  "itemGroup.warpdrive": "WarpDrive"
+  "itemGroup.warpdrive": "WarpDrive",
+
+  "item.warpdrive.warp_armor_basic_helmet": "Basic Warp Helmet",
+  "item.warpdrive.warp_armor_basic_chestplate": "Basic Warp Chestplate",
+  "item.warpdrive.warp_armor_basic_leggings": "Basic Warp Leggings",
+  "item.warpdrive.warp_armor_basic_boots": "Basic Warp Boots",
+
+  "item.warpdrive.warp_armor_advanced_helmet": "Advanced Warp Helmet",
+  "item.warpdrive.warp_armor_advanced_chestplate": "Advanced Warp Chestplate",
+  "item.warpdrive.warp_armor_advanced_leggings": "Advanced Warp Leggings",
+  "item.warpdrive.warp_armor_advanced_boots": "Advanced Warp Boots",
+
+  "item.warpdrive.warp_armor_superior_helmet": "Superior Warp Helmet",
+  "item.warpdrive.warp_armor_superior_chestplate": "Superior Warp Chestplate",
+  "item.warpdrive.warp_armor_superior_leggings": "Superior Warp Leggings",
+  "item.warpdrive.warp_armor_superior_boots": "Superior Warp Boots",
+
+  "death.attack.warpdrive.vacuum": "%1$s suffocated in vacuum",
+  "death.attack.warpdrive.vacuum.player": "%1$s suffocated in vacuum while fighting %2$s"
 }

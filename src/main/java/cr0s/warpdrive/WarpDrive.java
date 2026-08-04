@@ -41,13 +41,18 @@ public class WarpDrive {
 
 	private void commonSetup(final FMLCommonSetupEvent event) {
 		cr0s.warpdrive.network.WarpDriveNetwork.init();
+		// Must be deferred to setup: WorldGenRegistries is not safe to touch during construction
+		event.enqueueWork(cr0s.warpdrive.data.Registration::registerConfiguredFeatures);
 		logger.info("WarpDrive common setup complete");
 	}
 
 	private void clientSetup(final FMLClientSetupEvent event) {
-		event.enqueueWork(() -> ScreenManager.register(
-			cr0s.warpdrive.data.Registration.CREATIVE_ENERGY_CONTAINER.get(),
-			cr0s.warpdrive.client.CreativeEnergyScreen::new));
+		event.enqueueWork(() -> {
+			ScreenManager.register(
+				cr0s.warpdrive.data.Registration.CREATIVE_ENERGY_CONTAINER.get(),
+				cr0s.warpdrive.client.CreativeEnergyScreen::new);
+			cr0s.warpdrive.client.ClientDimensionRendering.register();
+		});
 		logger.info("WarpDrive client setup complete");
 	}
 }

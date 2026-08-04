@@ -152,19 +152,55 @@ Registry<DimensionType> dimensionRegistry = ...
 
 **Deliverable**: Working ship teleportation within same dimension
 
-### Phase 4: Space Dimension (Week 3-4)  — NOT STARTED
-**Goal**: Custom Space dimension
+### Phase 4: Space + Hyperspace Dimensions  — IN PROGRESS
 
-> **TODO: neither dimension exists yet.** `isInSpace()` / `isInHyperspace()` are already exposed on
-> the Ship Core and compare against `warpdrive:space` / `warpdrive:hyperspace`, so they answer
-> `false` today and become correct the moment the dimensions are registered — no Lua call site will
-> need changing. Still outstanding for this phase:
-> - register the Space and Hyperspace dimensions + dimension types
-> - void chunk generator
-> - asteroid feature + periodic placement
-> - vacuum / no-oxygen handling
-> - **cross-dimension jumps in `WarpEngine`** — it currently moves blocks within a single `World`
->   only, so a dimension change is not merely a coordinate change
+**Design (decided 2026-08-03), replacing the 1.12.2 model.**
+
+1.12.2 used a "celestial map": an XML tree of nested celestial objects, each with an invisible
+world border, packing many worlds into one dimension's coordinate space at different XZ offsets.
+The borders existed only to stop those packed worlds overlapping. We are not packing worlds, so
+the borders, the XML map and the `CelestialObject` system are all dropped.
+
+| Dimension | `coordinate_scale` | Terrain | Character |
+|---|---|---|---|
+| Overworld | 1.0 | vanilla | baseline |
+| `warpdrive:space` | 1.0 | void + asteroids | full size, 1:1 with the Overworld, 0g, jumps reach much further per FE |
+| `warpdrive:hyperspace` | 8.0 | void | Nether-style compression for long hauls |
+
+Travel between layers uses **both** a ship command and altitude ascent.
+
+**Status**
+- [x] `dimension_type` + `dimension` JSON for both. A void world needs no custom ChunkGenerator:
+      `minecraft:flat` with zero layers does it, so this step is pure data.
+- [x] custom biomes (`warpdrive:space`, `warpdrive:hyperspace`)
+- [x] custom sky: the original six-face skyboxes plus WarpDrive's procedural coloured starfield,
+      ported from 1.12.2 `RenderSpaceSky` including its seed, so the sky matches star for star
+- [x] cross-dimension jumps in `WarpEngine` — takes source and destination worlds; places before
+      clearing when crossing worlds so a failure cannot delete the ship
+- [x] ship command to select a target dimension (`setTargetDimension`)
+- [x] gravity — Forge's `ENTITY_GRAVITY` attribute replaces 1.12.2's CoreMod class transformer
+- [x] falling blocks (sand/gravel/anvils) suppressed
+- [x] asteroid fields with weighted ore types
+- [x] vacuum damage + tiered armour, stats carried over unchanged from 1.12.2
+- [x] `StructureBuilder`: computes off-thread, applies main-thread at 5000 blocks/tick
+
+**Still outstanding**
+- [ ] **Air tanks.** Only the helmet supplies air today. 1.12.2 also had tanks in the chestplate
+      giving a finite supply, so a full set mattered beyond its armour stats.
+- [ ] altitude ascent / descent for players and small craft (ship command works; the "fly up to
+      change layer" half is not implemented)
+- [ ] energy model: cheaper distance in 0g, and accounting for the 8:1 hyperspace scale
+- [ ] gravity nuance: 1.12.2 distinguished field gravity near ship blocks (0.025) from
+      `SPACE_VOID_GRAVITY` (0.001) in open void, and used separate lower values for dropped items.
+      The attribute only affects LivingEntity, so items still fall at vanilla speed.
+- [ ] moons and planets, via `StructureBuilder`
+- [ ] armour recipes and proper repair materials (currently leather/iron/diamond placeholders)
+
+`isInSpace()` / `isInHyperspace()` on the Ship Core already compare against these exact ids, so
+they begin answering correctly as soon as the dimensions load — no Lua call site changes.
+
+> **Note:** in 1.16.5 a datapack dimension is written into `level.dat` when a world is created.
+> Adding one to an existing world may not register it (MC-197860); test in a **new world**.
 
 **Tasks**:
 1. Register Space dimension

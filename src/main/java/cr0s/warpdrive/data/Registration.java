@@ -6,7 +6,18 @@ import cr0s.warpdrive.block.CreativeEnergyTileEntity;
 import cr0s.warpdrive.block.ShipCoreBlock;
 import cr0s.warpdrive.block.ShipCoreTileEntity;
 import cr0s.warpdrive.container.CreativeEnergyContainer;
+import cr0s.warpdrive.item.WarpArmorItem;
+import cr0s.warpdrive.item.WarpArmorMaterial;
+import cr0s.warpdrive.world.AsteroidFeature;
 import net.minecraft.block.Block;
+import net.minecraft.inventory.EquipmentSlotType;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.WorldGenRegistries;
+import net.minecraft.world.gen.feature.ConfiguredFeature;
+import net.minecraft.world.gen.feature.Feature;
+import net.minecraft.world.gen.feature.NoFeatureConfig;
+import net.minecraft.world.gen.placement.ChanceConfig;
+import net.minecraft.world.gen.placement.Placement;
 import net.minecraft.inventory.container.ContainerType;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
@@ -20,6 +31,10 @@ import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
+
+import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.Map;
 
 /**
  * Centralized registration system for WarpDrive using DeferredRegister pattern (1.16.5)
@@ -43,6 +58,50 @@ public class Registration {
 
 	public static final DeferredRegister<SoundEvent> SOUNDS =
 		DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, WarpDrive.MODID);
+
+	public static final DeferredRegister<Feature<?>> FEATURES =
+		DeferredRegister.create(ForgeRegistries.FEATURES, WarpDrive.MODID);
+
+	// ===== ARMOUR =====
+	// Three tiers x four slots. Stats live in WarpArmorMaterial and match 1.12.2 exactly.
+
+	private static final EquipmentSlotType[] ARMOR_SLOTS = {
+		EquipmentSlotType.HEAD, EquipmentSlotType.CHEST, EquipmentSlotType.LEGS, EquipmentSlotType.FEET
+	};
+	private static final String[] ARMOR_SLOT_NAMES = { "helmet", "chestplate", "leggings", "boots" };
+
+	public static final Map<String, RegistryObject<Item>> ARMOR = new LinkedHashMap<>();
+
+	static {
+		for (final WarpArmorMaterial material : WarpArmorMaterial.values()) {
+			final String tier = material.name().toLowerCase(Locale.ROOT);
+			for (int index = 0; index < ARMOR_SLOTS.length; index++) {
+				final EquipmentSlotType slot = ARMOR_SLOTS[index];
+				final String name = "warp_armor_" + tier + "_" + ARMOR_SLOT_NAMES[index];
+				ARMOR.put(name, ITEMS.register(name, () -> new WarpArmorItem(material, slot)));
+			}
+		}
+	}
+
+	// ===== WORLD GENERATION =====
+
+	public static final RegistryObject<Feature<NoFeatureConfig>> ASTEROID_FIELD =
+		FEATURES.register("asteroid_field", () -> new AsteroidFeature(NoFeatureConfig.CODEC));
+
+	/**
+	 * Configured form of the asteroid field, built during common setup because it must go into
+	 * WorldGenRegistries rather than a Forge registry. BiomeLoadingEvent then attaches it to the
+	 * space biome.
+	 */
+	public static ConfiguredFeature<?, ?> ASTEROID_FIELD_CONFIGURED;
+
+	public static void registerConfiguredFeatures() {
+		ASTEROID_FIELD_CONFIGURED = ASTEROID_FIELD.get()
+			.configured(NoFeatureConfig.INSTANCE)
+			.decorated(Placement.CHANCE.configured(new ChanceConfig(6)));
+		Registry.register(WorldGenRegistries.CONFIGURED_FEATURE,
+			new ResourceLocation(WarpDrive.MODID, "asteroid_field"), ASTEROID_FIELD_CONFIGURED);
+	}
 
 	// ===== SOUNDS =====
 	// The .ogg files and assets/warpdrive/sounds.json survived from 1.12.2 - these are the
@@ -109,6 +168,7 @@ public class Registration {
 		TILE_ENTITIES.register(modEventBus);
 		CONTAINERS.register(modEventBus);
 		SOUNDS.register(modEventBus);
+		FEATURES.register(modEventBus);
 
 		WarpDrive.logger.info("Deferred registers initialized");
 	}
