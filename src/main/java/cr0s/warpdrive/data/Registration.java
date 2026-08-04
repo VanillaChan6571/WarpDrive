@@ -1,6 +1,11 @@
 package cr0s.warpdrive.data;
 
 import cr0s.warpdrive.WarpDrive;
+import cr0s.warpdrive.block.breathing.AirFlowBlock;
+import cr0s.warpdrive.block.breathing.AirGeneratorBlock;
+import cr0s.warpdrive.block.breathing.AirGeneratorTier;
+import cr0s.warpdrive.block.breathing.AirGeneratorTileEntity;
+import cr0s.warpdrive.block.breathing.AirSourceBlock;
 import cr0s.warpdrive.block.CreativeEnergyBlock;
 import cr0s.warpdrive.block.CreativeEnergyTileEntity;
 import cr0s.warpdrive.block.ShipCoreBlock;
@@ -99,6 +104,34 @@ public class Registration {
 			AIR_TANKS.put(name, ITEMS.register(name, () -> new AirTankItem(tier)));
 		}
 	}
+
+	// ===== BREATHING =====
+	// No BlockItems: these are placed by the air simulation, never by hand.
+
+	public static final RegistryObject<Block> AIR_FLOW_BLOCK =
+		BLOCKS.register("air_flow", AirFlowBlock::new);
+
+	public static final RegistryObject<Block> AIR_SOURCE_BLOCK =
+		BLOCKS.register("air_source", AirSourceBlock::new);
+
+	/** Air generators, one per tier. Registry names keep the 1.12.2 dotted form. */
+	public static final Map<String, RegistryObject<Block>> AIR_GENERATOR_BLOCKS = new LinkedHashMap<>();
+	public static final Map<String, RegistryObject<Item>> AIR_GENERATOR_ITEMS = new LinkedHashMap<>();
+
+	static {
+		for (final AirGeneratorTier tier : AirGeneratorTier.values()) {
+			final String name = "air_generator." + tier.getName();
+			final RegistryObject<Block> block = BLOCKS.register(name, () -> new AirGeneratorBlock(tier));
+			AIR_GENERATOR_BLOCKS.put(name, block);
+			AIR_GENERATOR_ITEMS.put(name, ITEMS.register(name,
+				() -> new BlockItem(block.get(), new Item.Properties().tab(ItemGroup.TAB_MISC))));
+		}
+	}
+
+	public static final RegistryObject<TileEntityType<AirGeneratorTileEntity>> AIR_GENERATOR_TILE =
+		TILE_ENTITIES.register("air_generator",
+			() -> TileEntityType.Builder.of(AirGeneratorTileEntity::new,
+				AIR_GENERATOR_BLOCKS.values().stream().map(RegistryObject::get).toArray(Block[]::new)).build(null));
 
 	// ===== WORLD GENERATION =====
 

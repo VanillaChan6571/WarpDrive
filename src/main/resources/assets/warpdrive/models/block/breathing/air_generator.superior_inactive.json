@@ -1,0 +1,12 @@
+{
+	"parent": "block/cube",
+	"textures": {
+		"particle": "warpdrive:blocks/breathing/air_generator-side",
+		"down":  "warpdrive:blocks/breathing/air_generator-side",
+		"up":    "warpdrive:blocks/breathing/air_generator-side",
+		"north": "warpdrive:blocks/breathing/air_generator.superior-front_inactive",
+		"south": "warpdrive:blocks/breathing/air_generator-back",
+		"west":  "warpdrive:blocks/breathing/air_generator-side",
+		"east":  "warpdrive:blocks/breathing/air_generator-side"
+	}
+}

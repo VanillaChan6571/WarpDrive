@@ -18,6 +18,12 @@
   "item.warpdrive.warp_armor_superior_leggings": "Superior Warp Leggings",
   "item.warpdrive.warp_armor_superior_boots": "Superior Warp Boots",
 
+  "block.warpdrive.air_flow": "Air",
+  "block.warpdrive.air_source": "Air Source",
+  "block.warpdrive.air_generator.basic": "Basic Air Generator",
+  "block.warpdrive.air_generator.advanced": "Advanced Air Generator",
+  "block.warpdrive.air_generator.superior": "Superior Air Generator",
+
   "item.warpdrive.air_tank.basic": "Basic Air Tank",
   "item.warpdrive.air_tank.advanced": "Advanced Air Tank",
   "item.warpdrive.air_tank.superior": "Superior Air Tank",

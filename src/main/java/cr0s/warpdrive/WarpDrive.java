@@ -58,6 +58,15 @@ public class WarpDrive {
 				cr0s.warpdrive.data.Registration.CREATIVE_ENERGY_CONTAINER.get(),
 				cr0s.warpdrive.client.CreativeEnergyScreen::new);
 			cr0s.warpdrive.client.ClientDimensionRendering.register();
+
+			// Air blocks are translucent blue. Without this they render on the solid layer and the
+			// texture's alpha is ignored, so the volume would appear as opaque cubes.
+			net.minecraft.client.renderer.RenderTypeLookup.setRenderLayer(
+				cr0s.warpdrive.data.Registration.AIR_FLOW_BLOCK.get(),
+				net.minecraft.client.renderer.RenderType.translucent());
+			net.minecraft.client.renderer.RenderTypeLookup.setRenderLayer(
+				cr0s.warpdrive.data.Registration.AIR_SOURCE_BLOCK.get(),
+				net.minecraft.client.renderer.RenderType.translucent());
 		});
 		logger.info("WarpDrive client setup complete");
 	}
