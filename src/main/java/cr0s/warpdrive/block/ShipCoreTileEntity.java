@@ -22,6 +22,8 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
+import cr0s.warpdrive.data.DimensionAltitude;
+import cr0s.warpdrive.data.ShipMovementType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.ChunkPos;
@@ -91,8 +93,9 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 	public static final int STATE_COOLDOWN = 2;
 	private static final int MAX_FORCED_CHUNKS = 1024;
 
-	// 10s is the normal charge-up; giant ships escalate to 30s so their destination chunks have
-	// time to load and generate. Threshold is measured in chunks, since that is what costs time.
+	// 10s is the normal charge-up. Cross-dimension jumps and giant ships escalate to 30s so the
+	// destination world/chunks have time to load and generate. The size threshold is measured in
+	// chunks, since that is what costs time.
 	public static final int JUMP_DELAY_NORMAL_TICKS = 200;   // 10s -> warp_10s
 	public static final int JUMP_DELAY_LARGE_TICKS = 600;    // 30s -> warp_30s
 	private static final int LARGE_SHIP_CHUNK_THRESHOLD = 25;
@@ -101,7 +104,7 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 	private int countdownRemaining = 0;
 	private int cooldownRemaining = 0;
 	private int jumpDelayTicks = JUMP_DELAY_NORMAL_TICKS;
-	/** Delay actually in use for the current countdown (may be escalated for a large ship). */
+	/** Delay actually in use for the current countdown (may be escalated for dimension/ship size). */
 	private int activeJumpDelayTicks = JUMP_DELAY_NORMAL_TICKS;
 	private boolean warpSoundPlayed = false;
 
@@ -363,11 +366,39 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 	public final Object[] getMaxJumpDistance() {
 		final int volume = getShipVolume();
 		if (volume <= 1) {
-			return new Object[]{ false, 0 };
+			return new Object[]{ false, 0, 0, "dimensions not set" };
 		}
-		// Inverse of the cost formula: cost = volume * 100 + distance * 10
-		final int spare = energyStored - volume * 100;
-		return new Object[]{ spare > 0, Math.max(0, spare / 10) };
+		final int byType = getMaxJumpDistanceByType();
+		final int byEnergy = getMaxJumpDistanceByEnergy();
+		final int effective = Math.min(byType, byEnergy);
+		// Naming the binding constraint is the point: "48 blocks" is not actionable, but "48,
+		// limited by energy" tells the pilot to charge rather than to rebuild the ship
+		final String limitedBy = byEnergy < byType ? "energy" : getMovementType().getName();
+
+		return new Object[]{
+			effective >= ShipMovementType.MINIMUM_DISTANCE_BLOCKS,
+			effective,
+			ShipMovementType.MINIMUM_DISTANCE_BLOCKS,
+			limitedBy };
+	}
+
+	/** Range ceiling imposed by the kind of movement and the ship's mass. */
+	public int getMaxJumpDistanceByType() {
+		return getMovementType().maximumDistance(getShipMass());
+	}
+
+	/** Range ceiling imposed by stored energy - the inverse of cost = volume * 100 + distance * 10. */
+	public int getMaxJumpDistanceByEnergy() {
+		final int volume = getShipVolume();
+		if (volume <= 1) {
+			return 0;
+		}
+		return Math.max(0, (energyStored - volume * 100) / 10);
+	}
+
+	/** Whichever ceiling binds first. */
+	public int getEffectiveMaxJumpDistance() {
+		return Math.min(getMaxJumpDistanceByType(), getMaxJumpDistanceByEnergy());
 	}
 
 	/** Legacy: isValid, message = ship.getAssemblyStatus() */
@@ -747,9 +778,35 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 
 	@LuaFunction
 	public final Object[] setMovement(int dx, int dy, int dz) throws LuaException {
+		// Set the requested movement first: the movement type - and therefore the range - depends on
+		// where this jump would end up, so takeoff and landing can only be recognised once it is known
 		moveX = dx;
 		moveY = dy;
 		moveZ = dz;
+
+		final ShipMovementType movementType = getMovementType();
+		final int byType = getMaxJumpDistanceByType();
+		final int byEnergy = getMaxJumpDistanceByEnergy();
+		final int maximum = Math.min(byType, byEnergy);
+		final String limitedBy = byEnergy < byType ? "energy" : movementType.getName();
+		final double requested = Math.sqrt((double) dx * dx + (double) dy * dy + (double) dz * dz);
+
+		String note = "";
+		if (requested > maximum) {
+			// Scale the whole vector rather than clipping each axis, so the heading is preserved and
+			// the ship still travels the way the pilot pointed it
+			final double scale = maximum / requested;
+			moveX = (int) Math.round(dx * scale);
+			moveY = (int) Math.round(dy * scale);
+			moveZ = (int) Math.round(dz * scale);
+			note = String.format(" (clamped from %d, limited by %s)",
+				(int) Math.round(requested), limitedBy);
+		} else if (requested < ShipMovementType.MINIMUM_DISTANCE_BLOCKS) {
+			return new Object[]{ false, String.format(
+				"Movement too small: at least %d block required, up to %d (%s)",
+				ShipMovementType.MINIMUM_DISTANCE_BLOCKS, maximum, limitedBy) };
+		}
+
 		setChanged();
 
 		// Sync to client so the destination bounding box can be drawn
@@ -757,10 +814,46 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 			level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
 		}
 
-		WarpDrive.logger.info("Movement set to: {}, {}, {}", moveX, moveY, moveZ);
+		WarpDrive.logger.info("Movement set to: {}, {}, {} ({}, max {})",
+			moveX, moveY, moveZ, movementType.getName(), maximum);
 
-		return new Object[]{ true, String.format("Movement set: %d, %d, %d", dx, dy, dz) };
+		return new Object[]{ true, String.format("Movement set: %d, %d, %d%s - %s, range %d to %d blocks",
+			moveX, moveY, moveZ, note, movementType.getName(),
+			ShipMovementType.MINIMUM_DISTANCE_BLOCKS, maximum), maximum, limitedBy };
 	}
+
+	/**
+	 * What kind of movement the currently configured jump is, which sets its range.
+	 *
+	 * Order matters: a vertical boundary crossing is takeoff or landing regardless of which
+	 * dimension it starts in, and an explicit destination dimension is a hyperspace transition
+	 * rather than movement within the current world.
+	 */
+	public ShipMovementType getMovementType() {
+		if (level == null) {
+			return ShipMovementType.SPACE_MOVING;
+		}
+		if (transitionTarget() != null) {
+			final int[] b = getShipBounds();
+			return b[4] + moveY > DimensionAltitude.ceilingOf(level)
+			     ? ShipMovementType.PLANET_TAKEOFF
+			     : ShipMovementType.PLANET_LANDING;
+		}
+
+		final String current = DimensionAltitude.idOf(level);
+		if (targetDimension != null && !targetDimension.isEmpty() && !targetDimension.equals(current)) {
+			return DimensionAltitude.HYPERSPACE.equals(targetDimension)
+			     ? ShipMovementType.HYPERSPACE_ENTERING
+			     : ShipMovementType.HYPERSPACE_EXITING;
+		}
+
+		switch (current) {
+			case DimensionAltitude.HYPERSPACE: return ShipMovementType.HYPERSPACE_MOVING;
+			case DimensionAltitude.SPACE:      return ShipMovementType.SPACE_MOVING;
+			default:                           return ShipMovementType.PLANET_MOVING;
+		}
+	}
+
 
 	@LuaFunction
 	public final Object[] getMovement() {
@@ -830,9 +923,13 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		// silently does nothing, which is why the 1.12.2 version pre-loaded the target area first.
 		final int chunks = forceDestinationChunks(true);
 
-		// A giant ship spans more chunks, which take longer to load and generate - give them the
-		// full 30s window rather than moving blocks into terrain that is not ready yet.
-		final int delay = chunks >= LARGE_SHIP_CHUNK_THRESHOLD
+		// Changing dimensions always gets the full 30-second charge-up/sound. Giant ships use the
+		// same window even within one world because their larger destination takes longer to load.
+		final boolean changesDimension = transitionTarget() != null
+			|| (targetDimension != null && !targetDimension.isEmpty()
+				&& !targetDimension.equals(DimensionAltitude.idOf(level)));
+		final boolean needsLongCountdown = changesDimension || chunks >= LARGE_SHIP_CHUNK_THRESHOLD;
+		final int delay = needsLongCountdown
 			? Math.max(jumpDelayTicks, JUMP_DELAY_LARGE_TICKS)
 			: jumpDelayTicks;
 
@@ -846,7 +943,8 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		syncToClient();
 
 		DebugLog.log("JUMP", "jump scheduled: {} ticks countdown ({}), {} destination chunks force-loaded",
-			delay, delay >= JUMP_DELAY_LARGE_TICKS ? "large ship" : "normal", chunks);
+			delay, changesDimension ? "dimension change"
+				: chunks >= LARGE_SHIP_CHUNK_THRESHOLD ? "large ship" : "normal", chunks);
 
 		return new Object[]{ true, String.format("Jump in %.1fs (%d chunks pre-loaded)",
 			delay / 20.0, chunks) };
@@ -890,7 +988,27 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 				int energyAfterJump = Math.max(0, energyStored - required);
 
 				DebugLog.log("JUMP", "About to call WarpEngine.executeWarp with energyAfterJump={}", energyAfterJump);
-				final ServerWorld destWorld = resolveDestinationWorld();
+				// Takeoff / landing: leaving through the ceiling or floor changes dimension, and the
+				// ship re-enters through the opposite boundary of the destination
+				final RegistryKey<World> transition = transitionTarget();
+				final ServerWorld destWorld = transition != null
+					? level.getServer().getLevel(transition)
+					: resolveDestinationWorld();
+
+				if (transition != null && destWorld != null) {
+					final int[] bounds = getShipBounds();
+					final BlockPos core = getBlockPos();
+					final boolean ascending = bounds[4] + moveY > DimensionAltitude.ceilingOf(level);
+					// Offset from the core to the leading hull edge, so the ship clears the boundary
+					// it arrives through instead of materialising inside it
+					destY = ascending
+						? DimensionAltitude.entryAltitudeAscending(destWorld) + (core.getY() - bounds[1])
+						: DimensionAltitude.entryAltitudeDescending(destWorld) - (bounds[4] - core.getY());
+					DebugLog.log("JUMP", "{} {} to {}, entering at y={}",
+						shipName, ascending ? "taking off" : "landing",
+						transition.location(), destY);
+				}
+
 				if (destWorld == null) {
 					DebugLog.log("JUMP", "aborting: destination dimension '{}' did not resolve", targetDimension);
 					forceDestinationChunks(false);
@@ -1041,6 +1159,32 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 	}
 
 	/**
+	 * The dimension this jump would move into by leaving through the ceiling or floor, or null if
+	 * it stays inside the current world.
+	 *
+	 * This is 1.12.2's PLANET_TAKEOFF / PLANET_LANDING expressed as a property of the movement
+	 * rather than a mode the pilot selects: fly far enough up and you leave the atmosphere, far
+	 * enough down and you re-enter it.
+	 *
+	 * An explicit destination always wins - asking for a specific dimension means the pilot has
+	 * already decided, and silently redirecting them would be worse than refusing.
+	 */
+	@Nullable
+	private RegistryKey<World> transitionTarget() {
+		if (level == null || (targetDimension != null && !targetDimension.isEmpty())) {
+			return null;
+		}
+		final int[] b = getShipBounds();
+		if (b[1] + moveY < DimensionAltitude.floorOf(level)) {
+			return DimensionAltitude.below(level);
+		}
+		if (b[4] + moveY > DimensionAltitude.ceilingOf(level)) {
+			return DimensionAltitude.above(level);
+		}
+		return null;
+	}
+
+	/**
 	 * Cheap pre-flight check of where the ship would land. Returns null when the destination looks
 	 * usable, otherwise a message explaining why not.
 	 */
@@ -1050,18 +1194,44 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 			return "World not loaded";
 		}
 		final int[] b = getShipBounds();
-		final int destMinY = b[1] + moveY;
-		final int destMaxY = b[4] + moveY;
+		final BlockPos core = getBlockPos();
+		final RegistryKey<World> transition = transitionTarget();
+		final ServerWorld destinationWorld = transition != null && level.getServer() != null
+			? level.getServer().getLevel(transition)
+			: resolveDestinationWorld();
+		if (destinationWorld == null) {
+			return "Unknown destination dimension: "
+				+ (transition == null ? targetDimension : transition.location());
+		}
 
-		if (destMinY < 0) {
+		// A boundary transition does not retain its out-of-range source Y. It enters through the
+		// opposite edge of the destination world, using the same core altitude calculation as the
+		// actual jump below. Pre-flight must validate that mapped position or isInWorldBounds() will
+		// reject the deliberately out-of-range source Y before the countdown can even start.
+		final int destinationCoreY;
+		if (transition != null) {
+			final boolean ascending = b[4] + moveY > DimensionAltitude.ceilingOf(level);
+			destinationCoreY = ascending
+				? DimensionAltitude.entryAltitudeAscending(destinationWorld) + (core.getY() - b[1])
+				: DimensionAltitude.entryAltitudeDescending(destinationWorld) - (b[4] - core.getY());
+		} else {
+			destinationCoreY = core.getY() + moveY;
+		}
+		final int destMinY = destinationCoreY + b[1] - core.getY();
+		final int destMaxY = destinationCoreY + b[4] - core.getY();
+
+		// Leaving through the ceiling or the floor is a dimension transition rather than an error -
+		// takeoff and landing, in 1.12.2 terms - provided there is a world on the other side and
+		// the pilot has not asked for a specific destination.
+		if (destMinY < DimensionAltitude.floorOf(destinationWorld)) {
 			return String.format("Destination below the world (y %d)", destMinY);
 		}
-		if (destMaxY > 255) {
-			return String.format("Destination above the build limit (y %d > 255)", destMaxY);
+		if (destMaxY > DimensionAltitude.ceilingOf(destinationWorld)) {
+			return String.format("Destination above the build limit (y %d > %d)",
+				destMaxY, DimensionAltitude.ceilingOf(destinationWorld));
 		}
 
 		// Horizontal extent, honouring rotation, against the world border
-		final BlockPos core = getBlockPos();
 		final int destX = core.getX() + moveX;
 		final int destZ = core.getZ() + moveZ;
 		final int[] offsetsX = { b[0] - core.getX(), b[3] - core.getX() };
@@ -1076,7 +1246,7 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 					case 3: rx = oz;  rz = -ox; break;
 					default: break;
 				}
-				if (!level.isInWorldBounds(new BlockPos(destX + rx, destMinY, destZ + rz))) {
+				if (!destinationWorld.isInWorldBounds(new BlockPos(destX + rx, destMinY, destZ + rz))) {
 					return "Destination is outside the world";
 				}
 			}
@@ -1127,9 +1297,13 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 			return released;
 		}
 
-		final ServerWorld serverWorld = resolveDestinationWorld();
+		final RegistryKey<World> transition = transitionTarget();
+		final ServerWorld serverWorld = transition == null
+			? resolveDestinationWorld()
+			: ((ServerWorld) level).getServer().getLevel(transition);
 		if (serverWorld == null) {
-			DebugLog.log("JUMP", "cannot force chunks: destination dimension '{}' did not resolve", targetDimension);
+			DebugLog.log("JUMP", "cannot force chunks: destination dimension '{}' did not resolve",
+				transition == null ? targetDimension : transition.location());
 			return 0;
 		}
 		forcedChunksWorld = serverWorld.dimension();
