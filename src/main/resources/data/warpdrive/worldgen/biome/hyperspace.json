@@ -1,0 +1,27 @@
+{
+  "surface_builder": "minecraft:nope",
+  "precipitation": "none",
+  "category": "none",
+  "depth": 0.0,
+  "scale": 0.0,
+  "temperature": 0.5,
+  "downfall": 0.0,
+  "effects": {
+    "sky_color": 3145732,
+    "fog_color": 2031621,
+    "water_color": 4849717,
+    "water_fog_color": 1703961
+  },
+  "starts": [],
+  "spawners": {
+    "monster": [],
+    "creature": [],
+    "ambient": [],
+    "water_creature": [],
+    "water_ambient": [],
+    "misc": []
+  },
+  "spawn_costs": {},
+  "carvers": {},
+  "features": [[], [], [], [], [], [], [], [], [], []]
+}

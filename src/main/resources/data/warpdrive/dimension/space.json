@@ -1,0 +1,15 @@
+{
+  "type": "warpdrive:space",
+  "generator": {
+    "type": "minecraft:flat",
+    "settings": {
+      "layers": [],
+      "biome": "warpdrive:space",
+      "lakes": false,
+      "features": true,
+      "structures": {
+        "structures": {}
+      }
+    }
+  }
+}
