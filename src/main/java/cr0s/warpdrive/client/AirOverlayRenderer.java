@@ -85,6 +85,12 @@ public final class AirOverlayRenderer extends AbstractGui {
 		if (player.isCreative() || player.isSpectator()) {
 			return;
 		}
+		// Standing in generated air: nothing is wrong, so show nothing. Without this the alarm
+		// fires inside a fully pressurised ship purely because the player is not wearing a suit -
+		// which is the whole point of pressurising it.
+		if (BreathingManager.hasAirBlock(player)) {
+			return;
+		}
 
 		INSTANCE.render(event.getMatrixStack(),
 			event.getWindow().getGuiScaledWidth(),

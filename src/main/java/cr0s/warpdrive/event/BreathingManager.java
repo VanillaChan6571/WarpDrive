@@ -3,7 +3,9 @@ package cr0s.warpdrive.event;
 import cr0s.warpdrive.WarpDrive;
 import cr0s.warpdrive.api.IAirContainerItem;
 import cr0s.warpdrive.api.IBreathingHelmet;
+import cr0s.warpdrive.block.breathing.AbstractAirBlock;
 import cr0s.warpdrive.damage.WarpDamageSources;
+import net.minecraft.block.Block;
 import net.minecraft.entity.CreatureAttribute;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.item.ArmorStandEntity;
@@ -13,6 +15,8 @@ import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.EntityLeaveWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
@@ -59,6 +63,18 @@ public final class BreathingManager {
 
 	/** Grace period granted on the first breath in vacuum, and when leaving breathable air. */
 	private static final int AIR_FIRST_BREATH_TICKS = 300;
+	/** Reserve topped up while standing in generated air, 1.12.2 AIR_BLOCK_TICKS. */
+	private static final int AIR_BLOCK_TICKS = 20;
+
+	/**
+	 * Positions checked for breathable air, relative to the entity. From 1.12.2: feet and head
+	 * first, then the ring around the head, then around the feet - so leaning into a doorway or
+	 * standing at the edge of a pressurised room still counts.
+	 */
+	private static final int[][] AIR_OFFSETS = {
+		{ 0, 0, 0 }, { 0, 1, 0 },
+		{ 0, 1, 1 }, { 0, 1, -1 }, { 1, 1, 0 }, { -1, 1, 0 },
+		{ 0, 0, 1 }, { 0, 0, -1 }, { 1, 0, 0 }, { -1, 0, 0 } };
 	/** Interval between asphyxia hits once out of air. */
 	private static final int AIR_DROWN_TICKS = 20;
 	/** Damage per asphyxia hit. */
@@ -94,7 +110,14 @@ public final class BreathingManager {
 			return;
 		}
 
-		// No air blocks ported yet, so everywhere in these dimensions counts as vacuum
+		// Breathable air from a generator refills the environmental reserve, so a pressurised ship
+		// costs no tanks at all
+		if (hasAirBlock(entity)) {
+			ENTITY_AIR_BLOCK.put(uuid, AIR_BLOCK_TICKS);
+			PLAYER_AIR_TANK.remove(uuid);
+			return;
+		}
+
 		final Integer environmental = ENTITY_AIR_BLOCK.get(uuid);
 
 		// First tick in vacuum - grace period before anything starts draining
@@ -284,6 +307,28 @@ public final class BreathingManager {
 	public static float getAirReserveRatio(@Nonnull final PlayerEntity player) {
 		final int capacityTicks = getAirCapacityTicks(player);
 		return capacityTicks > 0 ? getStoredAirTicks(player) / (float) capacityTicks : 0.0F;
+	}
+
+	/**
+	 * True when a WarpDrive air block is within reach of this entity.
+	 *
+	 * Checks the block classification rather than the world directly, so a position only counts
+	 * once the simulation has actually filled it - an air block placed but not yet pressurised
+	 * does not keep you alive.
+	 */
+	public static boolean hasAirBlock(final LivingEntity entity) {
+		final int x = MathHelper.floor(entity.getX());
+		final int y = MathHelper.floor(entity.getY());
+		final int z = MathHelper.floor(entity.getZ());
+
+		for (final int[] offset : AIR_OFFSETS) {
+			final BlockPos blockPos = new BlockPos(x + offset[0], y + offset[1], z + offset[2]);
+			final Block block = entity.level.getBlockState(blockPos).getBlock();
+			if (block instanceof AbstractAirBlock) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public static boolean isVacuum(final World world) {
