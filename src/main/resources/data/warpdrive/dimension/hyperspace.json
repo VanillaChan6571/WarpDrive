@@ -1,15 +1,10 @@
 {
   "type": "warpdrive:hyperspace",
   "generator": {
-    "type": "minecraft:flat",
-    "settings": {
-      "layers": [],
-      "biome": "warpdrive:hyperspace",
-      "lakes": false,
-      "features": false,
-      "structures": {
-        "structures": {}
-      }
+    "type": "warpdrive:void",
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "warpdrive:hyperspace"
     }
   }
 }

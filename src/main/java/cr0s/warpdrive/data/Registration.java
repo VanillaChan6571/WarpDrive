@@ -9,6 +9,8 @@ import cr0s.warpdrive.container.CreativeEnergyContainer;
 import cr0s.warpdrive.item.WarpArmorItem;
 import cr0s.warpdrive.item.WarpArmorMaterial;
 import cr0s.warpdrive.world.AsteroidFeature;
+import cr0s.warpdrive.world.GiantAsteroidFeature;
+import cr0s.warpdrive.world.VoidChunkGenerator;
 import net.minecraft.block.Block;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.util.registry.Registry;
@@ -88,6 +90,11 @@ public class Registration {
 	public static final RegistryObject<Feature<NoFeatureConfig>> ASTEROID_FIELD =
 		FEATURES.register("asteroid_field", () -> new AsteroidFeature(NoFeatureConfig.CODEC));
 
+	public static final RegistryObject<Feature<NoFeatureConfig>> GIANT_ASTEROID =
+		FEATURES.register("giant_asteroid", () -> new GiantAsteroidFeature(NoFeatureConfig.CODEC));
+
+	public static ConfiguredFeature<?, ?> GIANT_ASTEROID_CONFIGURED;
+
 	/**
 	 * Configured form of the asteroid field, built during common setup because it must go into
 	 * WorldGenRegistries rather than a Forge registry. BiomeLoadingEvent then attaches it to the
@@ -95,12 +102,30 @@ public class Registration {
 	 */
 	public static ConfiguredFeature<?, ?> ASTEROID_FIELD_CONFIGURED;
 
+	/**
+	 * Chunk generator codec, needed before any dimension JSON referencing it is parsed at world
+	 * load - registering during common setup is early enough.
+	 */
+	public static void registerChunkGenerators() {
+		Registry.register(Registry.CHUNK_GENERATOR,
+			new ResourceLocation(WarpDrive.MODID, "void"), VoidChunkGenerator.CODEC);
+	}
+
 	public static void registerConfiguredFeatures() {
 		ASTEROID_FIELD_CONFIGURED = ASTEROID_FIELD.get()
 			.configured(NoFeatureConfig.INSTANCE)
-			.decorated(Placement.CHANCE.configured(new ChanceConfig(6)));
+			// Runs on every chunk; AsteroidFeature itself decides using village-style grid
+			// spacing. A chance decorator was the wrong tool - independent per-chunk rolls clump,
+			// which is what made the field look dense however low the rate went.
+			.decorated(Placement.CHANCE.configured(new ChanceConfig(1)));
 		Registry.register(WorldGenRegistries.CONFIGURED_FEATURE,
 			new ResourceLocation(WarpDrive.MODID, "asteroid_field"), ASTEROID_FIELD_CONFIGURED);
+
+		GIANT_ASTEROID_CONFIGURED = GIANT_ASTEROID.get()
+			.configured(NoFeatureConfig.INSTANCE)
+			.decorated(Placement.CHANCE.configured(new ChanceConfig(1)));
+		Registry.register(WorldGenRegistries.CONFIGURED_FEATURE,
+			new ResourceLocation(WarpDrive.MODID, "giant_asteroid"), GIANT_ASTEROID_CONFIGURED);
 	}
 
 	// ===== SOUNDS =====

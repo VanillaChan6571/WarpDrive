@@ -42,6 +42,7 @@ public class WarpDrive {
 	private void commonSetup(final FMLCommonSetupEvent event) {
 		cr0s.warpdrive.network.WarpDriveNetwork.init();
 		// Must be deferred to setup: WorldGenRegistries is not safe to touch during construction
+		event.enqueueWork(cr0s.warpdrive.data.Registration::registerChunkGenerators);
 		event.enqueueWork(cr0s.warpdrive.data.Registration::registerConfiguredFeatures);
 		logger.info("WarpDrive common setup complete");
 	}

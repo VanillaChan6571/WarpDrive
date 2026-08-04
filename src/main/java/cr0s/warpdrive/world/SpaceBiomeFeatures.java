@@ -35,6 +35,14 @@ public final class SpaceBiomeFeatures {
 		event.getGeneration()
 			.getFeatures(GenerationStage.Decoration.UNDERGROUND_ORES)
 			.add(() -> Registration.ASTEROID_FIELD_CONFIGURED);
-		WarpDrive.logger.info("Asteroid field attached to {}", event.getName());
+
+		if (Registration.GIANT_ASTEROID_CONFIGURED != null) {
+			// Placed in an earlier stage so the scattered fields can settle around it rather than
+			// being overwritten by it
+			event.getGeneration()
+				.getFeatures(GenerationStage.Decoration.SURFACE_STRUCTURES)
+				.add(() -> Registration.GIANT_ASTEROID_CONFIGURED);
+		}
+		WarpDrive.logger.info("Asteroid features attached to {}", event.getName());
 	}
 }
