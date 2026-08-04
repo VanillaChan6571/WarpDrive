@@ -25,3 +25,6 @@ gradle\.properties
 LemADEC\.jks
 LemADEC\.jks\.old
 CLAUDE.md
+Codex_Claude_Reasoning.sh
+HowToCallCodex.md
+/1.16.5-deobf-work
