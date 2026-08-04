@@ -1,7 +1,11 @@
 package cr0s.warpdrive.ship;
 
 import cr0s.warpdrive.WarpDrive;
+import cr0s.warpdrive.block.breathing.AbstractAirBlock;
+import cr0s.warpdrive.data.AirData;
+import cr0s.warpdrive.data.ChunkData;
 import cr0s.warpdrive.debug.DebugLog;
+import cr0s.warpdrive.event.ChunkHandler;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
@@ -17,6 +21,7 @@ import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.util.ITeleporter;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -188,6 +193,10 @@ public class WarpEngine {
             currentNbtByPos.put(scanResult.corePos, coreNbt);
         }
 
+        // Capture the ship's atmosphere before anything moves. Must happen before Phase 3, or the
+        // clear pass destroys the air blocks we are trying to carry.
+        final List<AirRecord> airRecords = collectAir(sourceWorld, scanResult);
+
         // Phase 3: Clear original positions.
         // Ordering matters. Within one world the ship can overlap itself on a short move, so the
         // source must be cleared before placing or the move overwrites its own blocks. Across
@@ -271,6 +280,11 @@ public class WarpEngine {
                 }
             }
         }
+
+        // Bring the atmosphere across with the hull, so the ship arrives pressurised rather than
+        // waiting on the generator to refill it
+        moveAir(sourceWorld, destWorld, airRecords, scanResult, rotation, rotationSteps,
+                destX, destY, destZ);
 
         // Phase 5: Teleport entities
         WarpDrive.logger.info("Phase 5: Teleporting {} entities...", entities.size());
@@ -367,6 +381,101 @@ public class WarpEngine {
         if (moved == null) {
             WarpDrive.logger.warn("Failed to move entity {} across dimensions", entity.getName().getString());
         }
+    }
+
+    /** One air block captured before a jump: where it was, what it was, and its packed air state. */
+    private static final class AirRecord {
+        final BlockPos pos;
+        final BlockState state;
+        final int dataAir;
+
+        AirRecord(final BlockPos pos, final BlockState state, final int dataAir) {
+            this.pos = pos;
+            this.state = state;
+            this.dataAir = dataAir;
+        }
+    }
+
+    /**
+     * Collect the ship's breathable air before it moves.
+     *
+     * Air blocks are deliberately excluded from the hull scan - they report as air, and letting the
+     * flood fill run through them would drag in every block the atmosphere touches. So they are
+     * swept separately from the hull's bounding box, which keeps them bounded by the ship itself.
+     */
+    private static List<AirRecord> collectAir(final World sourceWorld,
+                                              final ShipScanner.ShipScanResult scanResult) {
+        final List<AirRecord> records = new ArrayList<>();
+        if (!ChunkHandler.isSimulated(sourceWorld)) {
+            return records;
+        }
+
+        final BlockPos.Mutable blockPos = new BlockPos.Mutable();
+        for (int x = scanResult.minX; x <= scanResult.maxX; x++) {
+            for (int y = scanResult.minY; y <= scanResult.maxY; y++) {
+                for (int z = scanResult.minZ; z <= scanResult.maxZ; z++) {
+                    blockPos.set(x, y, z);
+                    final BlockState state = sourceWorld.getBlockState(blockPos);
+                    if (!(state.getBlock() instanceof AbstractAirBlock)) {
+                        continue;
+                    }
+                    final ChunkData chunkData = ChunkHandler.getChunkData(sourceWorld, x, z);
+                    final int dataAir = chunkData == null
+                                      ? AirData.AIR_DEFAULT
+                                      : chunkData.getDataAir(x, y, z);
+                    records.add(new AirRecord(blockPos.immutable(), state, dataAir));
+                }
+            }
+        }
+        DebugLog.log("JUMP", "collected {} air blocks from the ship volume", records.size());
+        return records;
+    }
+
+    /**
+     * Move captured air to the destination, clearing the origin first.
+     *
+     * Clearing before placing matters for the same reason it does for hull blocks: on a short move
+     * the ship overlaps itself, and placing first would have the clear pass delete air it had just
+     * written.
+     *
+     * Without this a jump leaves orphaned blue air floating at the origin and arrives in vacuum,
+     * with the crew holding their breath until the generator re-pressurises.
+     */
+    private static void moveAir(final World sourceWorld, final World destWorld,
+                                final List<AirRecord> records,
+                                final ShipScanner.ShipScanResult scanResult, final Rotation rotation,
+                                final int rotationSteps, final int destX, final int destY, final int destZ) {
+        if (records.isEmpty()) {
+            return;
+        }
+
+        for (final AirRecord record : records) {
+            sourceWorld.setBlock(record.pos, Blocks.AIR.defaultBlockState(), 2);
+            final ChunkData chunkData = ChunkHandler.getChunkData(
+                sourceWorld, record.pos.getX(), record.pos.getZ());
+            if (chunkData != null) {
+                chunkData.setDataAir(record.pos.getX(), record.pos.getY(), record.pos.getZ(),
+                    AirData.AIR_DEFAULT);
+            }
+        }
+
+        int moved = 0;
+        for (final AirRecord record : records) {
+            final BlockPos newPos = destinationOf(record.pos, scanResult, rotation, destX, destY, destZ);
+            if (!destWorld.isInWorldBounds(newPos) || !destWorld.getBlockState(newPos).isAir()) {
+                continue;
+            }
+            // rotate() carries the air source's facing round with the hull
+            destWorld.setBlock(newPos, record.state.rotate(rotation), 2);
+
+            final ChunkData chunkData = ChunkHandler.getChunkData(destWorld, newPos.getX(), newPos.getZ());
+            if (chunkData != null) {
+                chunkData.setDataAir(newPos.getX(), newPos.getY(), newPos.getZ(),
+                    AirData.rotate(record.dataAir, rotationSteps));
+            }
+            moved++;
+        }
+        DebugLog.log("JUMP", "moved {} of {} air blocks to the destination", moved, records.size());
     }
 
     private static void clearSource(final World sourceWorld, final ShipScanner.ShipScanResult scanResult) {
