@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "cr0s.warpdrive.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "warpdrive.refmap.json",
+  "mixins": [
+    "ItemEntityMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -1,10 +1,14 @@
 buildscript {
     repositories {
         maven { url = 'https://maven.minecraftforge.net' }
+        // MixinGradle lives here. Mixin itself needs no runtime dependency: Forge 1.16.5 already
+        // bundles the 0.8.4 subsystem and loads it through ModLauncher, so users install nothing.
+        maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
         mavenCentral()
     }
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.77', changing: false
+        classpath group: 'org.spongepowered', name: 'mixingradle', version: '0.7-SNAPSHOT', changing: true
     }
 }
 
@@ -14,6 +18,7 @@ plugins {
 }
 
 apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'org.spongepowered.mixin'
 
 // Load properties
 ext.configFile = file "build.properties"
@@ -34,6 +39,15 @@ archivesBaseName = 'WarpDrive'
 // Java 16+ is required to *run* ForgeGradle 5.1 - that is org.gradle.java.home in
 // gradle.properties, a separate thing from the compile target set here.
 java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+
+// The refmap is what makes a mixin work outside the dev environment. We compile against 'official'
+// (Mojang) names, but a real instance runs on SRG names, so a mixin targeting tick() would resolve
+// in runClient and silently find nothing in the deployed jar. The annotation processor generates
+// this mapping at compile time, using the SRG data ForgeGradle already produces.
+mixin {
+    add sourceSets.main, 'warpdrive.refmap.json'
+    config 'warpdrive.mixins.json'
+}
 
 minecraft {
     mappings channel: 'official', version: config.minecraft_version
@@ -116,6 +130,9 @@ repositories {
 
 dependencies {
     minecraft "net.minecraftforge:forge:${config.minecraft_version}-${config.forge_version}"
+
+    // Compile-time only: generates warpdrive.refmap.json. Forge supplies the Mixin runtime.
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
     // CC:Tweaked for 1.16.5
     compileOnly fg.deobf("org.squiddev:cc-tweaked-${config.minecraft_version}:${config.CCTweaked_version}")
@@ -205,8 +222,10 @@ jar {
             "Specification-Version": "1",
             "Implementation-Title": project.name,
             "Implementation-Version": project.version,
-            "Implementation-Vendor": "WarpDrive Team"
-            // Note: Removed FMLCorePlugin entries - coremods no longer supported in 1.13+
+            "Implementation-Vendor": "WarpDrive Team",
+            // 1.16.5 Forge discovers mixin configs through this manifest attribute. The 1.12.2
+            // FMLCorePlugin entries that used to live here did the same job the coremod way.
+            "MixinConfigs": "warpdrive.mixins.json"
         ])
     }
 
