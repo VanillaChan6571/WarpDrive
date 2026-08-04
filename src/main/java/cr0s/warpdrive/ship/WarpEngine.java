@@ -5,6 +5,7 @@ import cr0s.warpdrive.debug.DebugLog;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Rotation;
@@ -12,12 +13,17 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.common.util.ITeleporter;
 
 import javax.annotation.Nonnull;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
 
 /**
  * Warp Engine - Handles actual ship movement
@@ -78,12 +84,31 @@ public class WarpEngine {
                                          int destX, int destY, int destZ,
                                          int energyAfterJump,
                                          int rotationSteps) {
-        final Rotation rotation = ROTATIONS[((rotationSteps % 4) + 4) % 4];
+        return executeWarp(world, world, scanResult, destX, destY, destZ, energyAfterJump, rotationSteps);
+    }
 
-        DebugLog.log("JUMP", "WarpEngine.executeWarp ENTERED - from {} to {}, {}, {} energyAfterJump={}",
-            scanResult.corePos, destX, destY, destZ, energyAfterJump);
-        WarpDrive.logger.info("Executing warp from {} to {}, {}, {}",
-            scanResult.corePos, destX, destY, destZ);
+    /**
+     * Cross-dimension capable warp.
+     *
+     * @param sourceWorld world the ship currently occupies
+     * @param destWorld   world it is moving into; may be the same instance
+     * @param rotationSteps quarter turns clockwise applied around the ship core, 0..3
+     */
+    public static WarpResult executeWarp(@Nonnull World sourceWorld,
+                                         @Nonnull World destWorld,
+                                         @Nonnull ShipScanner.ShipScanResult scanResult,
+                                         int destX, int destY, int destZ,
+                                         int energyAfterJump,
+                                         int rotationSteps) {
+        final Rotation rotation = ROTATIONS[((rotationSteps % 4) + 4) % 4];
+        final boolean crossWorld = sourceWorld != destWorld;
+
+        DebugLog.log("JUMP", "WarpEngine.executeWarp ENTERED - from {} in {} to {}, {}, {} in {} energyAfterJump={}",
+            scanResult.corePos, dimensionOf(sourceWorld), destX, destY, destZ, dimensionOf(destWorld), energyAfterJump);
+        WarpDrive.logger.info("Executing warp from {} to {}, {}, {}{}",
+            scanResult.corePos, destX, destY, destZ,
+            crossWorld ? " (" + dimensionOf(sourceWorld) + " -> " + dimensionOf(destWorld) + ")" : "");
+
 
         // Calculate offset
         int offsetX = destX - scanResult.corePos.getX();
@@ -94,7 +119,7 @@ public class WarpEngine {
         Map<BlockPos, CompoundNBT> currentNbtByPos = new HashMap<>();
         DebugLog.log("JUMP", "Starting NBT capture for {} blocks", scanResult.blocks.size());
 		for (ShipScanner.ShipBlock shipBlock : scanResult.blocks) {
-			TileEntity te = world.getBlockEntity(shipBlock.pos);
+			TileEntity te = sourceWorld.getBlockEntity(shipBlock.pos);
 			String blockName = shipBlock.state.getBlock().getRegistryName() != null
 				? shipBlock.state.getBlock().getRegistryName().toString() : "unknown";
 			DebugLog.log("JUMP", "Block at {} type={} hasTileEntity={} te={}",
@@ -125,23 +150,28 @@ public class WarpEngine {
             scanResult.minX, scanResult.minY, scanResult.minZ,
             scanResult.maxX + 1, scanResult.maxY + 1, scanResult.maxZ + 1
         );
-        List<Entity> entities = world.getEntities((Entity) null, shipBounds);
+        List<Entity> entities = sourceWorld.getEntities((Entity) null, shipBounds);
         WarpDrive.logger.info("Found {} entities on ship", entities.size());
 
         // Phase 2: Check destination collision
         WarpDrive.logger.info("Phase 2: Checking destination collision...");
+        final Set<BlockPos> sourcePositions = new HashSet<>();
+        for (ShipScanner.ShipBlock shipBlock : scanResult.blocks) {
+            sourcePositions.add(shipBlock.pos);
+        }
         for (ShipScanner.ShipBlock shipBlock : scanResult.blocks) {
             BlockPos newPos = destinationOf(shipBlock.pos, scanResult, rotation, destX, destY, destZ);
 
             // Check world bounds
-            if (!world.isInWorldBounds(newPos)) {
+            if (!destWorld.isInWorldBounds(newPos)) {
                 WarpDrive.logger.warn("Warp failed: destination out of world bounds");
                 return new WarpResult(false, "Destination out of world bounds");
             }
 
             // Check for collision (if block at destination is not part of ship)
-            BlockState destState = world.getBlockState(newPos);
-            if (!destState.isAir() && !isInShip(newPos, scanResult, rotation, destX, destY, destZ)) {
+            // Across worlds the ship vacates nothing at the destination, so there is no exemption
+            BlockState destState = destWorld.getBlockState(newPos);
+            if (!destState.isAir() && (crossWorld || !isVacatedByShip(newPos, sourcePositions))) {
                 WarpDrive.logger.warn("Warp failed: collision at {}", newPos);
                 return new WarpResult(false, String.format("Collision at %d, %d, %d",
                     newPos.getX(), newPos.getY(), newPos.getZ()));
@@ -158,11 +188,14 @@ public class WarpEngine {
             currentNbtByPos.put(scanResult.corePos, coreNbt);
         }
 
-        // Phase 3: Clear original positions
-        WarpDrive.logger.info("Phase 3: Clearing original positions...");
-        for (ShipScanner.ShipBlock shipBlock : scanResult.blocks) {
-            world.setBlock(shipBlock.pos, Blocks.AIR.defaultBlockState(), 2);
-            world.removeBlockEntity(shipBlock.pos);
+        // Phase 3: Clear original positions.
+        // Ordering matters. Within one world the ship can overlap itself on a short move, so the
+        // source must be cleared before placing or the move overwrites its own blocks. Across
+        // worlds no overlap is possible, so we place first and clear afterwards - if placement
+        // fails there, the ship still exists at the origin instead of being destroyed.
+        if (!crossWorld) {
+            WarpDrive.logger.info("Phase 3: Clearing original positions (same world)...");
+            clearSource(sourceWorld, scanResult);
         }
 
         // Phase 4: Place blocks at new positions
@@ -173,23 +206,23 @@ public class WarpEngine {
                 ? shipBlock.state.getBlock().getRegistryName().toString() : "unknown";
 
             // Ensure destination chunk is loaded before placing
-            world.getChunk(newPos);
+            destWorld.getChunk(newPos);
 
             // Rotate the state as well as the position, so stairs/pistons/chests keep facing the
             // same way relative to the ship rather than staying stuck to world axes
             final BlockState newState = shipBlock.state.rotate(rotation);
 
             // Place block
-            world.setBlock(newPos, newState, 3);
+            destWorld.setBlock(newPos, newState, 3);
 
             // Ensure the TileEntity exists immediately after placement
-            if (newState.hasTileEntity() && world.getBlockEntity(newPos) == null) {
+            if (newState.hasTileEntity() && destWorld.getBlockEntity(newPos) == null) {
                 DebugLog.log("JUMP", "Creating TileEntity for {} at {}", blockName, newPos);
-                TileEntity created = newState.getBlock().createTileEntity(newState, world);
+                TileEntity created = newState.getBlock().createTileEntity(newState, destWorld);
                 if (created != null) {
                     // Set position and world before insertion
-                    created.setLevelAndPosition(world, newPos);
-                    world.setBlockEntity(newPos, created);
+                    created.setLevelAndPosition(destWorld, newPos);
+                    destWorld.setBlockEntity(newPos, created);
                     DebugLog.log("JUMP", "TileEntity created: {}", created.getClass().getSimpleName());
                 }
             }
@@ -199,13 +232,13 @@ public class WarpEngine {
             if (latestNbt != null) {
                 DebugLog.log("JUMP", "Restoring NBT for {} at {} (has {} keys)",
                     blockName, newPos, latestNbt.getAllKeys().size());
-                TileEntity newTE = world.getBlockEntity(newPos);
+                TileEntity newTE = destWorld.getBlockEntity(newPos);
                 if (newTE == null && newState.hasTileEntity()) {
                     DebugLog.log("JUMP", "Restore: creating TileEntity for {} at {} because it was missing", blockName, newPos);
-                    newTE = newState.getBlock().createTileEntity(newState, world);
+                    newTE = newState.getBlock().createTileEntity(newState, destWorld);
                     if (newTE != null) {
-                        newTE.setLevelAndPosition(world, newPos);
-                        world.setBlockEntity(newPos, newTE);
+                        newTE.setLevelAndPosition(destWorld, newPos);
+                        destWorld.setBlockEntity(newPos, newTE);
                         DebugLog.log("JUMP", "Restore: created {}", newTE.getClass().getSimpleName());
                     }
                 }
@@ -266,10 +299,21 @@ public class WarpEngine {
                     : rotation == Rotation.CLOCKWISE_180 ? 180.0F
                     : rotation == Rotation.COUNTERCLOCKWISE_90 ? -90.0F : 0.0F;
 
-                entity.teleportTo(newX, newY, newZ);
+                if (crossWorld && destWorld instanceof ServerWorld) {
+                    transferAcrossWorlds(entity, (ServerWorld) destWorld, newX, newY, newZ);
+                } else {
+                    entity.teleportTo(newX, newY, newZ);
+                }
                 WarpDrive.logger.debug("Teleported entity {} to {}, {}, {}",
                     entity.getName().getString(), newX, newY, newZ);
             }
+        }
+
+        // Cross-world clears last: until this point the ship still exists at the origin, so a
+        // failure above leaves it recoverable rather than deleted.
+        if (crossWorld) {
+            WarpDrive.logger.info("Phase 6: Clearing origin in {}...", dimensionOf(sourceWorld));
+            clearSource(sourceWorld, scanResult);
         }
 
         WarpDrive.logger.info("Warp completed successfully! Moved {} blocks and {} entities",
@@ -279,18 +323,61 @@ public class WarpEngine {
     }
 
     /**
-     * Check if a position is part of the ship structure (before offset)
+     * A destination cell is safe when it is air, or when it is currently occupied by a block this
+     * ship is about to vacate - so the test is membership of the SOURCE footprint.
+     *
+     * Both previous versions compared against the destination footprint instead (directly, or via
+     * an inverse offset), which is trivially true for the block being checked and made collision
+     * detection a no-op. Using a set also drops this from O(n) per block to O(1).
      */
-    private static boolean isInShip(BlockPos pos, ShipScanner.ShipScanResult scanResult,
-                                    Rotation rotation, int destX, int destY, int destZ) {
-        // With rotation in play the inverse transform is fiddly, so compare forwards instead:
-        // a destination cell is "part of the ship" if some ship block lands on it.
-        for (ShipScanner.ShipBlock shipBlock : scanResult.blocks) {
-            if (destinationOf(shipBlock.pos, scanResult, rotation, destX, destY, destZ).equals(pos)) {
-                return true;
-            }
+    private static boolean isVacatedByShip(final BlockPos pos, final Set<BlockPos> sourcePositions) {
+        return sourcePositions.contains(pos);
+    }
+
+    /**
+     * Move one entity into another world.
+     *
+     * Players and everything else need different calls. A player keeps its instance - Forge
+     * forbids replacing it - and is moved with ServerPlayerEntity.teleportTo(ServerWorld, ...).
+     * Any other entity is destroyed and recreated by changeDimension(), which returns the new
+     * instance; the original is dead afterwards, so nothing may be done with it.
+     *
+     * The ITeleporter below deliberately performs no portal search and no block placement: the
+     * destination is already decided by the warp, so vanilla's placement logic must not run.
+     */
+    private static void transferAcrossWorlds(final Entity entity, final ServerWorld destWorld,
+                                             final double x, final double y, final double z) {
+        if (entity instanceof ServerPlayerEntity) {
+            ((ServerPlayerEntity) entity).teleportTo(destWorld, x, y, z, entity.yRot, entity.xRot);
+            return;
         }
-        return false;
+
+        final Entity moved = entity.changeDimension(destWorld, new ITeleporter() {
+            @Override
+            public Entity placeEntity(final Entity entityToPlace, final ServerWorld currentWorld,
+                                      final ServerWorld destination, final float yaw,
+                                      final Function<Boolean, Entity> repositionEntity) {
+                final Entity placed = repositionEntity.apply(false);   // false = do not place a portal
+                if (placed != null) {
+                    placed.teleportTo(x, y, z);
+                }
+                return placed;
+            }
+        });
+        if (moved == null) {
+            WarpDrive.logger.warn("Failed to move entity {} across dimensions", entity.getName().getString());
+        }
+    }
+
+    private static void clearSource(final World sourceWorld, final ShipScanner.ShipScanResult scanResult) {
+        for (final ShipScanner.ShipBlock shipBlock : scanResult.blocks) {
+            sourceWorld.setBlock(shipBlock.pos, Blocks.AIR.defaultBlockState(), 2);
+            sourceWorld.removeBlockEntity(shipBlock.pos);
+        }
+    }
+
+    private static String dimensionOf(final World world) {
+        return world == null ? "null" : world.dimension().location().toString();
     }
 
     /**

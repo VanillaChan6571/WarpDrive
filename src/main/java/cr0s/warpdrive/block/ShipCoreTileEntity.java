@@ -23,7 +23,11 @@ import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.util.RegistryKey;
+import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
@@ -77,6 +81,9 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 	private boolean enabled = false;
 	private String targetName = "";
 
+	/** Destination dimension id, or empty for "stay in the current dimension". */
+	private String targetDimension = "";
+
 	// Jump sequencing: a countdown before the jump (which also gives force-loaded destination
 	// chunks time to finish loading) and a cooldown afterwards.
 	public static final int STATE_IDLE = 0;
@@ -102,6 +109,8 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 	private String lastLoggedSyncSignature = "";
 	private int cooldownTicks = 200;    // 10s
 	private final Set<Long> forcedChunks = new HashSet<>();
+	/** Which world `forcedChunks` belongs to - not necessarily this tile entity's world. */
+	private RegistryKey<World> forcedChunksWorld = null;
 
 	// Movement (relative, not absolute destination)
 	private int moveX = 0;
@@ -562,6 +571,51 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		return new Object[]{ shipName };
 	}
 
+	/** Resolve the world this ship will jump into. Null means the target could not be resolved. */
+	@Nullable
+	private ServerWorld resolveDestinationWorld() {
+		if (!(level instanceof ServerWorld)) {
+			return null;
+		}
+		final ServerWorld current = (ServerWorld) level;
+		if (targetDimension == null || targetDimension.isEmpty()) {
+			return current;
+		}
+		final ResourceLocation id = ResourceLocation.tryParse(targetDimension);
+		if (id == null) {
+			return null;
+		}
+		return current.getServer().getLevel(RegistryKey.create(Registry.DIMENSION_REGISTRY, id));
+	}
+
+	/** Set the destination dimension, e.g. "warpdrive:space". Empty string means stay put. */
+	@LuaFunction
+	public final Object[] setTargetDimension(final String dimensionId) {
+		final String requested = dimensionId == null ? "" : dimensionId.trim();
+		if (requested.isEmpty()) {
+			targetDimension = "";
+			setChanged();
+			return new Object[]{ true, "Destination dimension cleared (same dimension)" };
+		}
+		final String previous = targetDimension;
+		targetDimension = requested;
+		if (resolveDestinationWorld() == null) {
+			targetDimension = previous;
+			return new Object[]{ false, "Unknown dimension: " + requested };
+		}
+		setChanged();
+		DebugLog.log("JUMP", "target dimension set to {}", targetDimension);
+		return new Object[]{ true, "Destination dimension: " + targetDimension };
+	}
+
+	@LuaFunction
+	public final Object[] getTargetDimension() {
+		if (targetDimension == null || targetDimension.isEmpty()) {
+			return new Object[]{ level == null ? "unknown" : level.dimension().location().toString(), false };
+		}
+		return new Object[]{ targetDimension, true };
+	}
+
 	private void syncToClient() {
 		if (level != null && !level.isClientSide) {
 			level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
@@ -836,14 +890,23 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 				int energyAfterJump = Math.max(0, energyStored - required);
 
 				DebugLog.log("JUMP", "About to call WarpEngine.executeWarp with energyAfterJump={}", energyAfterJump);
-				WarpEngine.WarpResult result = WarpEngine.executeWarp(level, dimensionScan, destX, destY, destZ, energyAfterJump, rotationSteps);
+				final ServerWorld destWorld = resolveDestinationWorld();
+				if (destWorld == null) {
+					DebugLog.log("JUMP", "aborting: destination dimension '{}' did not resolve", targetDimension);
+					forceDestinationChunks(false);
+					beginCooldown();
+					future.complete(new Object[]{ false, "Unknown destination dimension: " + targetDimension });
+					return;
+				}
+				WarpEngine.WarpResult result = WarpEngine.executeWarp(level, destWorld, dimensionScan, destX, destY, destZ, energyAfterJump, rotationSteps);
 				DebugLog.log("JUMP", "WarpEngine.executeWarp returned: success={} message='{}'",
 					result.success, result.message);
 
 				if (result.success) {
 					// Update destination core directly to preserve all settings
 					BlockPos destCorePos = new net.minecraft.util.math.BlockPos(destX, destY, destZ);
-					TileEntity teAtDest = level.getBlockEntity(destCorePos);
+					// Must look in the destination world, which may not be this one
+					TileEntity teAtDest = destWorld.getBlockEntity(destCorePos);
 					if (teAtDest instanceof ShipCoreTileEntity) {
 						ShipCoreTileEntity destCore = (ShipCoreTileEntity) teAtDest;
 						destCore.energyStored = energyAfterJump;
@@ -869,6 +932,8 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 						destCore.command = command;
 						destCore.enabled = false;   // one-shot: do not immediately re-fire
 						destCore.targetName = targetName;
+						// Clear the target so the arriving ship does not immediately re-target
+						destCore.targetDimension = "";
 						// Cooldown lives on the ship that actually exists after the jump
 						destCore.jumpDelayTicks = jumpDelayTicks;
 						destCore.cooldownTicks = cooldownTicks;
@@ -880,7 +945,7 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 							TextFormatting.GREEN + "✦ WARP COMPLETE"));
 
 						// Sync to client so bounding boxes can update
-						level.sendBlockUpdated(destCorePos, destCore.getBlockState(), destCore.getBlockState(), 3);
+						destWorld.sendBlockUpdated(destCorePos, destCore.getBlockState(), destCore.getBlockState(), 3);
 
 						DebugLog.log("JUMP", "Updated destination Ship Core at {}", destCorePos);
 					} else {
@@ -1037,18 +1102,37 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		if (!(level instanceof ServerWorld)) {
 			return 0;
 		}
-		final ServerWorld serverWorld = (ServerWorld) level;
 
+		// Release must target the world we actually forced, which is not necessarily this one:
+		// after a cross-dimension jump `level` is the destination while the forced chunks may
+		// belong to the origin.
 		if (!add) {
+			if (forcedChunksWorld == null || forcedChunks.isEmpty()) {
+				forcedChunks.clear();
+				return 0;
+			}
+			final ServerWorld forcedWorld = ((ServerWorld) level).getServer().getLevel(forcedChunksWorld);
 			int released = 0;
-			for (final Long packed : forcedChunks) {
-				final ChunkPos chunkPos = new ChunkPos(packed);
-				serverWorld.setChunkForced(chunkPos.x, chunkPos.z, false);
-				released++;
+			if (forcedWorld != null) {
+				for (final Long packed : forcedChunks) {
+					final ChunkPos chunkPos = new ChunkPos(packed);
+					forcedWorld.setChunkForced(chunkPos.x, chunkPos.z, false);
+					released++;
+				}
+			} else {
+				DebugLog.log("JUMP", "cannot release forced chunks: world {} is gone", forcedChunksWorld.location());
 			}
 			forcedChunks.clear();
+			forcedChunksWorld = null;
 			return released;
 		}
+
+		final ServerWorld serverWorld = resolveDestinationWorld();
+		if (serverWorld == null) {
+			DebugLog.log("JUMP", "cannot force chunks: destination dimension '{}' did not resolve", targetDimension);
+			return 0;
+		}
+		forcedChunksWorld = serverWorld.dimension();
 
 		final int[] bounds = getShipBounds();
 		final BlockPos core = getBlockPos();
@@ -1291,6 +1375,7 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		command = nbt.contains("Command") ? nbt.getString("Command") : "MANUAL";
 		enabled = nbt.getBoolean("Enabled");
 		targetName = nbt.getString("TargetName");
+		targetDimension = nbt.getString("TargetDimension");
 		shipState = nbt.getInt("ShipState");
 		countdownRemaining = nbt.getInt("CountdownRemaining");
 		cooldownRemaining = nbt.getInt("CooldownRemaining");
@@ -1324,6 +1409,7 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		nbt.putString("Command", command);
 		nbt.putBoolean("Enabled", enabled);
 		nbt.putString("TargetName", targetName);
+		nbt.putString("TargetDimension", targetDimension);
 		nbt.putInt("ShipState", shipState);
 		nbt.putInt("CountdownRemaining", countdownRemaining);
 		nbt.putInt("CooldownRemaining", cooldownRemaining);
