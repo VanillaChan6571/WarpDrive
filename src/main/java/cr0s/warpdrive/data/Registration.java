@@ -6,6 +6,8 @@ import cr0s.warpdrive.block.CreativeEnergyTileEntity;
 import cr0s.warpdrive.block.ShipCoreBlock;
 import cr0s.warpdrive.block.ShipCoreTileEntity;
 import cr0s.warpdrive.container.CreativeEnergyContainer;
+import cr0s.warpdrive.item.AirTankItem;
+import cr0s.warpdrive.item.AirTankTier;
 import cr0s.warpdrive.item.WarpArmorItem;
 import cr0s.warpdrive.item.WarpArmorMaterial;
 import cr0s.warpdrive.world.AsteroidFeature;
@@ -82,6 +84,19 @@ public class Registration {
 				final String name = "warp_armor_" + tier + "_" + ARMOR_SLOT_NAMES[index];
 				ARMOR.put(name, ITEMS.register(name, () -> new WarpArmorItem(material, slot)));
 			}
+		}
+	}
+
+	// ===== AIR TANKS =====
+	// Registry names keep the 1.12.2 dot form ("air_tank.basic") so the surviving model files and
+	// their six-stage damage overrides resolve without touching the asset pack.
+
+	public static final Map<String, RegistryObject<Item>> AIR_TANKS = new LinkedHashMap<>();
+
+	static {
+		for (final AirTankTier tier : AirTankTier.values()) {
+			final String name = "air_tank." + tier.getName();
+			AIR_TANKS.put(name, ITEMS.register(name, () -> new AirTankItem(tier)));
 		}
 	}
 

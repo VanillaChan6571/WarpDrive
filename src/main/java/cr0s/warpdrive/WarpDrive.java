@@ -32,6 +32,11 @@ public class WarpDrive {
 		// Initialize deferred registration system (1.16.5 pattern)
 		cr0s.warpdrive.data.Registration.init();
 
+		// Client-only settings; harmlessly ignored on a dedicated server, which never loads them
+		net.minecraftforge.fml.ModLoadingContext.get().registerConfig(
+			net.minecraftforge.fml.config.ModConfig.Type.CLIENT,
+			cr0s.warpdrive.config.ClientConfig.SPEC, "warpdrive-client.toml");
+
 		// Register event handlers
 		FMLJavaModLoadingContext.get().getModEventBus().addListener(this::commonSetup);
 		FMLJavaModLoadingContext.get().getModEventBus().addListener(this::clientSetup);

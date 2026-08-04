@@ -18,6 +18,15 @@
   "item.warpdrive.warp_armor_superior_leggings": "Superior Warp Leggings",
   "item.warpdrive.warp_armor_superior_boots": "Superior Warp Boots",
 
-  "death.attack.warpdrive.vacuum": "%1$s suffocated in vacuum",
-  "death.attack.warpdrive.vacuum.player": "%1$s suffocated in vacuum while fighting %2$s"
+  "item.warpdrive.air_tank.basic": "Basic Air Tank",
+  "item.warpdrive.air_tank.advanced": "Advanced Air Tank",
+  "item.warpdrive.air_tank.superior": "Superior Air Tank",
+
+  "warpdrive.breathing.alarm": "Breathing alarm",
+  "warpdrive.breathing.invalid_setup": "No breathing helmet\nor incomplete armor",
+  "warpdrive.breathing.low_reserve": "Low air reserve!",
+  "warpdrive.breathing.no_air": "No more air!",
+
+  "death.attack.warpdrive.asphyxia": "%1$s died from asphyxia",
+  "death.attack.warpdrive.asphyxia.player": "%1$s was killed by %2$s using asphyxia"
 }
