@@ -138,6 +138,9 @@ dependencies {
     compileOnly fg.deobf("org.squiddev:cc-tweaked-${config.minecraft_version}:${config.CCTweaked_version}")
     runtimeOnly fg.deobf("org.squiddev:cc-tweaked-${config.minecraft_version}:${config.CCTweaked_version}")
 
+	// Pure calculation tests (movement costs, deterministic generation helpers).
+	testImplementation 'junit:junit:4.13.2'
+
     // Applied Energistics 2 for 1.16.5 (commented out until we reach Phase 4)
     // compileOnly fg.deobf("appeng:appliedenergistics2:${config.AE2_version}")
     // runtimeOnly fg.deobf("appeng:appliedenergistics2:${config.AE2_version}")
@@ -163,6 +166,9 @@ processResources {
     exclude '**/*.pdn'
     exclude '**/*.psd'
     exclude 'mcmod.info' // Old format
+	// OpenComputers has no 1.16.5 release. Keep the legacy scripts in source for reference without
+	// shipping dead payload in the 1.16 artifact.
+	exclude 'assets/warpdrive/lua.OpenComputers/**'
 
     // Process mods.toml with variable expansion
     filesMatching('META-INF/mods.toml') {
@@ -176,44 +182,17 @@ task copyShipControllerCommons1(type: Copy) {
     into('build/resources/main/assets/warpdrive/lua.ComputerCraft/warpdriveShipCore')
 }
 
-task copyShipControllerCommons2(type: Copy) {
-    from 'src/main/resources/assets/warpdrive/lua.OpenComputers/warpdriveShipController'
-    into('build/resources/main/assets/warpdrive/lua.OpenComputers/warpdriveShipCore')
-}
+def luaResourceCopyTasks = [
+	copyShipControllerCommons1
+]
 
-task copyOpenComputersCommons1(type: Copy) {
-    from 'src/main/resources/assets/warpdrive/lua.OpenComputers/common'
-    into('build/resources/main/assets/warpdrive/lua.OpenComputers/warpdriveAccelerator')
-}
-
-task copyOpenComputersCommons2(type: Copy) {
-    from 'src/main/resources/assets/warpdrive/lua.OpenComputers/common'
-    into('build/resources/main/assets/warpdrive/lua.OpenComputers/warpdriveEnanReactorCore')
-}
-
-task copyOpenComputersCommons3(type: Copy) {
-    from 'src/main/resources/assets/warpdrive/lua.OpenComputers/common'
-    into('build/resources/main/assets/warpdrive/lua.OpenComputers/warpdriveShipController')
-}
-
-task copyOpenComputersCommons4(type: Copy) {
-    from 'src/main/resources/assets/warpdrive/lua.OpenComputers/common'
-    into('build/resources/main/assets/warpdrive/lua.OpenComputers/warpdriveShipCore')
-}
-
-task copyOpenComputersCommons5(type: Copy) {
-    from 'src/main/resources/assets/warpdrive/lua.OpenComputers/common'
-    into('build/resources/main/assets/warpdrive/lua.OpenComputers/warpdriveTransporterCore')
-}
-
-task copyOpenComputersCommons6(type: Copy) {
-    from 'src/main/resources/assets/warpdrive/lua.OpenComputers/common'
-    into('build/resources/main/assets/warpdrive/lua.OpenComputers/warpdriveWeaponController')
-}
+// These tasks write into the main resource output used on the test classpath. Declare that
+// relationship explicitly so Gradle may safely retain parallel/incremental execution.
+tasks.named('compileTestJava') { dependsOn luaResourceCopyTasks }
+tasks.named('test') { dependsOn luaResourceCopyTasks }
 
 jar {
-    dependsOn copyShipControllerCommons1, copyShipControllerCommons2
-    dependsOn copyOpenComputersCommons1, copyOpenComputersCommons2, copyOpenComputersCommons3, copyOpenComputersCommons4, copyOpenComputersCommons5, copyOpenComputersCommons6
+	dependsOn luaResourceCopyTasks
 
     manifest {
         attributes([

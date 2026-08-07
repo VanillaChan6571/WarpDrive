@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:components",
+  "pattern": [
+    "lll",
+    "mbM",
+    "lll"
+  ],
+  "key": {
+    "l": {
+      "tag": "minecraft:leaves"
+    },
+    "m": {
+      "item": "minecraft:brown_mushroom"
+    },
+    "b": {
+      "item": "minecraft:sugar_cane"
+    },
+    "M": {
+      "item": "minecraft:red_mushroom"
+    }
+  },
+  "result": {
+    "item": "warpdrive:component-biopulp",
+    "count": 2
+  }
+}

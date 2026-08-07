@@ -1,0 +1,8 @@
+{
+    "parent":  "minecraft:block/cube_bottom_top",
+    "textures":  {
+                     "side":  "warpdrive:blocks/weapon/weapon_controller-side",
+                     "top":  "warpdrive:blocks/weapon/weapon_controller-top_bottom",
+                     "bottom":  "warpdrive:blocks/weapon/weapon_controller-top_bottom"
+                 }
+}

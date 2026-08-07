@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "warpdrive:electromagnet.basic.plain",
+    "warpdrive:electromagnet.basic.glass",
+    "warpdrive:electromagnet.advanced.plain",
+    "warpdrive:electromagnet.advanced.glass",
+    "warpdrive:electromagnet.superior.plain",
+    "warpdrive:electromagnet.superior.glass"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:components",
+  "pattern": [
+    "bbg",
+    "bdb",
+    "gbb"
+  ],
+  "key": {
+    "b": {
+      "item": "minecraft:iron_bars"
+    },
+    "g": {
+      "tag": "forge:ingots/gold"
+    },
+    "d": {
+      "item": "warpdrive:component-diamond_crystal"
+    }
+  },
+  "result": {
+    "item": "warpdrive:component-diamond_coil",
+    "count": 12
+  }
+}

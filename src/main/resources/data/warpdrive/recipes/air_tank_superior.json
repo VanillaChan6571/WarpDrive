@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:tools",
+  "pattern": [
+    "rnr",
+    "tpt",
+    "rcr"
+  ],
+  "key": {
+    "r": {
+      "item": "warpdrive:component-rubber"
+    },
+    "n": {
+      "tag": "forge:nuggets/gold"
+    },
+    "t": {
+      "item": "warpdrive:air_tank.advanced"
+    },
+    "p": {
+      "item": "warpdrive:component-motor"
+    },
+    "c": {
+      "item": "minecraft:emerald"
+    }
+  },
+  "result": {
+    "item": "warpdrive:air_tank.superior"
+  }
+}

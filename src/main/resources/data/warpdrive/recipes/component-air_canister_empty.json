@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:components",
+  "pattern": [
+    "iyi",
+    "rgr",
+    "iyi"
+  ],
+  "key": {
+    "i": {
+      "item": "minecraft:iron_bars"
+    },
+    "y": {
+      "item": "minecraft:purple_wool"
+    },
+    "r": {
+      "item": "warpdrive:component-rubber"
+    },
+    "g": {
+      "item": "warpdrive:component-glass_tank"
+    }
+  },
+  "result": {
+    "item": "warpdrive:component-air_canister_empty",
+    "count": 4
+  }
+}

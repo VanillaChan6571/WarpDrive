@@ -1,22 +1,7 @@
 {
-	"forge_marker": 1,
-	"defaults": {
-		"model": "minecraft:cube_all",
-		"textures": {
-			"all": "warpdrive:blocks/atomic/chiller.basic-offline"
-		},
-		"transform": "forge:default-block"
-	},
-	"variants": {
-		"normal": [{}],
-		"inventory": [{}],
-		"active": {
-			"false": {},
-			"true": {
-				"textures": {
-					"all": "warpdrive:blocks/atomic/chiller.basic-online"
-				}
-			}
-		}
-	}
+    "variants":  {
+                     "":  {
+                              "model":  "warpdrive:block/catalog/chiller.basic"
+                          }
+                 }
 }

@@ -1,0 +1,8 @@
+{
+    "parent":  "minecraft:block/cube_bottom_top",
+    "textures":  {
+                     "side":  "warpdrive:blocks/building/ship_scanner-side",
+                     "top":  "warpdrive:blocks/building/ship_scanner-top",
+                     "bottom":  "warpdrive:blocks/building/ship_scanner-bottom"
+                 }
+}

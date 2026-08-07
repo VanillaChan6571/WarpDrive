@@ -1,22 +1,7 @@
 {
-	"forge_marker": 1,
-	"defaults": {
-		"model": "minecraft:cube_all",
-		"textures": {
-			"all": "warpdrive:blocks/chunk_loader.advanced-online"
-		},
-		"transform": "forge:default-block"
-	},
-	"variants": {
-		"normal": [{}],
-		"inventory": [{}],
-		"active": {
-			"false": {
-				"textures": {
-					"north"   : "warpdrive:blocks/chunk_loader.advanced-offline"
-				}
-			},
-			"true": {}
-		}
-	}
+    "variants":  {
+                     "":  {
+                              "model":  "warpdrive:block/catalog/chunk_loader.advanced"
+                          }
+                 }
 }

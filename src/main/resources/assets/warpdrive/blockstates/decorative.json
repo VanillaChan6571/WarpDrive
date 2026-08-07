@@ -1,23 +1,7 @@
 {
-	"forge_marker": 1,
-	"defaults": {
-		"model": "minecraft:cube_all",
-		"textures": {
-			"all": "warpdrive:blocks/decoration/decorative-plain"
-		},
-		"transform": "forge:default-block"
-	},
-	"variants": {
-		"normal": [{}],
-		"inventory": [{}],
-		"type": {
-			"plain"              : { "textures": { "all": "warpdrive:blocks/decoration/decorative-plain"				} },
-			"grated"             : { "textures": { "all": "warpdrive:blocks/decoration/decorative-grated"				} },
-			"glass"              : { "textures": { "all": "warpdrive:blocks/decoration/decorative-glass"				} },
-			"stripes_black_down" : { "textures": { "all": "warpdrive:blocks/decoration/decorative-stripes_black_down"	} },
-			"stripes_black_up"   : { "textures": { "all": "warpdrive:blocks/decoration/decorative-stripes_black_up"		} },
-			"stripes_yellow_down": { "textures": { "all": "warpdrive:blocks/decoration/decorative-stripes_yellow_down"	} },
-			"stripes_yellow_up"  : { "textures": { "all": "warpdrive:blocks/decoration/decorative-stripes_yellow_up"	} }
-		}
-	}
+  "variants": {
+    "": {
+      "model": "warpdrive:block/decorative"
+    }
+  }
 }

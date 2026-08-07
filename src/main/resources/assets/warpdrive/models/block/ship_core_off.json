@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "warpdrive:blocks/movement/ship_core-top_bottom",
+    "down": "warpdrive:blocks/movement/ship_core-top_bottom",
+    "up": "warpdrive:blocks/movement/ship_core-top_bottom",
+    "north": "warpdrive:blocks/movement/ship_core-front",
+    "south": "warpdrive:blocks/movement/ship_controller-side_inactive",
+    "west": "warpdrive:blocks/movement/ship_core-left_offline",
+    "east": "warpdrive:blocks/movement/ship_core-right_offline"
+  }
+}

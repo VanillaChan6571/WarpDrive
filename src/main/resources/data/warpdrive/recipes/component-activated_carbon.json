@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:components",
+  "pattern": [
+    "lll",
+    "aaa",
+    "wgw"
+  ],
+  "key": {
+    "l": {
+      "tag": "minecraft:leaves"
+    },
+    "a": {
+      "item": "warpdrive:component-bone_charcoal"
+    },
+    "w": {
+      "type": "forge:nbt",
+      "item": "minecraft:potion",
+      "nbt": "{Potion:\"minecraft:water\"}"
+    },
+    "g": {
+      "item": "minecraft:gunpowder"
+    }
+  },
+  "result": {
+    "item": "warpdrive:component-activated_carbon"
+  }
+}

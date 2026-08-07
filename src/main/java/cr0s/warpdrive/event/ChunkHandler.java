@@ -3,7 +3,9 @@ package cr0s.warpdrive.event;
 import cr0s.warpdrive.WarpDrive;
 import cr0s.warpdrive.data.AirSpreader;
 import cr0s.warpdrive.data.ChunkData;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.RegistryKey;
+import net.minecraft.world.chunk.IChunk;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.IWorld;
@@ -19,7 +21,9 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -89,31 +93,42 @@ public class ChunkHandler {
 
 	// ===== lifecycle =====
 
-	@SubscribeEvent
-	public static void onChunkLoad(final ChunkEvent.Load event) {
-		final World world = asWorld(event);
-        if (!isSimulated(world)) {
-			return;
-		}
-		final ChunkPos chunkPos = event.getChunk().getPos();
-		final long key = ChunkPos.asLong(chunkPos.x, chunkPos.z);
-		// An entry may already exist from ChunkDataEvent.Load, which fires first and carries the NBT
-		registryFor(world).computeIfAbsent(key, ignored -> {
-			final ChunkData created = new ChunkData(chunkPos.x, chunkPos.z);
-			created.load(new net.minecraft.nbt.CompoundNBT());
-			return created;
-		});
-	}
+	/**
+	 * Air state read from disk but not yet attached to a world.
+	 *
+	 * ChunkDataEvent.Load is fired during deserialisation, before the chunk belongs to anything -
+	 * its only constructor takes no world, so getWorld() is null and the dimension cannot be known
+	 * yet. The NBT is therefore parked here and claimed by ChunkEvent.Load, which does have a world.
+	 *
+	 * Keyed on the chunk instance rather than its position: the same coordinates exist in every
+	 * dimension, and two of ours are simulated. A weak map means an entry that is never claimed -
+	 * a chunk that fails to finish loading - is collected rather than leaked.
+	 */
+	private static final Map<IChunk, CompoundNBT> PENDING_LOAD =
+		Collections.synchronizedMap(new WeakHashMap<>());
 
 	@SubscribeEvent
 	public static void onChunkDataLoad(final ChunkDataEvent.Load event) {
+		final CompoundNBT data = event.getData();
+		// Only park chunks that actually carry our data; most will not
+		if (data != null && data.contains(WarpDrive.MODID)) {
+			PENDING_LOAD.put(event.getChunk(), data);
+		}
+	}
+
+	@SubscribeEvent
+	public static void onChunkLoad(final ChunkEvent.Load event) {
+		final IChunk chunk = event.getChunk();
+		final CompoundNBT pending = PENDING_LOAD.remove(chunk);
+
 		final World world = asWorld(event);
 		if (!isSimulated(world)) {
 			return;
 		}
-		final ChunkPos chunkPos = event.getChunk().getPos();
+		final ChunkPos chunkPos = chunk.getPos();
 		final ChunkData chunkData = new ChunkData(chunkPos.x, chunkPos.z);
-		chunkData.load(event.getData());
+		// Saved state if we have it, defaults otherwise - a freshly generated chunk has no NBT
+		chunkData.load(pending != null ? pending : new CompoundNBT());
 		registryFor(world).put(ChunkPos.asLong(chunkPos.x, chunkPos.z), chunkData);
 	}
 
@@ -212,6 +227,24 @@ public class ChunkHandler {
 		// Cached chunk references inside the reusable StateAir cursors must not survive the tick,
 		// or a chunk unload leaves them pointing at freed data
 		AirSpreader.clearCache();
+	}
+
+	/**
+	 * Chunk positions currently carrying air state in this world.
+	 *
+	 * Iterating these rather than every loaded chunk keeps sweeps bounded to where ships actually
+	 * are, which in space is a vanishingly small fraction of what is loaded.
+	 */
+	public static Iterable<ChunkPos> getTrackedChunkPositions(final World world) {
+		final Map<Long, ChunkData> registry = REGISTRY.get(world.dimension());
+		if (registry == null) {
+			return java.util.Collections.emptyList();
+		}
+		final java.util.List<ChunkPos> positions = new java.util.ArrayList<>(registry.size());
+		for (final ChunkData chunkData : registry.values()) {
+			positions.add(chunkData.getChunkPos());
+		}
+		return positions;
 	}
 
 	/** How many chunks currently carry air state in this world - for diagnostics. */

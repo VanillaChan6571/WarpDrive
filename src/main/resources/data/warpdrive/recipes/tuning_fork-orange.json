@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:tools",
+  "pattern": [
+    "  q",
+    "iX ",
+    " i "
+  ],
+  "key": {
+    "q": {
+      "item": "minecraft:quartz"
+    },
+    "i": {
+      "tag": "forge:ingots/iron"
+    },
+    "X": {
+      "tag": "forge:dyes/orange"
+    }
+  },
+  "result": {
+    "item": "warpdrive:tuning_fork-orange"
+  }
+}

@@ -1,22 +1,7 @@
 {
-	"forge_marker": 1,
-	"defaults": {
-		"model": "minecraft:cube_bottom_top",
-		"textures": {
-			"side"  : "warpdrive:blocks/movement/transporter_core-side_online",
-			"bottom": "warpdrive:blocks/movement/transporter_core-bottom_top",
-			"top"   : "warpdrive:blocks/movement/transporter_core-bottom_top"
-		},
-		"transform": "forge:default-block"
-	},
-	"variants": {
-		"normal": [{}],
-		"inventory": [{}],
-		"variant": {
-			"disabled"   : { "textures": { "side"  : "warpdrive:blocks/movement/transporter_core-side_invalid"   } },
-			"idle"       : { "textures": { "side"  : "warpdrive:blocks/movement/transporter_core-side_online"    } },
-			"acquiring"  : { "textures": { "side"  : "warpdrive:blocks/movement/transporter_core-side_low_power" } },
-			"energizing" : { "textures": { "side"  : "warpdrive:blocks/movement/transporter_core-side_low_power" } }
-		}
-	}
+    "variants":  {
+                     "":  {
+                              "model":  "warpdrive:block/catalog/transporter_core"
+                          }
+                 }
 }

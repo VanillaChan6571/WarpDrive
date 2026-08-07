@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:components",
+  "pattern": [
+    "CCm",
+    "Cpc",
+    "CCm"
+  ],
+  "key": {
+    "C": {
+      "item": "warpdrive:component-diamond_coil"
+    },
+    "m": {
+      "item": "warpdrive:component-motor"
+    },
+    "p": {
+      "item": "warpdrive:component-power_interface"
+    },
+    "c": {
+      "item": "warpdrive:component-computer_interface"
+    }
+  },
+  "result": {
+    "item": "warpdrive:component-electromagnetic_projector"
+  }
+}

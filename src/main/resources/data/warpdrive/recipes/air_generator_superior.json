@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "aaa",
+    "ata",
+    "ama"
+  ],
+  "key": {
+    "a": {
+      "item": "warpdrive:air_generator.advanced"
+    },
+    "t": {
+      "item": "warpdrive:component-motor"
+    },
+    "m": {
+      "item": "minecraft:beacon"
+    }
+  },
+  "result": {
+    "item": "warpdrive:air_generator.superior"
+  }
+}

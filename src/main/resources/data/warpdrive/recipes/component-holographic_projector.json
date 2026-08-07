@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:components",
+  "pattern": [
+    "ssM",
+    "szc",
+    "ssE"
+  ],
+  "key": {
+    "s": {
+      "item": "warpdrive:component-flat_screen"
+    },
+    "z": {
+      "item": "warpdrive:component-zoom"
+    },
+    "M": {
+      "item": "warpdrive:component-memory_crystal"
+    },
+    "c": {
+      "item": "warpdrive:component-computer_interface"
+    },
+    "E": {
+      "item": "warpdrive:component-emerald_crystal"
+    }
+  },
+  "result": {
+    "item": "warpdrive:component-holographic_projector"
+  }
+}

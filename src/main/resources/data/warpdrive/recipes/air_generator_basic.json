@@ -1,0 +1,32 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "aba",
+    "ata",
+    "gmp"
+  ],
+  "key": {
+    "a": {
+      "item": "warpdrive:component-activated_carbon"
+    },
+    "b": {
+      "item": "minecraft:iron_bars"
+    },
+    "t": {
+      "item": "warpdrive:component-pump"
+    },
+    "g": {
+      "item": "warpdrive:component-glass_tank"
+    },
+    "m": {
+      "item": "minecraft:diamond_block"
+    },
+    "p": {
+      "item": "warpdrive:component-power_interface"
+    }
+  },
+  "result": {
+    "item": "warpdrive:air_generator.basic"
+  }
+}

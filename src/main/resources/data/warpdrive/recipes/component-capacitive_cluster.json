@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "group": "warpdrive:components",
+  "ingredients": [
+    {
+      "item": "warpdrive:component-capacitive_crystal"
+    },
+    {
+      "item": "warpdrive:component-capacitive_crystal"
+    },
+    {
+      "item": "warpdrive:component-capacitive_crystal"
+    },
+    {
+      "item": "warpdrive:component-capacitive_crystal"
+    }
+  ],
+  "result": {
+    "item": "warpdrive:component-capacitive_cluster"
+  }
+}

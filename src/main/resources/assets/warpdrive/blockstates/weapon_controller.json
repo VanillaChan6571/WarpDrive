@@ -1,16 +1,7 @@
 {
-	"forge_marker": 1,
-	"defaults": {
-		"model": "minecraft:cube_bottom_top",
-		"textures": {
-			"side"  : "warpdrive:blocks/weapon/weapon_controller-side",
-			"bottom": "warpdrive:blocks/weapon/weapon_controller-top_bottom",
-			"top"   : "warpdrive:blocks/weapon/weapon_controller-top_bottom"
-		},
-		"transform": "forge:default-block"
-	},
-	"variants": {
-		"normal": [{}],
-		"inventory": [{}]
-	}
+    "variants":  {
+                     "":  {
+                              "model":  "warpdrive:block/catalog/weapon_controller"
+                          }
+                 }
 }

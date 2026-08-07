@@ -32,6 +32,18 @@ public class WarpDrive {
 		// Initialize deferred registration system (1.16.5 pattern)
 		cr0s.warpdrive.data.Registration.init();
 
+		// Keep computer automation optional. The native Ship Controller works without CC:Tweaked,
+		// and reflection prevents the JVM from resolving any CC-linked compatibility class when the
+		// optional mod is absent.
+		if (net.minecraftforge.fml.ModList.get().isLoaded("computercraft")) {
+			try {
+				Class.forName("cr0s.warpdrive.compat.ComputerCraftCompat")
+					.getMethod("register").invoke(null);
+			} catch (final ReflectiveOperationException exception) {
+				throw new IllegalStateException("Unable to initialise CC:Tweaked compatibility", exception);
+			}
+		}
+
 		// Client-only settings; harmlessly ignored on a dedicated server, which never loads them
 		net.minecraftforge.fml.ModLoadingContext.get().registerConfig(
 			net.minecraftforge.fml.config.ModConfig.Type.CLIENT,
@@ -53,11 +65,33 @@ public class WarpDrive {
 	}
 
 	private void clientSetup(final FMLClientSetupEvent event) {
-		event.enqueueWork(() -> {
+			event.enqueueWork(() -> {
 			ScreenManager.register(
 				cr0s.warpdrive.data.Registration.CREATIVE_ENERGY_CONTAINER.get(),
 				cr0s.warpdrive.client.CreativeEnergyScreen::new);
+			ScreenManager.register(
+				cr0s.warpdrive.data.Registration.SHIP_CONTROLLER_CONTAINER.get(),
+				cr0s.warpdrive.client.ShipControllerScreen::new);
 			cr0s.warpdrive.client.ClientDimensionRendering.register();
+
+			// Restore metadata-era catalog variants through lightweight item predicates. These are
+			// evaluated only for item rendering and do not add blockstates.
+			cr0s.warpdrive.data.Registration.LEGACY_CATALOG_ITEMS.forEach((name, item) -> {
+				if (name.startsWith("electromagnetic_cell.") && !name.endsWith("-empty")) {
+					net.minecraft.item.ItemModelsProperties.register(
+						item.get(), new net.minecraft.util.ResourceLocation(MODID, "fill"),
+						(itemStack, world, entity) ->
+							cr0s.warpdrive.item.CatalogElectromagneticCellItem.getFillLevel(itemStack));
+				}
+			});
+			cr0s.warpdrive.data.Registration.HULL_SLAB_ITEMS.values().forEach(item ->
+				net.minecraft.item.ItemModelsProperties.register(
+					item.get(), new net.minecraft.util.ResourceLocation(MODID, "slab_variant"),
+					(itemStack, world, entity) ->
+						cr0s.warpdrive.item.CatalogVariantBlockItem.getVariant(itemStack)));
+			net.minecraft.client.Minecraft.getInstance().getItemColors().register(
+				cr0s.warpdrive.item.CatalogAirShieldItem::getTintColor,
+				cr0s.warpdrive.data.Registration.AIR_SHIELD_ITEM.get());
 
 			// Air blocks are translucent blue. Without this they render on the solid layer and the
 			// texture's alpha is ignored, so the volume would appear as opaque cubes.
@@ -66,6 +100,42 @@ public class WarpDrive {
 				net.minecraft.client.renderer.RenderType.translucent());
 			net.minecraft.client.renderer.RenderTypeLookup.setRenderLayer(
 				cr0s.warpdrive.data.Registration.AIR_SOURCE_BLOCK.get(),
+				net.minecraft.client.renderer.RenderType.translucent());
+			net.minecraft.client.renderer.RenderTypeLookup.setRenderLayer(
+				cr0s.warpdrive.data.Registration.AIR_SHIELD_BLOCK.get(),
+				net.minecraft.client.renderer.RenderType.translucent());
+
+			// Legacy transparent/cutout blocks. Render-layer selection was formerly supplied by
+			// Block#getRenderLayer; in 1.16 it is a client registration concern.
+			net.minecraft.client.renderer.RenderTypeLookup.setRenderLayer(
+				cr0s.warpdrive.data.Registration.BEDROCK_GLASS.get(),
+				net.minecraft.client.renderer.RenderType.cutout());
+			net.minecraft.client.renderer.RenderTypeLookup.setRenderLayer(
+				cr0s.warpdrive.data.Registration.VOID_SHELL_GLASS.get(),
+				net.minecraft.client.renderer.RenderType.translucent());
+			cr0s.warpdrive.data.Registration.ELECTROMAGNET_BLOCKS.forEach((name, block) -> {
+				if (name.endsWith(".glass")) {
+					net.minecraft.client.renderer.RenderTypeLookup.setRenderLayer(
+						block.get(), net.minecraft.client.renderer.RenderType.translucent());
+				}
+			});
+			cr0s.warpdrive.data.Registration.DECORATIVE_BLOCKS.values().forEach(block ->
+				net.minecraft.client.renderer.RenderTypeLookup.setRenderLayer(
+					block.get(), net.minecraft.client.renderer.RenderType.translucent()));
+			cr0s.warpdrive.data.Registration.GAS_BLOCKS.values().forEach(block ->
+				net.minecraft.client.renderer.RenderTypeLookup.setRenderLayer(
+					block.get(), net.minecraft.client.renderer.RenderType.translucent()));
+			cr0s.warpdrive.data.Registration.HULL_GLASS_BLOCKS.values().forEach(block ->
+				net.minecraft.client.renderer.RenderTypeLookup.setRenderLayer(
+					block.get(), net.minecraft.client.renderer.RenderType.translucent()));
+			cr0s.warpdrive.data.Registration.HULL_OMNIPANELS.values().forEach(block ->
+				net.minecraft.client.renderer.RenderTypeLookup.setRenderLayer(
+					block.get(), net.minecraft.client.renderer.RenderType.translucent()));
+			cr0s.warpdrive.data.Registration.LEGACY_CATALOG_BLOCKS.values().forEach(block ->
+				net.minecraft.client.renderer.RenderTypeLookup.setRenderLayer(
+					block.get(), net.minecraft.client.renderer.RenderType.cutout()));
+			net.minecraft.client.renderer.RenderTypeLookup.setRenderLayer(
+				cr0s.warpdrive.data.Registration.LAMP_BLOCKS.get("bubble").get(),
 				net.minecraft.client.renderer.RenderType.translucent());
 		});
 		logger.info("WarpDrive client setup complete");

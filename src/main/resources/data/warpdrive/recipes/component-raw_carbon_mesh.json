@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:components",
+  "pattern": [
+    "fcf",
+    "ccc",
+    "fcf"
+  ],
+  "key": {
+    "f": {
+      "item": "warpdrive:component-biofiber"
+    },
+    "c": {
+      "item": "warpdrive:component-raw_carbon_fiber"
+    }
+  },
+  "result": {
+    "item": "warpdrive:component-raw_carbon_mesh",
+    "count": 4
+  }
+}

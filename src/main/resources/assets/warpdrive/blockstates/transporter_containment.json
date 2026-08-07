@@ -1,16 +1,7 @@
 {
-	"forge_marker": 1,
-	"defaults": {
-		"model": "warpdrive:transporter_slab",
-		"textures": {
-			"side"  : "warpdrive:blocks/movement/transporter_containment-side",
-			"bottom": "warpdrive:blocks/movement/transporter_containment-bottom",
-			"top"   : "warpdrive:blocks/movement/transporter_containment-top"
-		},
-		"transform": "forge:default-block"
-	},
- 	"variants": {
-		"normal": [{}],
-		"inventory": [{}]
-	}
+    "variants":  {
+                     "":  {
+                              "model":  "warpdrive:block/catalog/transporter_containment"
+                          }
+                 }
 }

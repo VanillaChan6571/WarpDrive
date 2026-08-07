@@ -36,6 +36,14 @@ public final class SpaceBiomeFeatures {
 			.getFeatures(GenerationStage.Decoration.UNDERGROUND_ORES)
 			.add(() -> Registration.ASTEROID_FIELD_CONFIGURED);
 
+		if (Registration.CELESTIAL_BODIES_CONFIGURED != null) {
+			// Native feature generation is preferable to post-generation tick queues here: every
+			// chunk builds only its deterministic slice of a planet/moon system.
+			event.getGeneration()
+				.getFeatures(GenerationStage.Decoration.SURFACE_STRUCTURES)
+				.add(() -> Registration.CELESTIAL_BODIES_CONFIGURED);
+		}
+
 		if (Registration.GIANT_ASTEROID_CONFIGURED != null) {
 			// Placed in an earlier stage so the scattered fields can settle around it rather than
 			// being overwritten by it
@@ -43,6 +51,6 @@ public final class SpaceBiomeFeatures {
 				.getFeatures(GenerationStage.Decoration.SURFACE_STRUCTURES)
 				.add(() -> Registration.GIANT_ASTEROID_CONFIGURED);
 		}
-		WarpDrive.logger.info("Asteroid features attached to {}", event.getName());
+		WarpDrive.logger.info("Space generation features attached to {}", event.getName());
 	}
 }

@@ -4,13 +4,18 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import cr0s.warpdrive.WarpDrive;
 import cr0s.warpdrive.config.ClientConfig;
+import cr0s.warpdrive.block.breathing.AirShieldBlock;
+import cr0s.warpdrive.data.AirClassifier;
 import cr0s.warpdrive.event.BreathingManager;
 import cr0s.warpdrive.item.AirTankItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
+import net.minecraft.client.world.ClientWorld;
+import net.minecraft.util.Direction;
 import net.minecraft.util.IReorderingProcessor;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextFormatting;
@@ -39,9 +44,8 @@ import java.util.List;
  *     normal frame. So it visibly pops once per breath.
  *   - Warnings are a splash alarm drawn over the screen, not action bar text.
  *
- * Deviation: 1.12.2 only raised the alarm when actually near void (getRangeToVoid) or within the
- * first 20 seconds after joining. That check needs StateAir and air blocks, so until those are
- * ported the alarm shows whenever you are in a vacuum dimension.
+ * The alarm is gated on proximity to open space (getRangeToVoid) or the first 20 seconds after
+ * joining, exactly as the original was. The gauge itself always shows in a vacuum dimension.
  */
 @Mod.EventBusSubscriber(modid = WarpDrive.MODID, value = Dist.CLIENT,
                         bus = Mod.EventBusSubscriber.Bus.FORGE)
@@ -57,9 +61,29 @@ public final class AirOverlayRenderer extends AbstractGui {
 	private static final String KEY_INVALID_SETUP = "warpdrive.breathing.invalid_setup";
 	private static final String KEY_NO_AIR = "warpdrive.breathing.no_air";
 	private static final String KEY_LOW_RESERVE = "warpdrive.breathing.low_reserve";
+	private static final String KEY_SUIT_ALARM = "warpdrive.suit.alarm";
+	private static final String KEY_SUIT_INCOMPLETE = "warpdrive.suit.incomplete";
 
 	/** Reserve below which the low-air alarm sounds. */
 	private static final float LOW_RESERVE_RATIO = 0.15F;
+
+	/** Grace window after joining during which the alarm shows regardless of proximity. */
+	private static final int WARNING_ON_JOIN_TICKS = 20 * 20;
+
+	/** Horizontal facings only - the original checks sideways for a breach, not up and down. */
+	private static final Direction[] HORIZONTALS = {
+		Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST };
+
+	/** Cache so the scan runs once per tick rather than once per frame. */
+	private static VoidExposure cachedVoidExposure = VoidExposure.NONE;
+	private static int cachedRangeTick = -1;
+
+	/** The shield is permeable to players, but still separates breathable air from open vacuum. */
+	private enum VoidExposure {
+		NONE,
+		SHIELDED,
+		OPEN
+	}
 
 	/** Bubble animation state - the reserve value last seen, and when it changed. */
 	private static float ratioPreviousAir = 1.0F;
@@ -85,12 +109,6 @@ public final class AirOverlayRenderer extends AbstractGui {
 		if (player.isCreative() || player.isSpectator()) {
 			return;
 		}
-		// Standing in generated air: nothing is wrong, so show nothing. Without this the alarm
-		// fires inside a fully pressurised ship purely because the player is not wearing a suit -
-		// which is the whole point of pressurising it.
-		if (BreathingManager.hasAirBlock(player)) {
-			return;
-		}
 
 		INSTANCE.render(event.getMatrixStack(),
 			event.getWindow().getGuiScaledWidth(),
@@ -106,14 +124,36 @@ public final class AirOverlayRenderer extends AbstractGui {
 
 		RenderSystem.enableBlend();
 
-		// Splash alarm first - its alpha drives the bar tint below
+		// Splash alarm first - its alpha drives the bar tint below.
+		//
+		// Only raised when open space is actually within reach, or during the first seconds after
+		// joining. Deep inside a sealed ship there is nothing to warn about: an incomplete suit
+		// only matters if the vacuum can get to you, and alarming there would be crying wolf every
+		// time someone took their helmet off indoors.
 		int alpha = 255;
-		if (!hasValidSetup) {
-			alpha = drawSplashAlarm(matrixStack, width, height, KEY_INVALID_SETUP);
-		} else if (ratioAirReserve <= 0.0F) {
-			alpha = drawSplashAlarm(matrixStack, width, height, KEY_NO_AIR);
-		} else if (ratioAirReserve < LOW_RESERVE_RATIO) {
-			alpha = drawSplashAlarm(matrixStack, width, height, KEY_LOW_RESERVE);
+		boolean criticalAlarm = false;
+		final VoidExposure exposure = getVoidExposure(player);
+		final boolean nearVoid = exposure != VoidExposure.NONE
+		                      || player.tickCount < WARNING_ON_JOIN_TICKS;
+		if (nearVoid) {
+			if (!hasValidSetup) {
+				if (exposure == VoidExposure.SHIELDED) {
+					alpha = drawSplashAlarm(matrixStack, width, height,
+						KEY_SUIT_ALARM, KEY_SUIT_INCOMPLETE, false);
+				} else {
+					criticalAlarm = true;
+					alpha = drawSplashAlarm(matrixStack, width, height,
+						KEY_ALARM, KEY_INVALID_SETUP, true);
+				}
+			} else if (ratioAirReserve <= 0.0F) {
+				criticalAlarm = true;
+				alpha = drawSplashAlarm(matrixStack, width, height,
+					KEY_ALARM, KEY_NO_AIR, true);
+			} else if (ratioAirReserve < LOW_RESERVE_RATIO) {
+				criticalAlarm = true;
+				alpha = drawSplashAlarm(matrixStack, width, height,
+					KEY_ALARM, KEY_LOW_RESERVE, true);
+			}
 		}
 
 		// Drawing text swapped the bound texture out - put the icons sheet back
@@ -131,7 +171,7 @@ public final class AirOverlayRenderer extends AbstractGui {
 		// Filled portion, right-anchored so it drains towards the bubble
 		final int filled = MathHelper.ceil(ratioAirReserve * BAR_WIDTH);
 		if (filled > 0) {
-			if (alpha != 255) {
+			if (criticalAlarm && alpha != 255) {
 				// Alarm is up: pulse the bar red in step with it
 				final float factor = 1.0F - alpha / 255.0F;
 				final float fade = 0.2F + 0.8F * factor;
@@ -211,11 +251,67 @@ public final class AirOverlayRenderer extends AbstractGui {
 	}
 
 	/**
+	 * Classify nearby open space as directly reachable, separated by an energy air shield, or absent.
+	 *
+	 * Ported from 1.12.2 RenderOverlayAir.getRangeToVoid. The second step only happens through a
+	 * neighbour that does not seal - so it reaches out through an open doorway or a gap in the hull,
+	 * but stops at a wall. That is what makes it an airlock check rather than a radius: standing
+	 * one block inside a closed door is safe, standing one block inside an open one is not.
+	 *
+	 * Cached per tick because this is called from render, which runs far more often than the world
+	 * changes. A real opening wins over a shield in another direction, so an actual breach can never
+	 * be downgraded to the yellow suit advisory.
+	 */
+	private static VoidExposure getVoidExposure(final ClientPlayerEntity player) {
+		if (player.tickCount == cachedRangeTick) {
+			return cachedVoidExposure;
+		}
+		cachedRangeTick = player.tickCount;
+		cachedVoidExposure = computeVoidExposure(player);
+		return cachedVoidExposure;
+	}
+
+	private static VoidExposure computeVoidExposure(final ClientPlayerEntity player) {
+		final ClientWorld world = (ClientWorld) player.level;
+		final BlockPos origin = player.blockPosition();
+
+		if (AirClassifier.isVoid(world, origin)) {
+			return VoidExposure.OPEN;
+		}
+
+		boolean foundShieldedVacuum = false;
+		for (final Direction direction : HORIZONTALS) {
+			final BlockPos close = origin.relative(direction);
+			if (AirClassifier.isVoid(world, close)) {
+				return VoidExposure.OPEN;
+			}
+			// A sealing neighbour blocks the line of sight to vacuum; anything else lets it through.
+			//
+			// An air shield is the exception, and 1.12.2 spelled it out the same way: it seals air
+			// but you can walk through it, so vacuum is still one step away and the warning should
+			// stay up. A wall earns silence, a curtain does not.
+			final boolean isAirShield = world.getBlockState(close).getBlock() instanceof AirShieldBlock;
+			if (!isAirShield && AirClassifier.isSealer(world, close)) {
+				continue;
+			}
+			if (AirClassifier.isVoid(world, origin.relative(direction, 2))) {
+				if (isAirShield) {
+					foundShieldedVacuum = true;
+				} else {
+					return VoidExposure.OPEN;
+				}
+			}
+		}
+		return foundShieldedVacuum ? VoidExposure.SHIELDED : VoidExposure.NONE;
+	}
+
+	/**
 	 * Bold red title over a pulsing message, drawn at double scale near the top of the screen.
 	 * Returns the message alpha so the caller can pulse the gauge in sync.
 	 */
 	private int drawSplashAlarm(final MatrixStack matrixStack, final int width, final int height,
-	                            final String messageKey) {
+	                            final String titleKey, final String messageKey,
+	                            final boolean critical) {
 		final Minecraft minecraft = Minecraft.getInstance();
 		final FontRenderer font = minecraft.font;
 
@@ -229,12 +325,12 @@ public final class AirOverlayRenderer extends AbstractGui {
 
 		int y = height / 10;
 
-		final ITextComponent title = new TranslationTextComponent(KEY_ALARM)
+		final ITextComponent title = new TranslationTextComponent(titleKey)
 			.withStyle(TextFormatting.BOLD);
 		font.drawShadow(matrixStack, title,
 			width / 4.0F - font.width(title) / 2.0F,
 			y - font.lineHeight,
-			argb(230, 255, 32, 24));
+			critical ? argb(230, 255, 32, 24) : argb(230, 255, 220, 48));
 
 		final ITextComponent message = new TranslationTextComponent(messageKey);
 		final List<IReorderingProcessor> lines = font.split(message, width / 2);
@@ -242,7 +338,7 @@ public final class AirOverlayRenderer extends AbstractGui {
 			font.draw(matrixStack, line,
 				width / 4.0F - font.width(line) / 2.0F,
 				y,
-				argb(alpha, 192, 64, 48));
+				critical ? argb(alpha, 192, 64, 48) : argb(alpha, 240, 200, 64));
 			y += font.lineHeight;
 		}
 

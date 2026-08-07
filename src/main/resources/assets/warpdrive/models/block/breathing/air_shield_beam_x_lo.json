@@ -1,0 +1,38 @@
+{
+	"parent": "block/block",
+	"textures": {
+		"all": "warpdrive:blocks/breathing/air_shield",
+		"particle": "warpdrive:blocks/breathing/air_shield"
+	},
+	"elements": [
+		{
+			"from": [
+				0,
+				7,
+				7
+			],
+			"to": [
+				9,
+				9,
+				9
+			],
+			"faces": {
+				"down": {
+					"texture": "#all"
+				},
+				"up": {
+					"texture": "#all"
+				},
+				"north": {
+					"texture": "#all"
+				},
+				"south": {
+					"texture": "#all"
+				},
+				"east": {
+					"texture": "#all"
+				}
+			}
+		}
+	]
+}

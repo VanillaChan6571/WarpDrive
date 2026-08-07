@@ -1,0 +1,7 @@
+{
+    "parent":  "warpdrive:block/slab_down",
+    "textures":  {
+                     "full":  "warpdrive:blocks/hull/tiled-magenta",
+                     "horizontal":  "warpdrive:blocks/hull/tiled_horizontal-magenta"
+                 }
+}

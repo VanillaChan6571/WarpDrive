@@ -1,53 +1,7 @@
 {
-	"forge_marker": 1,
-	"defaults": {
-		"model": "minecraft:cube_bottom_top",
-		"textures": {
-			"side"  : "warpdrive:blocks/movement/ship_controller-side_active2",
-			"bottom": "warpdrive:blocks/movement/ship_controller-top_bottom",
-			"top"   : "warpdrive:blocks/movement/ship_controller-top_bottom"
-		},
-		"transform": "forge:default-block"
-	},
-	"variants": {
-		"normal": [{}],
-		"inventory": [{}],
-		"command": {
-			"offline": {
-				"textures": {
-					"side"  : "warpdrive:blocks/movement/ship_controller-side_inactive"
-				}
-			},
-			"idle": {
-				"textures": {
-					"side"  : "warpdrive:blocks/movement/ship_controller-side_active0"
-				}
-			},
-			"manual": {
-				"textures": {
-					"side"  : "warpdrive:blocks/movement/ship_controller-side_active1"
-				}
-			},
-			"autopilot": {
-				"textures": {
-					"side"  : "warpdrive:blocks/movement/ship_controller-side_active2"
-				}
-			},
-			"hyperdrive": {
-				"textures": {
-					"side"  : "warpdrive:blocks/movement/ship_controller-side_active4"
-				}
-			},
-			"gate": {
-				"textures": {
-					"side"  : "warpdrive:blocks/movement/ship_controller-side_active5"
-				}
-			},
-			"maintenance": {
-				"textures": {
-					"side"  : "warpdrive:blocks/movement/ship_controller-side_active7"
-				}
-			}
-		}
-	}
+    "variants":  {
+                     "":  {
+                              "model":  "warpdrive:block/catalog/ship_controller.advanced"
+                          }
+                 }
 }

@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:smelting",
+  "ingredient": {
+    "item": "warpdrive:component-biopulp"
+  },
+  "result": "warpdrive:component-biofiber",
+  "experience": 0,
+  "cookingtime": 200
+}

@@ -6,11 +6,11 @@ import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.simple.SimpleChannel;
 
 /**
- * Mod network channel. Currently only carries GUI -> server configuration changes.
+ * Mod network channel for server-authoritative GUI actions and lightweight client HUD state.
  */
 public final class WarpDriveNetwork {
 
-	private static final String PROTOCOL_VERSION = "1";
+	private static final String PROTOCOL_VERSION = "2";
 
 	public static SimpleChannel CHANNEL;
 
@@ -30,6 +30,16 @@ public final class WarpDriveNetwork {
 			SetCreativeEnergyPacket::encode,
 			SetCreativeEnergyPacket::decode,
 			SetCreativeEnergyPacket::handle);
+		CHANNEL.registerMessage(id++,
+			ShipControllerActionPacket.class,
+			ShipControllerActionPacket::encode,
+			ShipControllerActionPacket::decode,
+			ShipControllerActionPacket::handle);
+		CHANNEL.registerMessage(id++,
+			ShipCountdownPacket.class,
+			ShipCountdownPacket::encode,
+			ShipCountdownPacket::decode,
+			ShipCountdownPacket::handle);
 
 		WarpDrive.logger.info("Network channel registered ({} message types)", id);
 	}

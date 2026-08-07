@@ -1,0 +1,8 @@
+{
+    "parent":  "warpdrive:block/slab_north",
+    "textures":  {
+                     "full":  "warpdrive:blocks/hull/tiled-green",
+                     "horizontal":  "warpdrive:blocks/hull/tiled_horizontal-green",
+                     "vertical":  "warpdrive:blocks/hull/tiled_vertical-green"
+                 }
+}

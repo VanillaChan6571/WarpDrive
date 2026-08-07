@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:components",
+  "pattern": [
+    " t ",
+    "iii",
+    "ggg"
+  ],
+  "key": {
+    "t": {
+      "item": "minecraft:ghast_tear"
+    },
+    "i": {
+      "item": "minecraft:iron_bars"
+    },
+    "g": {
+      "item": "minecraft:glowstone"
+    }
+  },
+  "result": {
+    "item": "warpdrive:component-diffraction_grating"
+  }
+}

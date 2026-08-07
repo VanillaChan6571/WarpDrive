@@ -1,0 +1,47 @@
+{
+    "parent":  "warpdrive:block/hull_generated/slab-orange-plain_down",
+    "overrides":  [
+                      {
+                          "predicate":  {
+                                            "warpdrive:slab_variant":  1
+                                        },
+                          "model":  "warpdrive:block/hull_generated/slab-orange-plain_north"
+                      },
+                      {
+                          "predicate":  {
+                                            "warpdrive:slab_variant":  2
+                                        },
+                          "model":  "warpdrive:block/hull_generated/slab-orange-tiled_down"
+                      },
+                      {
+                          "predicate":  {
+                                            "warpdrive:slab_variant":  3
+                                        },
+                          "model":  "warpdrive:block/hull_generated/slab-orange-tiled_north"
+                      },
+                      {
+                          "predicate":  {
+                                            "warpdrive:slab_variant":  4
+                                        },
+                          "model":  "warpdrive:block/hull_generated/slab-orange-plain_full"
+                      },
+                      {
+                          "predicate":  {
+                                            "warpdrive:slab_variant":  5
+                                        },
+                          "model":  "warpdrive:block/hull_generated/slab-orange-tiled_full_x"
+                      },
+                      {
+                          "predicate":  {
+                                            "warpdrive:slab_variant":  6
+                                        },
+                          "model":  "warpdrive:block/hull_generated/slab-orange-tiled_full_y"
+                      },
+                      {
+                          "predicate":  {
+                                            "warpdrive:slab_variant":  7
+                                        },
+                          "model":  "warpdrive:block/hull_generated/slab-orange-tiled_full_z"
+                      }
+                  ]
+}

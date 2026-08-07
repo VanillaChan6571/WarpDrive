@@ -1,32 +1,5 @@
 {
-	"forge_marker": 1,
-	"defaults": {
-		"model": "minecraft:cube_all",
-		"textures": {
-			"all": "warpdrive:blocks/breathing/air_shield"
-		},
-		"transform": "forge:default-block"
-	},
 	"variants": {
-		"normal": [{}],
-		"inventory": [{}],
-		"color": {
-			"black"     : { "textures": { "all": "warpdrive:blocks/breathing/air_shield" } },
-			"blue"      : { "textures": { "all": "warpdrive:blocks/breathing/air_shield" } },
-			"brown"     : { "textures": { "all": "warpdrive:blocks/breathing/air_shield" } },
-			"cyan"      : { "textures": { "all": "warpdrive:blocks/breathing/air_shield" } },
-			"gray"      : { "textures": { "all": "warpdrive:blocks/breathing/air_shield" } },
-			"green"     : { "textures": { "all": "warpdrive:blocks/breathing/air_shield" } },
-			"light_blue": { "textures": { "all": "warpdrive:blocks/breathing/air_shield" } },
-			"lime"      : { "textures": { "all": "warpdrive:blocks/breathing/air_shield" } },
-			"magenta"   : { "textures": { "all": "warpdrive:blocks/breathing/air_shield" } },
-			"orange"    : { "textures": { "all": "warpdrive:blocks/breathing/air_shield" } },
-			"pink"      : { "textures": { "all": "warpdrive:blocks/breathing/air_shield" } },
-			"purple"    : { "textures": { "all": "warpdrive:blocks/breathing/air_shield" } },
-			"red"       : { "textures": { "all": "warpdrive:blocks/breathing/air_shield" } },
-			"silver"    : { "textures": { "all": "warpdrive:blocks/breathing/air_shield" } },
-			"white"     : { "textures": { "all": "warpdrive:blocks/breathing/air_shield" } },
-			"yellow"    : { "textures": { "all": "warpdrive:blocks/breathing/air_shield" } }
-		}
+		"": { "model": "warpdrive:block/breathing/air_shield_post" }
 	}
 }

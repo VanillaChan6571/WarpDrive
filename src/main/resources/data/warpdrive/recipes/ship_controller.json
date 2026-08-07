@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "gsg",
+    "ici",
+    "iri"
+  ],
+  "key": {
+    "g": { "tag": "forge:glass/colorless" },
+    "s": { "item": "warpdrive:component-flat_screen" },
+    "i": { "item": "minecraft:iron_ingot" },
+    "c": { "item": "warpdrive:component-computer_interface" },
+    "r": { "item": "minecraft:redstone" }
+  },
+  "result": {
+    "item": "warpdrive:ship_controller"
+  }
+}

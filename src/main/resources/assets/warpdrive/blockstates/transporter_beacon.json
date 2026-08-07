@@ -1,32 +1,7 @@
 {
-	"forge_marker": 1,
-	"defaults": {
-		"transform": "forge:default-block"
-	},
-	"variants": {
-		"normal": [{}],
-		"inventory": {
-			"model": "minecraft:normal_torch",
-			"textures": {
-				"torch" : "warpdrive:blocks/movement/transporter_beacon-deployed_active"
-			}
-		},
-		
-		"active=false,deployed=false": {
-			"model": "warpdrive:movement/transporter_beacon-packed_inactive",
-			"textures": { "beacon" : "warpdrive:blocks/movement/transporter_beacon-packed_inactive" }
-		},
-		"active=true,deployed=false" : {
-			"model": "warpdrive:movement/transporter_beacon-packed_active",
-			"textures": { "beacon" : "warpdrive:blocks/movement/transporter_beacon-packed_active" }
-		},
-		"active=false,deployed=true" : {
-			"model": "warpdrive:movement/transporter_beacon-deployed_inactive",
-			"textures": { "beacon" : "warpdrive:blocks/movement/transporter_beacon-deployed_inactive" }
-		},
-		"active=true,deployed=true"  : {
-			"model": "warpdrive:movement/transporter_beacon-deployed_active",
-			"textures": { "beacon" : "warpdrive:blocks/movement/transporter_beacon-deployed_active" }
-		}
-	}
+    "variants":  {
+                     "":  {
+                              "model":  "warpdrive:block/catalog/transporter_beacon"
+                          }
+                 }
 }

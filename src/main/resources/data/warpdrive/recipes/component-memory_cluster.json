@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "group": "warpdrive:components",
+  "ingredients": [
+    {
+      "item": "warpdrive:component-memory_crystal"
+    },
+    {
+      "item": "warpdrive:component-memory_crystal"
+    },
+    {
+      "item": "warpdrive:component-memory_crystal"
+    },
+    {
+      "item": "warpdrive:component-memory_crystal"
+    }
+  ],
+  "result": {
+    "item": "warpdrive:component-memory_cluster"
+  }
+}

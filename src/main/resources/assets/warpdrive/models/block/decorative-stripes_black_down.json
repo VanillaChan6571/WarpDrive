@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "warpdrive:blocks/decoration/decorative-stripes_black_down"
+  }
+}

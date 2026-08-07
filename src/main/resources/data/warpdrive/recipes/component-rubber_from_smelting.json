@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:smelting",
+  "ingredient": {
+    "item": "warpdrive:component-raw_rubber"
+  },
+  "result": "warpdrive:component-rubber",
+  "experience": 0,
+  "cookingtime": 200
+}

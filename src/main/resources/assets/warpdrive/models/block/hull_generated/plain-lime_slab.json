@@ -1,0 +1,8 @@
+{
+    "parent":  "minecraft:block/slab",
+    "textures":  {
+                     "bottom":  "warpdrive:blocks/hull/plain-lime",
+                     "top":  "warpdrive:blocks/hull/plain-lime",
+                     "side":  "warpdrive:blocks/hull/plain-lime"
+                 }
+}

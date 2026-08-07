@@ -3,6 +3,7 @@ package cr0s.warpdrive.item;
 import cr0s.warpdrive.api.IAirContainerItem;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.item.Item;
+import cr0s.warpdrive.data.WarpDriveItemGroup;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
@@ -34,7 +35,7 @@ public class AirTankItem extends Item implements IAirContainerItem {
 
 	public AirTankItem(final AirTankTier tier) {
 		super(new Properties()
-			.tab(ItemGroup.TAB_TOOLS)
+			.tab(WarpDriveItemGroup.MAIN)
 			.stacksTo(1)
 			.durability(tier.getCapacity()));
 		this.tier = tier;

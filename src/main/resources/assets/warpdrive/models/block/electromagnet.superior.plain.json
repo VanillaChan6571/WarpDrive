@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "side": "warpdrive:blocks/atomic/electromagnet.superior.plain-side",
+    "bottom": "warpdrive:blocks/atomic/electromagnet.superior.plain-top_bottom",
+    "top": "warpdrive:blocks/atomic/electromagnet.superior.plain-top_bottom"
+  }
+}

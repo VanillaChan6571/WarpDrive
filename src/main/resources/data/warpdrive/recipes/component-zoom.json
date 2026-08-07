@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:components",
+  "pattern": [
+    "dir",
+    "lll",
+    "dit"
+  ],
+  "key": {
+    "d": {
+      "tag": "forge:dyes"
+    },
+    "i": {
+      "tag": "forge:ingots/iron"
+    },
+    "r": {
+      "item": "minecraft:redstone"
+    },
+    "l": {
+      "item": "warpdrive:component-lens"
+    },
+    "t": {
+      "item": "warpdrive:component-motor"
+    }
+  },
+  "result": {
+    "item": "warpdrive:component-zoom"
+  }
+}

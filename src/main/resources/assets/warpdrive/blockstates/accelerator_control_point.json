@@ -1,22 +1,7 @@
 {
-	"forge_marker": 1,
-	"defaults": {
-		"model": "minecraft:cube_all",
-		"textures": {
-			"all": "warpdrive:blocks/atomic/accelerator_control_point-online"
-		},
-		"transform": "forge:default-block"
-	},
-	"variants": {
-		"normal": [{}],
-		"inventory": [{}],
-		"active": {
-			"false": {
-				"textures": {
-					"all": "warpdrive:blocks/atomic/accelerator_control_point-offline"
-				}
-			},
-			"true": { }
-		}
-	}
+    "variants":  {
+                     "":  {
+                              "model":  "warpdrive:block/catalog/accelerator_control_point"
+                          }
+                 }
 }

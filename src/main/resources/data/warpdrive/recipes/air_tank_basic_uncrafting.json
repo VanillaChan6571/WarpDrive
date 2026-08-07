@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "group": "warpdrive:components",
+  "ingredients": [
+    {
+      "item": "warpdrive:air_tank.basic"
+    }
+  ],
+  "result": {
+    "item": "warpdrive:component-air_canister_empty",
+    "count": 2
+  }
+}

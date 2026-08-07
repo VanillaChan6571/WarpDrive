@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:tools",
+  "pattern": [
+    "mam",
+    "mpm",
+    "mcm"
+  ],
+  "key": {
+    "m": {
+      "item": "warpdrive:component-carbon_fiber"
+    },
+    "a": {
+      "item": "warpdrive:warp_armor_advanced_chestplate"
+    },
+    "p": {
+      "item": "warpdrive:component-pump"
+    },
+    "c": {
+      "item": "warpdrive:component-air_canister_empty"
+    }
+  },
+  "result": {
+    "item": "warpdrive:warp_armor_superior_chestplate"
+  }
+}

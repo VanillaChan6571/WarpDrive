@@ -153,73 +153,12 @@ public class StateAir {
 	 * them from "seals horizontally" to "leaks everywhere" and quietly vented every pane window.
 	 */
 	private void updateBlockType(final World world) {
-		final int typeBlock;
-		final Block block = blockState.getBlock();
-
-		if (block instanceof AirFlowBlock) {
-			typeBlock = AirData.BLOCK_AIR_FLOW;
-
-		} else if (block instanceof AirSourceBlock) {
-			typeBlock = AirData.BLOCK_AIR_SOURCE;
-
-		} else if ( block == Blocks.AIR
-		         || block == Blocks.CAVE_AIR
-		         || block == Blocks.VOID_AIR ) {
-			typeBlock = AirData.BLOCK_AIR_PLACEABLE;
-
-		} else if (blockState.getMaterial() == Material.LEAVES) {
-			typeBlock = AirData.BLOCK_AIR_NON_PLACEABLE;
-
-		} else if (!blockState.getFluidState().isEmpty()) {
-			// Two stacked sources look identical from metadata alone, so the block above decides:
-			// more fluid above means we are inside a column and sealed, otherwise this is a surface
-			// that air can move across horizontally.
-			final BlockState blockStateAbove = world.getBlockState(blockPos.above());
-			typeBlock = blockStateAbove.getFluidState().isEmpty()
-			          ? AirData.BLOCK_AIR_NON_PLACEABLE_H
-			          : AirData.BLOCK_SEALER;
-
-		} else if (block instanceof PaneBlock) {
-			typeBlock = AirData.BLOCK_AIR_NON_PLACEABLE_V;
-
-		} else if (blockState.getMaterial().isReplaceable()) {
-			// grass, snow layers, modded replaceable decoration
-			typeBlock = AirData.BLOCK_AIR_NON_PLACEABLE;
-
-		} else {
-			typeBlock = classifyByShape(world);
-		}
+		final int typeBlock = AirClassifier.classify(blockState, world, blockPos);
 
 		if ((dataAir & AirData.BLOCK_MASK) != typeBlock) {
 			dataAir = (dataAir & ~AirData.BLOCK_MASK) | typeBlock;
 			chunkData.setDataAir(blockPos.getX(), blockPos.getY(), blockPos.getZ(), dataAir);
 		}
-	}
-
-	/** Decide sealing from the collision shape's extent on each axis, as 1.12.2 did with its AABB. */
-	private int classifyByShape(final World world) {
-		final VoxelShape shape = blockState.getCollisionShape(world, blockPos);
-		if (shape.isEmpty()) {
-			return AirData.BLOCK_AIR_NON_PLACEABLE;
-		}
-
-		final AxisAlignedBB bounds = shape.bounds();
-		final boolean fullX = bounds.maxX - bounds.minX > 0.99D;
-		final boolean fullY = bounds.maxY - bounds.minY > 0.99D;
-		final boolean fullZ = bounds.maxZ - bounds.minZ > 0.99D;
-
-		if (fullX && fullY && fullZ) {
-			return AirData.BLOCK_SEALER;
-		}
-		if (fullX && fullZ) {
-			// spans the whole footprint but not the full height: seals vertically, leaks sideways
-			return AirData.BLOCK_AIR_NON_PLACEABLE_H;
-		}
-		if (fullY && (fullX || fullZ)) {
-			// spans the full height across one axis: seals sideways, leaks vertically
-			return AirData.BLOCK_AIR_NON_PLACEABLE_V;
-		}
-		return AirData.BLOCK_AIR_NON_PLACEABLE;
 	}
 
 	// ===== void detection =====

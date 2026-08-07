@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "group": "warpdrive:decorations",
+  "ingredients": [
+    {
+      "item": "warpdrive:decorative-stripes_black_down"
+    }
+  ],
+  "result": {
+    "item": "warpdrive:decorative-stripes_yellow_up"
+  }
+}

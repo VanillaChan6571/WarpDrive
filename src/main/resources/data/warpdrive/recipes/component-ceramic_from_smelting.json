@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:smelting",
+  "ingredient": {
+    "item": "warpdrive:component-raw_ceramic"
+  },
+  "result": "warpdrive:component-ceramic",
+  "experience": 0,
+  "cookingtime": 200
+}

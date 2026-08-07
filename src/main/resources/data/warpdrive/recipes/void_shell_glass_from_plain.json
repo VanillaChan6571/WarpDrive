@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "g g",
+    "sfs",
+    "g g"
+  ],
+  "key": {
+    "g": {
+      "tag": "forge:glass/colorless"
+    },
+    "s": {
+      "item": "warpdrive:void_shell.plain"
+    },
+    "f": {
+      "item": "minecraft:glowstone_dust"
+    }
+  },
+  "result": {
+    "item": "warpdrive:void_shell.glass",
+    "count": 2
+  }
+}

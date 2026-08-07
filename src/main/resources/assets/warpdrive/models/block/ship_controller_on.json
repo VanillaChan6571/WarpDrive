@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "particle": "warpdrive:block/ship_controller_side",
+    "top": "warpdrive:block/ship_controller_top",
+    "front": "warpdrive:block/ship_controller_front_on",
+    "side": "warpdrive:block/ship_controller_side"
+  }
+}

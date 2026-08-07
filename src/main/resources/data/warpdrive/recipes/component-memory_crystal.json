@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:components",
+  "pattern": [
+    "gmg",
+    "gmg",
+    "prp"
+  ],
+  "key": {
+    "g": {
+      "tag": "forge:glass_panes/colorless"
+    },
+    "m": {
+      "item": "minecraft:comparator"
+    },
+    "p": {
+      "item": "minecraft:paper"
+    },
+    "r": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "result": {
+    "item": "warpdrive:component-memory_crystal"
+  }
+}

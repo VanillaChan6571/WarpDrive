@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:components",
+  "pattern": [
+    "rgr",
+    "RgR",
+    "rgr"
+  ],
+  "key": {
+    "r": {
+      "item": "minecraft:redstone"
+    },
+    "g": {
+      "tag": "forge:ingots/gold"
+    },
+    "R": {
+      "item": "warpdrive:component-rubber"
+    }
+  },
+  "result": {
+    "item": "warpdrive:component-power_interface",
+    "count": 3
+  }
+}

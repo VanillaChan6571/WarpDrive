@@ -1,0 +1,21 @@
+{
+  "replace": false,
+  "values": [
+    "warpdrive:tuning_fork-white",
+    "warpdrive:tuning_fork-orange",
+    "warpdrive:tuning_fork-magenta",
+    "warpdrive:tuning_fork-light_blue",
+    "warpdrive:tuning_fork-yellow",
+    "warpdrive:tuning_fork-lime",
+    "warpdrive:tuning_fork-pink",
+    "warpdrive:tuning_fork-gray",
+    "warpdrive:tuning_fork-silver",
+    "warpdrive:tuning_fork-cyan",
+    "warpdrive:tuning_fork-purple",
+    "warpdrive:tuning_fork-blue",
+    "warpdrive:tuning_fork-brown",
+    "warpdrive:tuning_fork-green",
+    "warpdrive:tuning_fork-red",
+    "warpdrive:tuning_fork-black"
+  ]
+}

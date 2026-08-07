@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:components",
+  "pattern": [
+    "sgs",
+    "g g",
+    "sgs"
+  ],
+  "key": {
+    "s": {
+      "tag": "forge:slimeballs"
+    },
+    "g": {
+      "tag": "forge:glass/colorless"
+    }
+  },
+  "result": {
+    "item": "warpdrive:component-glass_tank",
+    "count": 4
+  }
+}

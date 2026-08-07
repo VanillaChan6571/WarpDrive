@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:components",
+  "pattern": [
+    "GGg",
+    "rer",
+    "gGG"
+  ],
+  "key": {
+    "G": {
+      "tag": "forge:glass_panes/colorless"
+    },
+    "g": {
+      "tag": "forge:nuggets/gold"
+    },
+    "e": {
+      "item": "minecraft:ender_pearl"
+    },
+    "r": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "result": {
+    "item": "warpdrive:component-ender_coil",
+    "count": 2
+  }
+}

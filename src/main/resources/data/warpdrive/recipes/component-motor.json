@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:components",
+  "pattern": [
+    "bbn",
+    "iii",
+    "bbn"
+  ],
+  "key": {
+    "b": {
+      "item": "minecraft:iron_bars"
+    },
+    "i": {
+      "tag": "forge:ingots/iron"
+    },
+    "n": {
+      "tag": "forge:nuggets/gold"
+    }
+  },
+  "result": {
+    "item": "warpdrive:component-motor"
+  }
+}

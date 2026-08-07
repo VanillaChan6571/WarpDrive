@@ -1,0 +1,9 @@
+{
+  "parent": "warpdrive:block/ship_core_off",
+  "textures": {
+    "north": "warpdrive:blocks/movement/ship_core-left_online",
+    "south": "warpdrive:blocks/movement/ship_core-right_online",
+    "west": "warpdrive:blocks/movement/ship_controller-side_active4",
+    "east": "warpdrive:blocks/movement/ship_core-front"
+  }
+}

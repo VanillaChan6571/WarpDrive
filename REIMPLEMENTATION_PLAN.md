@@ -184,16 +184,15 @@ Travel between layers uses **both** a ship command and altitude ascent.
 - [x] vacuum damage + tiered armour, stats carried over unchanged from 1.12.2
 - [x] `StructureBuilder`: computes off-thread, applies main-thread at 5000 blocks/tick
 
-**Still outstanding**
-- [ ] **Air tanks.** Only the helmet supplies air today. 1.12.2 also had tanks in the chestplate
-      giving a finite supply, so a full set mattered beyond its armour stats.
-- [ ] altitude ascent / descent for players and small craft (ship command works; the "fly up to
-      change layer" half is not implemented)
-- [ ] energy model: cheaper distance in 0g, and accounting for the 8:1 hyperspace scale
-- [ ] gravity nuance: 1.12.2 distinguished field gravity near ship blocks (0.025) from
-      `SPACE_VOID_GRAVITY` (0.001) in open void, and used separate lower values for dropped items.
-      The attribute only affects LivingEntity, so items still fall at vanilla speed.
-- [ ] moons and planets, via `StructureBuilder`
+**Phase 4 completion status**
+- [x] air tanks with three finite-capacity tiers, chest-slot consumption and HUD integration
+- [x] altitude ascent / descent for players and ships across overworld, space and hyperspace
+- [x] faithful movement-type energy equation and mass/range factors; hyperspace's cheaper local
+      distance naturally compounds with its 8:1 coordinate scale for long-haul travel
+- [x] field/void gravity nuance for living entities and separate zero-g item handling
+- [x] deterministic mineable planets with one or two moons. Normal world generation uses a native
+      chunk-sliced `Feature` for bounded memory and order-independent generation; `StructureBuilder`
+      remains available for future bodies created dynamically after terrain generation.
 - [ ] armour recipes and proper repair materials (currently leather/iron/diamond placeholders)
 
 `isInSpace()` / `isInHyperspace()` on the Ship Core already compare against these exact ids, so

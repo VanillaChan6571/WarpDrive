@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:tools",
+  "pattern": [
+    "mam",
+    "m m"
+  ],
+  "key": {
+    "m": {
+      "item": "warpdrive:component-carbon_fiber"
+    },
+    "a": {
+      "item": "warpdrive:warp_armor_advanced_boots"
+    }
+  },
+  "result": {
+    "item": "warpdrive:warp_armor_superior_boots"
+  }
+}

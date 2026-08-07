@@ -1,0 +1,8 @@
+{
+    "parent":  "minecraft:block/cube_bottom_top",
+    "textures":  {
+                     "side":  "warpdrive:blocks/movement/transporter_core-side_online",
+                     "top":  "warpdrive:blocks/movement/transporter_core-bottom_top",
+                     "bottom":  "warpdrive:blocks/movement/transporter_core-bottom_top"
+                 }
+}

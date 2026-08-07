@@ -1,29 +1,13 @@
 {
-    "forge_marker": 1,
-    "defaults": {
-        "textures": {
-            "plain"           : "warpdrive:blocks/hull/plain-blue",
-            "tiled_full"      : "warpdrive:blocks/hull/tiled-blue",
-            "tiled_horizontal": "warpdrive:blocks/hull/tiled_horizontal-blue",
-            "tiled_vertical"  : "warpdrive:blocks/hull/tiled_vertical-blue"
-        }
-    },
-    "variants": {
-        "variant=plain_down"  : { "model": "warpdrive:slab_down" , "textures": { "full": "#plain"     , "horizontal": "#plain"                                           } },
-        "variant=plain_up"    : { "model": "warpdrive:slab_up"   , "textures": { "full": "#plain"     , "horizontal": "#plain"                                           } },
-        "variant=plain_north" : { "model": "warpdrive:slab_north", "textures": { "full": "#plain"     , "horizontal": "#plain"          , "vertical": "#plain"           } },
-        "variant=plain_south" : { "model": "warpdrive:slab_south", "textures": { "full": "#plain"     , "horizontal": "#plain"          , "vertical": "#plain"           } },
-        "variant=plain_east"  : { "model": "warpdrive:slab_east" , "textures": { "full": "#plain"     , "vertical"  : "#plain"                                           } },
-        "variant=plain_west"  : { "model": "warpdrive:slab_west" , "textures": { "full": "#plain"     , "vertical"  : "#plain"                                           } },
-        "variant=tiled_down"  : { "model": "warpdrive:slab_down" , "textures": { "full": "#tiled_full", "horizontal": "#tiled_horizontal"                                } },
-        "variant=tiled_up"    : { "model": "warpdrive:slab_up"   , "textures": { "full": "#tiled_full", "horizontal": "#tiled_horizontal"                                } },
-        "variant=tiled_north" : { "model": "warpdrive:slab_north", "textures": { "full": "#tiled_full", "horizontal": "#tiled_horizontal", "vertical": "#tiled_vertical" } },
-        "variant=tiled_south" : { "model": "warpdrive:slab_south", "textures": { "full": "#tiled_full", "horizontal": "#tiled_horizontal", "vertical": "#tiled_vertical" } },
-        "variant=tiled_east"  : { "model": "warpdrive:slab_east" , "textures": { "full": "#tiled_full", "vertical"  : "#tiled_vertical"                                  } },
-        "variant=tiled_west"  : { "model": "warpdrive:slab_west" , "textures": { "full": "#tiled_full", "vertical"  : "#tiled_vertical"                                  } },
-        "variant=plain_full"  : { "model": "minecraft:cube_all"  , "textures": { "all": "#plain" } },
-        "variant=tiled_full_x": { "model": "minecraft:cube"      , "textures": { "particle": "#tiled_vertical"  , "down": "#tiled_vertical"  , "up": "#tiled_vertical"  , "north": "#tiled_vertical"  , "south": "#tiled_vertical"  , "west": "#tiled_full"      , "east": "#tiled_full"       } },
-        "variant=tiled_full_y": { "model": "minecraft:cube"      , "textures": { "particle": "#tiled_full"      , "down": "#tiled_full"      , "up": "#tiled_full"      , "north": "#tiled_horizontal", "south": "#tiled_horizontal", "west": "#tiled_horizontal", "east": "#tiled_horizontal" } },
-        "variant=tiled_full_z": { "model": "minecraft:cube"      , "textures": { "particle": "#tiled_horizontal", "down": "#tiled_horizontal", "up": "#tiled_horizontal", "north": "#tiled_full"      , "south": "#tiled_full"      , "west": "#tiled_vertical"  , "east": "#tiled_vertical"   } }
-    }
+    "variants":  {
+                     "type=bottom":  {
+                                         "model":  "warpdrive:block/hull_generated/plain-blue_slab"
+                                     },
+                     "type=top":  {
+                                      "model":  "warpdrive:block/hull_generated/plain-blue_slab_top"
+                                  },
+                     "type=double":  {
+                                         "model":  "warpdrive:block/hull_generated/plain-blue"
+                                     }
+                 }
 }

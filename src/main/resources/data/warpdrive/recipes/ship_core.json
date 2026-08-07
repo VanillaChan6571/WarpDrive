@@ -1,0 +1,32 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "ce ",
+    "pmc",
+    "cCM"
+  ],
+  "key": {
+    "c": {
+      "item": "minecraft:redstone"
+    },
+    "e": {
+      "item": "warpdrive:component-diamond_crystal"
+    },
+    "p": {
+      "item": "warpdrive:component-power_interface"
+    },
+    "m": {
+      "item": "minecraft:iron_block"
+    },
+    "C": {
+      "item": "warpdrive:component-computer_interface"
+    },
+    "M": {
+      "item": "warpdrive:component-memory_crystal"
+    }
+  },
+  "result": {
+    "item": "warpdrive:ship_core"
+  }
+}

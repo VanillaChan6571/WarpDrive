@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:tools",
+  "pattern": [
+    "faf",
+    "mmm",
+    "mfm"
+  ],
+  "key": {
+    "f": {
+      "item": "warpdrive:component-biofiber"
+    },
+    "a": {
+      "item": "warpdrive:warp_armor_basic_chestplate"
+    },
+    "m": {
+      "item": "warpdrive:component-ceramic"
+    }
+  },
+  "result": {
+    "item": "warpdrive:warp_armor_advanced_chestplate"
+  }
+}

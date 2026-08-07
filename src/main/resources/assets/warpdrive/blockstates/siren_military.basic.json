@@ -1,32 +1,7 @@
 {
-	"forge_marker": 1,
-	"variants": {
-		"inventory"                       : { "model": "warpdrive:detection/siren_military.basic-vertical"             },
-		
-		"active=false,spinning=down_north": { "model": "warpdrive:detection/siren_military.basic-vertical"  , "x": 180 },
-		"active=false,spinning=down_south": { "model": "warpdrive:detection/siren_military.basic-vertical"  , "x": 180 },
-		"active=false,spinning=down_east" : { "model": "warpdrive:detection/siren_military.basic-vertical"  , "x": 180 },
-		"active=false,spinning=down_west" : { "model": "warpdrive:detection/siren_military.basic-vertical"  , "x": 180 },
-		"active=false,spinning=up_north"  : { "model": "warpdrive:detection/siren_military.basic-vertical"             },
-		"active=false,spinning=up_south"  : { "model": "warpdrive:detection/siren_military.basic-vertical"             },
-		"active=false,spinning=up_east"   : { "model": "warpdrive:detection/siren_military.basic-vertical"             },
-		"active=false,spinning=up_west"   : { "model": "warpdrive:detection/siren_military.basic-vertical"             },
-		"active=false,spinning=north"     : { "model": "warpdrive:detection/siren_military.basic-horizontal"           },
-		"active=false,spinning=south"     : { "model": "warpdrive:detection/siren_military.basic-horizontal", "y": 180 },
-		"active=false,spinning=west"      : { "model": "warpdrive:detection/siren_military.basic-horizontal", "y": 270 },
-		"active=false,spinning=east"      : { "model": "warpdrive:detection/siren_military.basic-horizontal", "y":  90 },
-		
-		"active=true,spinning=down_north" : { "model": "warpdrive:detection/siren_military.basic-vertical"  , "x": 180 },
-		"active=true,spinning=down_south" : { "model": "warpdrive:detection/siren_military.basic-vertical"  , "x": 180 },
-		"active=true,spinning=down_east"  : { "model": "warpdrive:detection/siren_military.basic-vertical"  , "x": 180 },
-		"active=true,spinning=down_west"  : { "model": "warpdrive:detection/siren_military.basic-vertical"  , "x": 180 },
-		"active=true,spinning=up_north"   : { "model": "warpdrive:detection/siren_military.basic-vertical"             },
-		"active=true,spinning=up_south"   : { "model": "warpdrive:detection/siren_military.basic-vertical"             },
-		"active=true,spinning=up_east"    : { "model": "warpdrive:detection/siren_military.basic-vertical"             },
-		"active=true,spinning=up_west"    : { "model": "warpdrive:detection/siren_military.basic-vertical"             },
-		"active=true,spinning=north"      : { "model": "warpdrive:detection/siren_military.basic-horizontal"           },
-		"active=true,spinning=south"      : { "model": "warpdrive:detection/siren_military.basic-horizontal", "y": 180 },
-		"active=true,spinning=west"       : { "model": "warpdrive:detection/siren_military.basic-horizontal", "y": 270 },
-		"active=true,spinning=east"       : { "model": "warpdrive:detection/siren_military.basic-horizontal", "y":  90 }
-	}
+    "variants":  {
+                     "":  {
+                              "model":  "warpdrive:block/catalog/siren_military.basic"
+                          }
+                 }
 }

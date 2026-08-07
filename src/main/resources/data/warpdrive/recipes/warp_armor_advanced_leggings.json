@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:tools",
+  "pattern": [
+    "faf",
+    "mMm",
+    "w w"
+  ],
+  "key": {
+    "f": {
+      "item": "warpdrive:component-biofiber"
+    },
+    "a": {
+      "item": "warpdrive:warp_armor_basic_leggings"
+    },
+    "m": {
+      "item": "warpdrive:component-ceramic"
+    },
+    "M": {
+      "item": "warpdrive:component-motor"
+    },
+    "w": {
+      "tag": "minecraft:wool"
+    }
+  },
+  "result": {
+    "item": "warpdrive:warp_armor_advanced_leggings"
+  }
+}

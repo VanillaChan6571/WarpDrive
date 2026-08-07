@@ -1,0 +1,6 @@
+{
+    "parent":  "minecraft:block/cube_all",
+    "textures":  {
+                     "all":  "warpdrive:blocks/energy/enan_reactor_laser-top_bottom"
+                 }
+}

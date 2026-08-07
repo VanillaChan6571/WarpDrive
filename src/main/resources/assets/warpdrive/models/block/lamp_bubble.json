@@ -1,0 +1,5 @@
+{
+  "loader": "forge:obj",
+  "model": "warpdrive:models/block/decoration/lamp_bubble.obj",
+  "flip-v": true
+}

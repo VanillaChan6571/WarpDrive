@@ -1,6 +1,7 @@
 package cr0s.warpdrive.ship;
 
 import cr0s.warpdrive.WarpDrive;
+import cr0s.warpdrive.block.ShipCoreBlock;
 import cr0s.warpdrive.block.breathing.AbstractAirBlock;
 import cr0s.warpdrive.data.AirData;
 import cr0s.warpdrive.data.ChunkData;
@@ -114,40 +115,26 @@ public class WarpEngine {
             scanResult.corePos, destX, destY, destZ,
             crossWorld ? " (" + dimensionOf(sourceWorld) + " -> " + dimensionOf(destWorld) + ")" : "");
 
-
-        // Calculate offset
-        int offsetX = destX - scanResult.corePos.getX();
-        int offsetY = destY - scanResult.corePos.getY();
-        int offsetZ = destZ - scanResult.corePos.getZ();
-
-        // Capture up-to-date TileEntity NBT before we move anything (state may have changed after scan)
+        // The caller captured this snapshot immediately after the countdown. Consume that exact
+        // state instead of reading every TileEntity a second time and reopening a validation gap.
         Map<BlockPos, CompoundNBT> currentNbtByPos = new HashMap<>();
-        DebugLog.log("JUMP", "Starting NBT capture for {} blocks", scanResult.blocks.size());
 		for (ShipScanner.ShipBlock shipBlock : scanResult.blocks) {
-			TileEntity te = sourceWorld.getBlockEntity(shipBlock.pos);
 			String blockName = shipBlock.state.getBlock().getRegistryName() != null
 				? shipBlock.state.getBlock().getRegistryName().toString() : "unknown";
-			DebugLog.log("JUMP", "Block at {} type={} hasTileEntity={} te={}",
-				shipBlock.pos, blockName, shipBlock.state.hasTileEntity(), te != null);
-
-			if (te != null) {
-				CompoundNBT nbt = new CompoundNBT();
-				te.save(nbt);
+			if (!sourceWorld.getBlockState(shipBlock.pos).equals(shipBlock.state)) {
+				return new WarpResult(false, String.format("Source ship changed at %d, %d, %d",
+					shipBlock.pos.getX(), shipBlock.pos.getY(), shipBlock.pos.getZ()));
+			}
+			final CompoundNBT nbt = shipBlock.copyTileEntityNBT();
+			if (nbt != null) {
 				currentNbtByPos.put(shipBlock.pos, nbt);
-				DebugLog.log("JUMP", "Saved NBT for {} at {} keys={}",
+				DebugLog.log("JUMP", "Using validated NBT for {} at {} keys={}",
 					blockName, shipBlock.pos, nbt.getAllKeys().size());
-				maybeLogCCComputer("save", shipBlock.state, shipBlock.pos, nbt);
-				logTileEntityState("save", shipBlock.state, shipBlock.pos, nbt);
-			} else if (shipBlock.tileEntityNBT != null) {
-				CompoundNBT nbt = shipBlock.tileEntityNBT.copy();
-				currentNbtByPos.put(shipBlock.pos, nbt);
-				DebugLog.log("JUMP", "Saved fallback (scan) NBT for {} at {} keys={}",
-					blockName, shipBlock.pos, nbt.getAllKeys().size());
-				maybeLogCCComputer("save-fallback", shipBlock.state, shipBlock.pos, nbt);
-				logTileEntityState("save-fallback", shipBlock.state, shipBlock.pos, nbt);
+				maybeLogCCComputer("snapshot", shipBlock.state, shipBlock.pos, nbt);
+				logTileEntityState("snapshot", shipBlock.state, shipBlock.pos, nbt);
 			}
 		}
-        DebugLog.log("JUMP", "NBT capture complete: {} TileEntities saved", currentNbtByPos.size());
+        DebugLog.log("JUMP", "Validated snapshot contains {} TileEntities", currentNbtByPos.size());
 
         // Phase 1: Detect entities on ship
         WarpDrive.logger.info("Phase 1: Detecting entities on ship...");
@@ -187,6 +174,10 @@ public class WarpEngine {
         CompoundNBT coreNbt = currentNbtByPos.get(scanResult.corePos);
         if (coreNbt != null) {
             coreNbt.putInt("Energy", Math.max(0, energyAfterJump));
+            // The jump command is one-shot. Match the destination NBT and blockstate before
+            // placement so ShipCoreTileEntity.syncBlockAppearance() has no reason to mutate a
+            // tile entity that is still pending registration in World.tickBlockEntities().
+            coreNbt.putBoolean("Enabled", false);
             // ShipScanned/ShipBlocks were written here previously. ShipCoreTileEntity.load() reads
             // neither - those fields disappeared when the API moved to setDimensions/setMovement -
             // so they only showed up as phantom keys in NBT dumps.
@@ -214,15 +205,21 @@ public class WarpEngine {
             String blockName = shipBlock.state.getBlock().getRegistryName() != null
                 ? shipBlock.state.getBlock().getRegistryName().toString() : "unknown";
 
-            // Ensure destination chunk is loaded before placing
-            destWorld.getChunk(newPos);
-
             // Rotate the state as well as the position, so stairs/pistons/chests keep facing the
             // same way relative to the ship rather than staying stuck to world axes
-            final BlockState newState = shipBlock.state.rotate(rotation);
+            BlockState newState = shipBlock.state.rotate(rotation);
+            if (shipBlock.pos.equals(scanResult.corePos)
+             && newState.getBlock() instanceof ShipCoreBlock) {
+                newState = newState.setValue(ShipCoreBlock.ACTIVE, false);
+            }
 
-            // Place block
-            destWorld.setBlock(newPos, newState, 3);
+            // Build the destination on the server without publishing the freshly-created, empty
+            // TileEntity to clients yet. Its saved NBT is restored immediately below, and the
+            // completed block + TileEntity are published together after the entire placement
+            // pass. Sending flag 2 here used to race a default Ship Core update against the
+            // restored one, making the client show a new unnamed, zero-size ship after a jump.
+            // Keep flag 1 so vanilla neighbour behaviour remains identical to a normal placement.
+            destWorld.setBlock(newPos, newState, 1);
 
             // Ensure the TileEntity exists immediately after placement
             if (newState.hasTileEntity() && destWorld.getBlockEntity(newPos) == null) {
@@ -237,7 +234,7 @@ public class WarpEngine {
             }
 
             // Restore TileEntity data if present (saved during scan)
-            CompoundNBT latestNbt = currentNbtByPos.getOrDefault(shipBlock.pos, shipBlock.tileEntityNBT);
+            CompoundNBT latestNbt = currentNbtByPos.get(shipBlock.pos);
             if (latestNbt != null) {
                 DebugLog.log("JUMP", "Restoring NBT for {} at {} (has {} keys)",
                     blockName, newPos, latestNbt.getAllKeys().size());
@@ -275,10 +272,30 @@ public class WarpEngine {
                     newTE.setChanged();
                     maybeLogCCComputer("restore", shipBlock.state, newPos, nbt);
                     logTileEntityState("restore", shipBlock.state, newPos, nbt);
+                    final CompoundNBT actualNbt = new CompoundNBT();
+                    newTE.save(actualNbt);
+                    logTileEntityState("restore-actual", newState, newPos, actualNbt);
                 } else if (newState.hasTileEntity()) {
                     DebugLog.log("JUMP", "Failed to create TileEntity for {} at {}", shipBlock.state.getBlock().getRegistryName(), newPos);
                 }
             }
+        }
+
+        // All TileEntities now contain their authoritative saved data. Publish each completed
+        // destination block exactly once so the accompanying update packet cannot contain the
+        // constructor defaults. This also applies to inventories and third-party TileEntities,
+        // not only WarpDrive's Ship Core.
+        for (ShipScanner.ShipBlock shipBlock : scanResult.blocks) {
+            final BlockPos newPos = destinationOf(
+                shipBlock.pos, scanResult, rotation, destX, destY, destZ);
+            final BlockState restoredState = destWorld.getBlockState(newPos);
+            final TileEntity restoredTile = destWorld.getBlockEntity(newPos);
+            if (restoredTile != null) {
+                final CompoundNBT publishedNbt = new CompoundNBT();
+                restoredTile.save(publishedNbt);
+                logTileEntityState("publish", restoredState, newPos, publishedNbt);
+            }
+            destWorld.sendBlockUpdated(newPos, restoredState, restoredState, 2);
         }
 
         // Bring the atmosphere across with the hull, so the ship arrives pressurised rather than
@@ -449,6 +466,11 @@ public class WarpEngine {
             return;
         }
 
+        // Landing on a world that has its own atmosphere: the ship's bottled air is simply
+        // discarded. Carrying it across would strand air blocks in a dimension with no simulation
+        // running, so nothing would ever tick them down and they would hang there permanently.
+        final boolean destinationHoldsAir = ChunkHandler.isSimulated(destWorld);
+
         for (final AirRecord record : records) {
             sourceWorld.setBlock(record.pos, Blocks.AIR.defaultBlockState(), 2);
             final ChunkData chunkData = ChunkHandler.getChunkData(
@@ -457,6 +479,12 @@ public class WarpEngine {
                 chunkData.setDataAir(record.pos.getX(), record.pos.getY(), record.pos.getZ(),
                     AirData.AIR_DEFAULT);
             }
+        }
+
+        if (!destinationHoldsAir) {
+            DebugLog.log("JUMP", "discarded {} air blocks: {} has its own atmosphere",
+                records.size(), destWorld.dimension().location());
+            return;
         }
 
         int moved = 0;
@@ -530,6 +558,19 @@ public class WarpEngine {
                 nbt != null && nbt.contains(CC_KEY_ID),
                 nbt != null && nbt.contains(CC_KEY_LABEL),
                 nbt == null ? "null" : nbt.getAllKeys());
+            if (name.contains("ship_core") && nbt != null) {
+                DebugLog.log("JUMP", "Warp {} core values at {}: version={} name='{}' "
+                        + "dims=F{} B{} L{} R{} U{} D{} move={},{},{} energy={} box={} "
+                        + "facing={} rot={} enabled={} command='{}' state={} countdown={} cooldown={} pos={},{},{}",
+                    phase, pos, nbt.getInt("CoreDataVersion"), nbt.getString("ShipName"),
+                    nbt.getInt("DimFront"), nbt.getInt("DimBack"), nbt.getInt("DimLeft"),
+                    nbt.getInt("DimRight"), nbt.getInt("DimUp"), nbt.getInt("DimDown"),
+                    nbt.getInt("MoveX"), nbt.getInt("MoveY"), nbt.getInt("MoveZ"),
+                    nbt.getInt("Energy"), nbt.getBoolean("ShowBoundingBox"), nbt.getInt("Facing"),
+                    nbt.getInt("RotationSteps"), nbt.getBoolean("Enabled"), nbt.getString("Command"),
+                    nbt.getInt("ShipState"), nbt.getInt("CountdownRemaining"),
+                    nbt.getInt("CooldownRemaining"), nbt.getInt("x"), nbt.getInt("y"), nbt.getInt("z"));
+            }
         }
     }
 }

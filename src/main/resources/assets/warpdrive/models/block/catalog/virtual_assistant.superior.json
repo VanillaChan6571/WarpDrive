@@ -1,0 +1,8 @@
+{
+    "parent":  "minecraft:block/cube_bottom_top",
+    "textures":  {
+                     "side":  "warpdrive:blocks/detection/virtual_assistant-side_on",
+                     "top":  "warpdrive:blocks/detection/virtual_assistant.superior-top",
+                     "bottom":  "warpdrive:blocks/detection/virtual_assistant-bottom"
+                 }
+}

@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:decorations",
+  "pattern": [
+    "ssb",
+    "sss",
+    "yss"
+  ],
+  "key": {
+    "s": {
+      "tag": "warpdrive:decorative_blocks"
+    },
+    "b": {
+      "tag": "forge:dyes/black"
+    },
+    "y": {
+      "tag": "forge:dyes/yellow"
+    }
+  },
+  "result": {
+    "item": "warpdrive:decorative-stripes_yellow_up",
+    "count": 7
+  }
+}

@@ -1,0 +1,8 @@
+{
+    "parent":  "minecraft:block/cube_bottom_top",
+    "textures":  {
+                     "side":  "warpdrive:blocks/movement/ship_controller-side_active2",
+                     "top":  "warpdrive:blocks/movement/ship_controller-top_bottom",
+                     "bottom":  "warpdrive:blocks/movement/ship_controller-top_bottom"
+                 }
+}

@@ -1,0 +1,7 @@
+{
+    "parent":  "warpdrive:block/slab_down",
+    "textures":  {
+                     "full":  "warpdrive:blocks/hull/tiled-light_blue",
+                     "horizontal":  "warpdrive:blocks/hull/tiled_horizontal-light_blue"
+                 }
+}

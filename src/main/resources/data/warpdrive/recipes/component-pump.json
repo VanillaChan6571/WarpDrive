@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:components",
+  "pattern": [
+    "sst",
+    "mim",
+    "tss"
+  ],
+  "key": {
+    "s": {
+      "item": "warpdrive:component-rubber"
+    },
+    "t": {
+      "item": "warpdrive:component-glass_tank"
+    },
+    "m": {
+      "item": "warpdrive:component-motor"
+    },
+    "i": {
+      "tag": "forge:ingots/iron"
+    }
+  },
+  "result": {
+    "item": "warpdrive:component-pump",
+    "count": 2
+  }
+}

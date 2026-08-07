@@ -1,20 +1,7 @@
 {
-	"forge_marker": 1,
-	"variants": {
-		"inventory": {
-			"model": "minecraft:cube_directional",
-			"textures": {
-				"particle": "warpdrive:blocks/energy/capacitor.superior-output",
-				"down"    : "warpdrive:blocks/energy/capacitor.superior-input",
-				"up"      : "warpdrive:blocks/energy/capacitor.superior-input",
-				"north"   : "warpdrive:blocks/energy/capacitor.superior-output",
-				"south"   : "warpdrive:blocks/energy/capacitor.superior-output",
-				"west"    : "warpdrive:blocks/energy/capacitor.superior-output",
-				"east"    : "warpdrive:blocks/energy/capacitor.superior-output"
-			}
-		},
-		"config=disabled": { "model": "minecraft:cube_all", "textures": { "all" : "warpdrive:blocks/energy/capacitor.superior-disabled"    } },
-		"config=input"   : { "model": "minecraft:cube_all", "textures": { "all" : "warpdrive:blocks/energy/capacitor.superior-input"       } },
-		"config=output"  : { "model": "minecraft:cube_all", "textures": { "all" : "warpdrive:blocks/energy/capacitor.superior-output"      } }
-	}
+    "variants":  {
+                     "":  {
+                              "model":  "warpdrive:block/catalog/capacitor.superior"
+                          }
+                 }
 }

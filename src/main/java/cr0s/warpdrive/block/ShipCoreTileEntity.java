@@ -3,16 +3,15 @@ package cr0s.warpdrive.block;
 import cr0s.warpdrive.WarpDrive;
 import cr0s.warpdrive.data.Registration;
 import cr0s.warpdrive.debug.DebugLog;
+import cr0s.warpdrive.network.ShipCountdownPacket;
+import cr0s.warpdrive.network.WarpDriveNetwork;
 import cr0s.warpdrive.render.BoundingBoxRenderer;
 import cr0s.warpdrive.ship.ShipScanner;
 import cr0s.warpdrive.ship.WarpEngine;
-import dan200.computercraft.api.lua.LuaException;
 import dan200.computercraft.api.lua.LuaFunction;
-import dan200.computercraft.api.peripheral.IPeripheral;
-import dan200.computercraft.shared.Capabilities;
-import dan200.computercraft.shared.peripheral.generic.GenericPeripheralProvider;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SUpdateTileEntityPacket;
@@ -38,6 +37,7 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.energy.IEnergyStorage;
+import net.minecraftforge.fml.network.PacketDistributor;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -45,15 +45,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.UUID;
 
 /**
- * Ship Core TileEntity - Handles ship logic and ComputerCraft integration
+ * Ship Core TileEntity - Handles authoritative ship logic
  *
  * Implements:
  * - IEnergyStorage for Forge Energy
- * - Provides IPeripheral via capability for CC:Tweaked
+ * - CC:Tweaked annotations are consumed by the optional compatibility adapter when installed
  */
 public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntity {
 
@@ -80,7 +79,10 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 
 	// Ship command state, mirroring the 1.12.2 controller's model
 	private String command = "MANUAL";
-	private boolean enabled = false;
+	// TileEntityAbstractMachine defaulted this to true in 1.12.2. Starting disabled made every
+	// freshly placed 1.16 core select the dull offline textures until a CC command happened.
+	private boolean enabled = true;
+	private static final int CORE_DATA_VERSION = 2;
 	private String targetName = "";
 
 	/** Destination dimension id, or empty for "stay in the current dimension". */
@@ -102,11 +104,19 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 
 	private int shipState = STATE_IDLE;
 	private int countdownRemaining = 0;
+	/** Players who received the one-shot HUD start packet, retained so abort can cancel it. */
+	private final Set<UUID> countdownHudRecipients = new HashSet<>();
 	private int cooldownRemaining = 0;
 	private int jumpDelayTicks = JUMP_DELAY_NORMAL_TICKS;
 	/** Delay actually in use for the current countdown (may be escalated for dimension/ship size). */
 	private int activeJumpDelayTicks = JUMP_DELAY_NORMAL_TICKS;
 	private boolean warpSoundPlayed = false;
+	/**
+	 * Blockstate changes from onLoad are unsafe in 1.16.5: a tile created during another tile's
+	 * tick is still pending, so changing its state can make LevelChunk create a replacement before
+	 * the restored object is committed. Reconcile appearance from the first normal tick instead.
+	 */
+	private boolean appearanceSyncPending = true;
 
 	/** Client-side only: last state we logged, to avoid a SYNC line every second. */
 	private String lastLoggedSyncSignature = "";
@@ -115,10 +125,18 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 	/** Which world `forcedChunks` belongs to - not necessarily this tile entity's world. */
 	private RegistryKey<World> forcedChunksWorld = null;
 
-	// Movement (relative, not absolute destination)
-	private int moveX = 0;
-	private int moveY = 0;
-	private int moveZ = 0;
+	// Status calls from the bundled CC UI arrive once a second. A short-lived summary avoids six
+	// separate full-volume scans per redraw; the actual jump always takes a fresh NBT snapshot.
+	private static final long ASSEMBLY_STATUS_CACHE_TICKS = 100L;
+	@Nullable
+	private ShipScanner.ShipInspection cachedInspection = null;
+	private long cachedInspectionTick = Long.MIN_VALUE;
+
+	// Legacy ship-local movement: forward/back, up/down, right/left. These are deliberately not
+	// world X/Y/Z; the horizontal pair is rotated through the core's facing immediately before use.
+	private int moveX = 0; // forward (+) / back (-)
+	private int moveY = 0; // up (+) / down (-)
+	private int moveZ = 0; // right (+) / left (-)
 
 	// Whether the bounding boxes are displayed. Server-authoritative and stored in NBT so the
 	// setting survives a jump; the client renders straight off this + the fields above, which
@@ -129,12 +147,73 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		super(Registration.SHIP_CORE_TILE.get());
 	}
 
+	@Override
+	public void onLoad() {
+		super.onLoad();
+		debugCoreNbt("onLoad-enter", null);
+		// Facing is a persisted blockstate property in both 1.12.2 and this port. BlockItem has
+		// already calculated the player-relative state by the time the tile is loaded, so read it
+		// here. Writing the tile's default SOUTH value in this callback races setPlacedBy and was
+		// the reason every core eventually snapped south regardless of placement direction.
+		final BlockState blockState = getBlockState();
+		if (blockState.getBlock() instanceof ShipCoreBlock
+		 && blockState.hasProperty(ShipCoreBlock.FACING)) {
+			facing = blockState.getValue(ShipCoreBlock.FACING);
+		}
+		appearanceSyncPending = !level.isClientSide;
+		debugCoreNbt("onLoad-exit", null);
+	}
+
+	/** Called by ShipCoreBlock after placement so movement and rendering start in the same frame. */
+	void setFacingFromBlock(@Nonnull final Direction direction) {
+		if (!direction.getAxis().isVertical()) {
+			facing = direction;
+			setChanged();
+			// onLoad runs while BlockItem is placing the block and may briefly apply the tile's
+			// default SOUTH value. Re-apply the placement direction after setPlacedBy supplies it.
+			syncBlockAppearance();
+		}
+	}
+
+	private boolean isModelActive() {
+		return enabled && !"OFFLINE".equals(command);
+	}
+
+	/** Synchronise the two legacy render properties without disturbing the block entity. */
+	private void syncBlockAppearance() {
+		if (level == null || level.isClientSide) {
+			return;
+		}
+		final BlockState current = level.getBlockState(worldPosition);
+		if (!(current.getBlock() instanceof ShipCoreBlock)) {
+			return;
+		}
+		final BlockState wanted = current
+			.setValue(ShipCoreBlock.FACING, facing)
+			.setValue(ShipCoreBlock.ACTIVE, isModelActive());
+		if (!wanted.equals(current)) {
+			DebugLog.logSided(level, "CORE-NBT",
+				"syncBlockAppearance object={} current={} wanted={} worldObject={} values={}",
+				objectId(), current, wanted, objectId(level.getBlockEntity(worldPosition)), coreValues());
+			level.setBlock(worldPosition, wanted, 3);
+		}
+	}
+
 	// Ticking is back (it was removed with the creative auto-charge) because the jump countdown and
 	// post-jump cooldown genuinely need per-tick work. Power still comes from real energy blocks.
 	@Override
 	public void tick() {
 		if (level == null || level.isClientSide) {
 			return;
+		}
+		if (appearanceSyncPending) {
+			appearanceSyncPending = false;
+			syncBlockAppearance();
+			// A defensive guard for unusual server implementations: never tick state on an object
+			// that was replaced while synchronising its render properties.
+			if (isRemoved() || level.getBlockEntity(worldPosition) != this) {
+				return;
+			}
 		}
 
 		if (shipState == STATE_COUNTDOWN) {
@@ -147,19 +226,10 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 				playShipSound(selectWarpSound(activeJumpDelayTicks), 4.0F, 1.0F);
 			}
 
-			// Action bar countdown for anyone aboard. Refreshed twice a second: often enough to
-			// tick down smoothly, and well inside the ~3s the action bar stays visible.
-			if (countdownRemaining > 0 && countdownRemaining % 10 == 0) {
-				final double seconds = countdownRemaining / 20.0;
-				final TextFormatting colour = seconds <= 3.0 ? TextFormatting.RED
-					: seconds <= 5.0 ? TextFormatting.GOLD : TextFormatting.YELLOW;
-				broadcastToOnboard(new StringTextComponent(
-					colour + String.format("⚠ WARP IN %.1fs", seconds)));
-			}
-
 			if (countdownRemaining <= 0) {
 				countdownRemaining = 0;
 				shipState = STATE_IDLE;
+				countdownHudRecipients.clear(); // normal completion expires on clients at the same end tick
 				executeScheduledJump();
 			} else if (countdownRemaining % 20 == 0) {
 				syncToClient();
@@ -182,11 +252,25 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 	// Using @LuaFunction annotation (CC:Tweaked 1.16.5 pattern)
 
 	@LuaFunction
-	public final Object[] setDimensions(int front, int back, int left, int right, int up, int down) throws LuaException {
+	public final Object[] setDimensions(int front, int back, int left, int right, int up, int down) {
+		if (shipState == STATE_COUNTDOWN) {
+			return new Object[]{ false, "Cannot change dimensions during a jump countdown" };
+		}
 		// Validate dimensions
 		if (front < 0 || back < 0 || left < 0 || right < 0 || up < 0 || down < 0) {
 			return new Object[]{ false, "All dimensions must be >= 0" };
 		}
+		if ((long) front + back > ShipScanner.MAX_SHIP_SIDE
+		 || (long) left + right > ShipScanner.MAX_SHIP_SIDE
+		 || (long) up + down > ShipScanner.MAX_SHIP_SIDE) {
+			return new Object[]{ false, String.format(
+				"Each ship axis must be at most %d blocks, excluding the core",
+				ShipScanner.MAX_SHIP_SIDE) };
+		}
+
+		final long volume = ((long) front + back + 1L)
+		                  * ((long) left + right + 1L)
+		                  * ((long) up + down + 1L);
 
 		// Set dimensions
 		dimFront = front;
@@ -195,15 +279,13 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		dimRight = right;
 		dimUp = up;
 		dimDown = down;
+		invalidateAssemblyInspection();
 		setChanged();
 
 		// Sync to client
 		if (level != null && !level.isClientSide) {
 			level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
 		}
-
-		// Calculate total volume
-		int volume = (front + back + 1) * (left + right + 1) * (up + down + 1);
 
 		WarpDrive.logger.info("Ship dimensions set: F{} B{} L{} R{} U{} D{} (volume: {})",
 			front, back, left, right, up, down, volume);
@@ -221,8 +303,17 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		return energyStored;
 	}
 
+	/** Legacy Lua shape: success, required = ship.getEnergyRequired(). */
 	@LuaFunction
-	public final int getEnergyRequired() {
+	public final Object[] getEnergyRequired() {
+		if (getShipVolume() <= 1) {
+			return new Object[]{ false, "Dimensions not set" };
+		}
+		return new Object[]{ true, calculateEnergyRequired() };
+	}
+
+	/** Direct value for the native controller, which does not need Lua's success tuple. */
+	public int getEnergyRequiredValue() {
 		return calculateEnergyRequired();
 	}
 
@@ -232,27 +323,13 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		return new Object[]{ getShipMass(), getShipVolume() };
 	}
 
-	/** Number of non-air blocks inside the envelope. */
+	/** Number of non-air blocks inside the envelope, from the short-lived status cache. */
 	public int getShipMass() {
-		if (level == null || getShipVolume() <= 1) {
-			return 0;
-		}
-		final int[] b = getShipBounds();
-		int mass = 0;
-		for (int y = b[1]; y <= b[4]; y++) {
-			for (int x = b[0]; x <= b[3]; x++) {
-				for (int z = b[2]; z <= b[5]; z++) {
-					if (!level.getBlockState(new BlockPos(x, y, z)).isAir()) {
-						mass++;
-					}
-				}
-			}
-		}
-		return mass;
+		return inspectAssembly(false).blockCount;
 	}
 
 	@LuaFunction
-	public final Object[] addEnergy(int amount) throws LuaException {
+	public final Object[] addEnergy(int amount) {
 		if (amount <= 0) {
 			return new Object[]{ false, "Amount must be positive" };
 		}
@@ -267,7 +344,7 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 	}
 
 	@LuaFunction
-	public final Object[] setEnergy(int amount) throws LuaException {
+	public final Object[] setEnergy(int amount) {
 		if (amount < 0 || amount > MAX_ENERGY) {
 			return new Object[]{ false, String.format("Amount must be 0-%,d", MAX_ENERGY) };
 		}
@@ -281,29 +358,41 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 	}
 
 	private int calculateEnergyRequired() {
-		if (level == null) {
-			return 0;
-		}
+		return calculateEnergyRequired(getShipMass());
+	}
 
-		// Calculate ship volume from dimensions
-		int volume = (dimFront + dimBack + 1) * (dimLeft + dimRight + 1) * (dimUp + dimDown + 1);
+	private int calculateEnergyRequired(final int shipMass) {
+		return level == null ? 0 : getMovementType().energyRequired(shipMass, getMovementDistance());
+	}
 
-		// Calculate movement distance
-		double distance = Math.sqrt(moveX*moveX + moveY*moveY + moveZ*moveZ);
-
-		// Energy formula: volume * 100 + distance * 10
-		int baseCost = volume * 100;
-		int distanceCost = (int)(distance * 10);
-
-		return baseCost + distanceCost;
+	/** Legacy costs use the ceiling of the Euclidean movement length. */
+	private int getMovementDistance() {
+		return (int) Math.ceil(Math.sqrt(
+			(double) moveX * moveX + (double) moveY * moveY + (double) moveZ * moveZ));
 	}
 
 	private int getShipVolume() {
-		return (dimFront + dimBack + 1) * (dimLeft + dimRight + 1) * (dimUp + dimDown + 1);
+		final long volume = ((long) dimFront + dimBack + 1L)
+		                  * ((long) dimLeft + dimRight + 1L)
+		                  * ((long) dimUp + dimDown + 1L);
+		return volume > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) Math.max(0L, volume);
 	}
 
 	public boolean isBoundingBoxShown() {
 		return showBoundingBox;
+	}
+
+	public Direction getFacingDirection() {
+		return facing;
+	}
+
+	public int getRotationStepsValue() {
+		return rotationSteps;
+	}
+
+	/** Empty means normal movement or an automatic vertical boundary transition. */
+	public String getConfiguredTargetDimension() {
+		return targetDimension == null ? "" : targetDimension;
 	}
 
 	// ===== 1.12.2-compatible status API =====
@@ -333,21 +422,29 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 
 	/** Set the bow direction by name (north/south/east/west). Dimensions are relative to it. */
 	@LuaFunction
-	public final Object[] setOrientation(final String direction) throws LuaException {
+	public final Object[] setOrientation(final String direction) {
+		if (shipState == STATE_COUNTDOWN) {
+			return new Object[]{ false, "Cannot change orientation during a jump countdown" };
+		}
 		final Direction parsed = Direction.byName(direction == null ? "" : direction.toLowerCase());
 		if (parsed == null || parsed.getAxis().isVertical()) {
 			return new Object[]{ false, "Orientation must be north, south, east or west" };
 		}
 		facing = parsed;
+		invalidateAssemblyInspection();
 		setChanged();
+		syncBlockAppearance();
 		syncToClient();
 		return new Object[]{ true, "Bow now faces " + facing };
 	}
 
 	/** Legacy: ship.rotationSteps() to read, ship.rotationSteps(n) to set. 0..3 quarter turns. */
 	@LuaFunction
-	public final Object[] rotationSteps(final Optional<Integer> steps) throws LuaException {
+	public final Object[] rotationSteps(final Optional<Integer> steps) {
 		if (steps.isPresent()) {
+			if (shipState == STATE_COUNTDOWN) {
+				return new Object[]{ false, "Cannot change rotation during a jump countdown" };
+			}
 			rotationSteps = ((steps.get() % 4) + 4) % 4;
 			setChanged();
 			syncToClient();
@@ -366,20 +463,10 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 	public final Object[] getMaxJumpDistance() {
 		final int volume = getShipVolume();
 		if (volume <= 1) {
-			return new Object[]{ false, 0, 0, "dimensions not set" };
+			return new Object[]{ false, "dimensions not set" };
 		}
 		final int byType = getMaxJumpDistanceByType();
-		final int byEnergy = getMaxJumpDistanceByEnergy();
-		final int effective = Math.min(byType, byEnergy);
-		// Naming the binding constraint is the point: "48 blocks" is not actionable, but "48,
-		// limited by energy" tells the pilot to charge rather than to rebuild the ship
-		final String limitedBy = byEnergy < byType ? "energy" : getMovementType().getName();
-
-		return new Object[]{
-			effective >= ShipMovementType.MINIMUM_DISTANCE_BLOCKS,
-			effective,
-			ShipMovementType.MINIMUM_DISTANCE_BLOCKS,
-			limitedBy };
+		return new Object[]{ byType >= ShipMovementType.MINIMUM_DISTANCE_BLOCKS, byType };
 	}
 
 	/** Range ceiling imposed by the kind of movement and the ship's mass. */
@@ -387,13 +474,12 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		return getMovementType().maximumDistance(getShipMass());
 	}
 
-	/** Range ceiling imposed by stored energy - the inverse of cost = volume * 100 + distance * 10. */
+	/** Range ceiling imposed by stored energy, using the inverse of the active movement cost. */
 	public int getMaxJumpDistanceByEnergy() {
-		final int volume = getShipVolume();
-		if (volume <= 1) {
+		if (getShipVolume() <= 1) {
 			return 0;
 		}
-		return Math.max(0, (energyStored - volume * 100) / 10);
+		return getMovementType().maximumDistanceForEnergy(getShipMass(), energyStored);
 	}
 
 	/** Whichever ceiling binds first. */
@@ -401,30 +487,52 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		return Math.min(getMaxJumpDistanceByType(), getMaxJumpDistanceByEnergy());
 	}
 
+	private void invalidateAssemblyInspection() {
+		cachedInspection = null;
+		cachedInspectionTick = Long.MIN_VALUE;
+	}
+
+	private ShipScanner.ShipInspection inspectAssembly(final boolean forceRefresh) {
+		if (getShipVolume() <= 1) {
+			return new ShipScanner.ShipInspection(false, "Dimensions not set", 0, getShipVolume());
+		}
+		if (level == null) {
+			return new ShipScanner.ShipInspection(false, "No world", 0, getShipVolume());
+		}
+
+		final long now = level.getGameTime();
+		if (!forceRefresh && cachedInspection != null
+		 && now >= cachedInspectionTick
+		 && now - cachedInspectionTick < ASSEMBLY_STATUS_CACHE_TICKS) {
+			return cachedInspection;
+		}
+
+		cachedInspection = ShipScanner.inspectShip(level, getBlockPos(), getShipBounds());
+		cachedInspectionTick = now;
+		return cachedInspection;
+	}
+
+	private void cacheAssemblySnapshot(final ShipScanner.ShipScanResult snapshot) {
+		if (level == null) {
+			return;
+		}
+		cachedInspection = new ShipScanner.ShipInspection(snapshot.success, snapshot.message,
+			snapshot.getBlockCount(), snapshot.getVolume());
+		cachedInspectionTick = level.getGameTime();
+	}
+
 	/** Legacy: isValid, message = ship.getAssemblyStatus() */
 	@LuaFunction
 	public final Object[] getAssemblyStatus() {
-		if (getShipVolume() <= 1) {
-			return new Object[]{ false, "Dimensions not set" };
-		}
-		if (level == null) {
-			return new Object[]{ false, "No world" };
-		}
-		final int[] b = getShipBounds();
-		if (b[1] < 0 || b[4] > 255) {
-			return new Object[]{ false, "Ship extends outside the world height" };
-		}
-		int solid = 0;
-		for (int y = b[1]; y <= b[4]; y++) {
-			for (int x = b[0]; x <= b[3]; x++) {
-				for (int z = b[2]; z <= b[5]; z++) {
-					if (!level.getBlockState(new BlockPos(x, y, z)).isAir()) {
-						solid++;
-					}
-				}
-			}
-		}
-		return new Object[]{ true, String.format("Valid - %d blocks in a %d block envelope", solid, getShipVolume()) };
+		final ShipScanner.ShipInspection inspection = inspectAssembly(false);
+		return new Object[]{ inspection.success, inspection.message };
+	}
+
+	/** Force a fresh integrity scan. Kept compatible with the bundled ComputerCraft program. */
+	@LuaFunction
+	public final Object[] scan() {
+		final ShipScanner.ShipInspection inspection = inspectAssembly(true);
+		return new Object[]{ inspection.success, inspection.blockCount, inspection.message };
 	}
 
 	/** Legacy: local stringPlayers = ship.getAttachedPlayers() */
@@ -455,13 +563,6 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 
 	/**
 	 * Legacy: ship.isInSpace() / ship.isInHyperspace().
-	 *
-	 * TODO(Phase 4): neither the Space nor the Hyperspace dimension has been implemented yet.
-	 * These compare against the intended dimension ids, so they answer false today and start
-	 * answering correctly the moment the dimensions are registered - no call site needs changing.
-	 * Blocked work: dimension registration, void chunk generator, asteroid feature/placement,
-	 * vacuum handling, and cross-dimension jumps in WarpEngine (which currently moves blocks
-	 * within a single World only).
 	 */
 	@LuaFunction
 	public final Object[] isInSpace() {
@@ -519,6 +620,7 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		if (shipState != STATE_COUNTDOWN) {
 			return new Object[]{ false, "No jump in progress" };
 		}
+		stopCountdownHud();
 		shipState = STATE_IDLE;
 		countdownRemaining = 0;
 		forceDestinationChunks(false);
@@ -532,31 +634,30 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 
 	/** Legacy: ship.command("MANUAL", false) */
 	@LuaFunction
-	public final Object[] command(final String newCommand, final Optional<Boolean> doEnable) throws LuaException {
+	public final Object[] command(final String newCommand, final Optional<Boolean> doEnable) {
 		if (newCommand != null && !newCommand.isEmpty()) {
 			command = newCommand.toUpperCase();
 		}
-		if (doEnable.isPresent()) {
-			enabled = doEnable.get();
-		}
-		DebugLog.log("SHIP", "command set to {} (enabled={})", command, enabled);
+		final boolean confirmed = doEnable.orElse(false);
+		DebugLog.log("SHIP", "command set to {} (confirmed={}, enabled={})", command, confirmed, enabled);
 		setChanged();
-		return new Object[]{ command, enabled };
-	}
-
-	/** Legacy: ship.enable(true) starts the currently selected command. */
-	@LuaFunction
-	public final Object[] enable(final boolean value) {
-		enabled = value;
-		setChanged();
-		DebugLog.log("SHIP", "enable({}) with command={}", value, command);
-		if (value && "MANUAL".equals(command)) {
+		syncBlockAppearance();
+		if (confirmed && enabled && "MANUAL".equals(command)) {
 			return jump();
 		}
-		if (value) {
-			return new Object[]{ false, "Command '" + command + "' is not implemented yet" };
+		return new Object[]{ command, confirmed };
+	}
+
+	/** Legacy machine power switch. Command confirmation, not this switch, starts a jump. */
+	@LuaFunction
+	public final Object[] enable(final Optional<Boolean> value) {
+		if (value.isPresent()) {
+			enabled = value.get();
+			setChanged();
+			syncBlockAppearance();
+			DebugLog.log("SHIP", "enable({}) with command={}", enabled, command);
 		}
-		return new Object[]{ true, "Disabled" };
+		return new Object[]{ enabled };
 	}
 
 	/** Legacy: ship.targetName("") - get or set the jump-gate target name. */
@@ -571,31 +672,40 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 
 	// --- Legacy call shapes, so the 1.12.2 controller ports without rewriting every call site ---
 
-	/** Legacy: front, right, up = ship.dim_positive() */
+	/** Legacy: front, right, up = ship.dim_positive([front, right, up]). */
 	@LuaFunction
-	public final Object[] dim_positive() {
+	public final Object[] dim_positive(final Optional<Integer> front,
+	                                  final Optional<Integer> right,
+	                                  final Optional<Integer> up) {
+		if (front.isPresent() && right.isPresent() && up.isPresent()) {
+			setDimensions(front.get(), dimBack, dimLeft, right.get(), up.get(), dimDown);
+		}
 		return new Object[]{ dimFront, dimRight, dimUp };
 	}
 
-	/** Legacy: back, left, down = ship.dim_negative() */
+	/** Legacy: back, left, down = ship.dim_negative([back, left, down]). */
 	@LuaFunction
-	public final Object[] dim_negative() {
+	public final Object[] dim_negative(final Optional<Integer> back,
+	                                  final Optional<Integer> left,
+	                                  final Optional<Integer> down) {
+		if (back.isPresent() && left.isPresent() && down.isPresent()) {
+			setDimensions(dimFront, back.get(), left.get(), dimRight, dimUp, down.get());
+		}
 		return new Object[]{ dimBack, dimLeft, dimDown };
 	}
 
 	/** Legacy: ship.movement() to read, ship.movement(x, y, z) to set. */
 	@LuaFunction
-	public final Object[] movement(final Optional<Integer> x, final Optional<Integer> y, final Optional<Integer> z)
-		throws LuaException {
+	public final Object[] movement(final Optional<Integer> x, final Optional<Integer> y, final Optional<Integer> z) {
 		if (x.isPresent() && y.isPresent() && z.isPresent()) {
-			return setMovement(x.get(), y.get(), z.get());
+			setMovement(x.get(), y.get(), z.get());
 		}
 		return new Object[]{ moveX, moveY, moveZ };
 	}
 
 	/** Legacy: ship.name() to read, ship.name("x") to set. */
 	@LuaFunction
-	public final Object[] name(final Optional<String> newName) throws LuaException {
+	public final Object[] name(final Optional<String> newName) {
 		if (newName.isPresent() && !newName.get().trim().isEmpty()) {
 			setName(newName.get());
 		}
@@ -622,6 +732,9 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 	/** Set the destination dimension, e.g. "warpdrive:space". Empty string means stay put. */
 	@LuaFunction
 	public final Object[] setTargetDimension(final String dimensionId) {
+		if (shipState == STATE_COUNTDOWN) {
+			return new Object[]{ false, "Cannot change destination dimension during a jump countdown" };
+		}
 		final String requested = dimensionId == null ? "" : dimensionId.trim();
 		if (requested.isEmpty()) {
 			targetDimension = "";
@@ -649,11 +762,54 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 
 	private void syncToClient() {
 		if (level != null && !level.isClientSide) {
+			debugCoreNbt("syncToClient", null);
 			level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
 		}
 	}
 
 	// ===== Debug reporting =====
+
+	private String objectId() {
+		return objectId(this);
+	}
+
+	private static String objectId(@Nullable final Object object) {
+		return object == null ? "null" : object.getClass().getSimpleName() + "@"
+			+ Integer.toHexString(System.identityHashCode(object));
+	}
+
+	private String coreValues() {
+		return String.format("name='%s' dims=F%d B%d L%d R%d U%d D%d move=%d,%d,%d "
+				+ "energy=%d box=%s facing=%s rot=%d enabled=%s command=%s shipState=%d countdown=%d cooldown=%d",
+			shipName, dimFront, dimBack, dimLeft, dimRight, dimUp, dimDown,
+			moveX, moveY, moveZ, energyStored, showBoundingBox, facing, rotationSteps,
+			enabled, command, shipState, countdownRemaining, cooldownRemaining);
+	}
+
+	private static String coreTagValues(@Nullable final CompoundNBT nbt) {
+		if (nbt == null) {
+			return "<no tag>";
+		}
+		return String.format("keys=%d version=%d name='%s' dims=F%d B%d L%d R%d U%d D%d "
+				+ "move=%d,%d,%d energy=%d box=%s facing=%d rot=%d enabled=%s command='%s' "
+				+ "shipState=%d countdown=%d cooldown=%d pos=%d,%d,%d",
+			nbt.getAllKeys().size(), nbt.getInt("CoreDataVersion"), nbt.getString("ShipName"),
+			nbt.getInt("DimFront"), nbt.getInt("DimBack"), nbt.getInt("DimLeft"),
+			nbt.getInt("DimRight"), nbt.getInt("DimUp"), nbt.getInt("DimDown"),
+			nbt.getInt("MoveX"), nbt.getInt("MoveY"), nbt.getInt("MoveZ"), nbt.getInt("Energy"),
+			nbt.getBoolean("ShowBoundingBox"), nbt.getInt("Facing"), nbt.getInt("RotationSteps"),
+			nbt.getBoolean("Enabled"), nbt.getString("Command"), nbt.getInt("ShipState"),
+			nbt.getInt("CountdownRemaining"), nbt.getInt("CooldownRemaining"),
+			nbt.getInt("x"), nbt.getInt("y"), nbt.getInt("z"));
+	}
+
+	private void debugCoreNbt(final String event, @Nullable final CompoundNBT nbt) {
+		final TileEntity worldTile = level == null ? null : level.getBlockEntity(worldPosition);
+		DebugLog.logSided(level, "CORE-NBT",
+			"{} pos={} object={} removed={} worldObject={} block={} values={} tag={}",
+			event, worldPosition, objectId(), isRemoved(), objectId(worldTile), getBlockState(),
+			coreValues(), coreTagValues(nbt));
+	}
 
 	/**
 	 * Full state snapshot. Deliberately includes the logical side: nearly every bug found so far
@@ -673,7 +829,8 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		report.append("energyStored  : ").append(energyStored).append(" / ").append(MAX_ENERGY).append('\n');
 		report.append("energyNeeded  : ").append(calculateEnergyRequired()).append('\n');
 		report.append("showBoundBox  : ").append(showBoundingBox).append('\n');
-		report.append("peripheralCap : ").append(peripheralCap == null ? "not resolved" : "present").append('\n');
+		report.append("CC:Tweaked    : ").append(
+			net.minecraftforge.fml.ModList.get().isLoaded("computercraft") ? "available" : "not installed").append('\n');
 		if (level != null) {
 			report.append("blockAtPos    : ").append(level.getBlockState(getBlockPos()).getBlock().getRegistryName()).append('\n');
 		}
@@ -712,8 +869,8 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 
 		extend(lo, hi, facing, dimFront);
 		extend(lo, hi, facing.getOpposite(), dimBack);
-		extend(lo, hi, facing.getCounterClockWise(), dimRight);
-		extend(lo, hi, facing.getClockWise(), dimLeft);
+		extend(lo, hi, facing.getClockWise(), dimRight);
+		extend(lo, hi, facing.getCounterClockWise(), dimLeft);
 
 		return new int[]{ lo[0], lo[1], lo[2], hi[0], hi[1], hi[2] };
 	}
@@ -745,11 +902,43 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		if (moveX == 0 && moveY == 0 && moveZ == 0) {
 			return null;
 		}
-		double[] b = getShipBoxBounds();
-		return new double[]{
-			b[0] + moveX, b[1] + moveY, b[2] + moveZ,
-			b[3] + moveX, b[4] + moveY, b[5] + moveZ
-		};
+		final int[] bounds = getShipBounds();
+		final BlockPos core = getBlockPos();
+		final BlockPos movement = getWorldMovement();
+		final int[] offsetsX = { bounds[0] - core.getX(), bounds[3] - core.getX() };
+		final int[] offsetsZ = { bounds[2] - core.getZ(), bounds[5] - core.getZ() };
+		int minX = Integer.MAX_VALUE;
+		int maxX = Integer.MIN_VALUE;
+		int minZ = Integer.MAX_VALUE;
+		int maxZ = Integer.MIN_VALUE;
+		for (final int offsetX : offsetsX) {
+			for (final int offsetZ : offsetsZ) {
+				int rotatedX = offsetX;
+				int rotatedZ = offsetZ;
+				switch (Math.floorMod(rotationSteps, 4)) {
+					case 1: rotatedX = -offsetZ; rotatedZ = offsetX;  break;
+					case 2: rotatedX = -offsetX; rotatedZ = -offsetZ; break;
+					case 3: rotatedX = offsetZ;  rotatedZ = -offsetX; break;
+					default: break;
+				}
+				final int x = core.getX() + movement.getX() + rotatedX;
+				final int z = core.getZ() + movement.getZ() + rotatedZ;
+				minX = Math.min(minX, x);
+				maxX = Math.max(maxX, x);
+				minZ = Math.min(minZ, z);
+				maxZ = Math.max(maxZ, z);
+			}
+		}
+		return new double[]{ minX, bounds[1] + moveY, minZ,
+			maxX + 1, bounds[4] + moveY + 1, maxZ + 1 };
+	}
+
+	/** Convert legacy forward/up/right movement into a world-space delta. */
+	private BlockPos getWorldMovement() {
+		return new BlockPos(
+			facing.getStepX() * moveX - facing.getStepZ() * moveZ,
+			moveY,
+			facing.getStepZ() * moveX + facing.getStepX() * moveZ);
 	}
 
 	/** Keep the client-side renderer's tracked set in step with this tile entity. */
@@ -777,35 +966,46 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 	}
 
 	@LuaFunction
-	public final Object[] setMovement(int dx, int dy, int dz) throws LuaException {
+	public final Object[] setMovement(final int forward, final int up, final int right) {
+		if (shipState == STATE_COUNTDOWN) {
+			return new Object[]{ false, "Cannot change movement during a jump countdown" };
+		}
+		if (forward == 0 && up == 0 && right == 0) {
+			moveX = 0;
+			moveY = 0;
+			moveZ = 0;
+			setChanged();
+			syncToClient();
+			return new Object[]{ true, "Movement cleared" };
+		}
 		// Set the requested movement first: the movement type - and therefore the range - depends on
 		// where this jump would end up, so takeoff and landing can only be recognised once it is known
-		moveX = dx;
-		moveY = dy;
-		moveZ = dz;
+		moveX = forward;
+		moveY = up;
+		moveZ = right;
 
 		final ShipMovementType movementType = getMovementType();
-		final int byType = getMaxJumpDistanceByType();
-		final int byEnergy = getMaxJumpDistanceByEnergy();
-		final int maximum = Math.min(byType, byEnergy);
-		final String limitedBy = byEnergy < byType ? "energy" : movementType.getName();
-		final double requested = Math.sqrt((double) dx * dx + (double) dy * dy + (double) dz * dz);
+		final int maximum = getMaxJumpDistanceByType();
+		final double requested = Math.sqrt((double) forward * forward
+			+ (double) up * up + (double) right * right);
 
-		String note = "";
-		if (requested > maximum) {
-			// Scale the whole vector rather than clipping each axis, so the heading is preserved and
-			// the ship still travels the way the pilot pointed it
-			final double scale = maximum / requested;
-			moveX = (int) Math.round(dx * scale);
-			moveY = (int) Math.round(dy * scale);
-			moveZ = (int) Math.round(dz * scale);
-			note = String.format(" (clamped from %d, limited by %s)",
-				(int) Math.round(requested), limitedBy);
-		} else if (requested < ShipMovementType.MINIMUM_DISTANCE_BLOCKS) {
+		if (requested < ShipMovementType.MINIMUM_DISTANCE_BLOCKS) {
 			return new Object[]{ false, String.format(
 				"Movement too small: at least %d block required, up to %d (%s)",
-				ShipMovementType.MINIMUM_DISTANCE_BLOCKS, maximum, limitedBy) };
+				ShipMovementType.MINIMUM_DISTANCE_BLOCKS, maximum, movementType.getName()) };
 		}
+
+		// 1.12.2 treats the configured range as empty travel beyond the hull. Each local axis may
+		// therefore include its full ship length plus that range (the exact limits printed by the
+		// legacy M/P movement pages).
+		final int maximumForward = dimFront + dimBack + 1 + maximum;
+		final int maximumUp = dimUp + dimDown + 1 + maximum;
+		final int maximumRight = dimRight + dimLeft + 1 + maximum;
+		moveX = Math.max(-maximumForward, Math.min(maximumForward, forward));
+		moveY = Math.max(-maximumUp, Math.min(maximumUp, up));
+		moveZ = Math.max(-maximumRight, Math.min(maximumRight, right));
+		final String note = moveX != forward || moveY != up || moveZ != right
+			? " (clamped to legacy hull-clearance limits)" : "";
 
 		setChanged();
 
@@ -814,12 +1014,12 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 			level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
 		}
 
-		WarpDrive.logger.info("Movement set to: {}, {}, {} ({}, max {})",
+		WarpDrive.logger.info("Local movement set to F/U/R {}, {}, {} ({}, max {})",
 			moveX, moveY, moveZ, movementType.getName(), maximum);
 
-		return new Object[]{ true, String.format("Movement set: %d, %d, %d%s - %s, range %d to %d blocks",
+		return new Object[]{ true, String.format("Movement set: %d forward, %d up, %d right%s - %s, range %d to %d blocks",
 			moveX, moveY, moveZ, note, movementType.getName(),
-			ShipMovementType.MINIMUM_DISTANCE_BLOCKS, maximum), maximum, limitedBy };
+			ShipMovementType.MINIMUM_DISTANCE_BLOCKS, maximum), maximum, movementType.getName() };
 	}
 
 	/**
@@ -866,7 +1066,7 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 	}
 
 	@LuaFunction
-	public final Object[] setName(String name) throws LuaException {
+	public final Object[] setName(String name) {
 		if (name == null || name.trim().isEmpty()) {
 			return new Object[]{ false, "Name cannot be empty" };
 		}
@@ -888,22 +1088,30 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 			return new Object[]{ false, "World not loaded" };
 		}
 
-		// Check if dimensions are set
-		int volume = getShipVolume();
-		if (volume <= 1) {
-			return new Object[]{ false, "Ship dimensions not set! Use setDimensions() first." };
+		if (shipState == STATE_COOLDOWN) {
+			return new Object[]{ false, String.format("Drive cooling down: %.1fs remaining", cooldownRemaining / 20.0) };
+		}
+		if (shipState == STATE_COUNTDOWN) {
+			return new Object[]{ false, String.format("Jump already counting down: %.1fs", countdownRemaining / 20.0) };
+		}
+		if (getMovementDistance() < ShipMovementType.MINIMUM_DISTANCE_BLOCKS) {
+			return new Object[]{ false, String.format("Movement must be at least %d block",
+				ShipMovementType.MINIMUM_DISTANCE_BLOCKS) };
 		}
 
-		int required = calculateEnergyRequired();
+		// Preliminary server-side inspection gives immediate feedback. It is intentionally not trusted
+		// for execution: a fresh NBT snapshot is captured after the countdown.
+		final ShipScanner.ShipInspection inspection = inspectAssembly(true);
+		if (!inspection.success) {
+			return new Object[]{ false, inspection.message };
+		}
+
+		final int required = calculateEnergyRequired(inspection.blockCount);
 		if (energyStored < required) {
 			return new Object[]{
 				false,
 				String.format("Insufficient energy: %d/%d FE", energyStored, required)
 			};
-		}
-
-		if (shipState == STATE_COOLDOWN) {
-			return new Object[]{ false, String.format("Drive cooling down: %.1fs remaining", cooldownRemaining / 20.0) };
 		}
 
 		// Validate the destination up front. WarpEngine checks this too, but only once the
@@ -915,13 +1123,13 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 			DebugLog.log("JUMP", "jump rejected before countdown: {}", destinationProblem);
 			return new Object[]{ false, destinationProblem };
 		}
-		if (shipState == STATE_COUNTDOWN) {
-			return new Object[]{ false, String.format("Jump already counting down: %.1fs", countdownRemaining / 20.0) };
-		}
-
 		// Force-load the destination before counting down. Placing blocks into an unloaded chunk
 		// silently does nothing, which is why the 1.12.2 version pre-loaded the target area first.
 		final int chunks = forceDestinationChunks(true);
+		if (chunks <= 0) {
+			forceDestinationChunks(false);
+			return new Object[]{ false, "Unable to load destination chunks safely" };
+		}
 
 		// Changing dimensions always gets the full 30-second charge-up/sound. Giant ships use the
 		// same window even within one world because their larger destination takes longer to load.
@@ -941,6 +1149,7 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		warpSoundPlayed = false;
 		setChanged();
 		syncToClient();
+		startCountdownHud(delay);
 
 		DebugLog.log("JUMP", "jump scheduled: {} ticks countdown ({}), {} destination chunks force-loaded",
 			delay, changesDimension ? "dimension change"
@@ -955,39 +1164,67 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 	 * TileEntity access is safe without marshalling.
 	 */
 	private void executeScheduledJump() {
-		final int volume = getShipVolume();
-		final int required = calculateEnergyRequired();
-
-		if (energyStored < required) {
-			DebugLog.log("JUMP", "countdown finished but energy dropped below requirement ({} < {})",
-				energyStored, required);
+		// Authoritative final validation. This exact immutable state/NBT snapshot is passed to the
+		// mover, so there is no scan-then-recapture window after the countdown.
+		final ShipScanner.ShipScanResult dimensionScan =
+			ShipScanner.captureShip(level, getBlockPos(), getShipBounds());
+		cacheAssemblySnapshot(dimensionScan);
+		if (!dimensionScan.success) {
+			DebugLog.log("JUMP", "final integrity check failed: {}", dimensionScan.message);
+			playShipSound(Registration.SOUND_COLLISION.get(), 1.0F, 1.0F);
+			broadcastToOnboard(new StringTextComponent(
+				TextFormatting.RED + "âœ– WARP FAILED: " + dimensionScan.message));
 			forceDestinationChunks(false);
 			beginCooldown();
 			return;
 		}
 
-		CompletableFuture<Object[]> future = new CompletableFuture<>();
+		final int volume = dimensionScan.getVolume();
+		final int required = calculateEnergyRequired(dimensionScan.getBlockCount());
+
+		if (energyStored < required) {
+			DebugLog.log("JUMP", "final snapshot requires more energy than is available ({} < {})",
+				energyStored, required);
+			broadcastToOnboard(new StringTextComponent(TextFormatting.RED + String.format(
+				"âœ– WARP FAILED: insufficient energy after integrity check (%,d/%,d FE)",
+				energyStored, required)));
+			forceDestinationChunks(false);
+			beginCooldown();
+			return;
+		}
+		final String destinationProblem = validateDestination();
+		if (destinationProblem != null) {
+			playShipSound(Registration.SOUND_COLLISION.get(), 1.0F, 1.0F);
+			broadcastToOnboard(new StringTextComponent(
+				TextFormatting.RED + "âœ– WARP FAILED: " + destinationProblem));
+			forceDestinationChunks(false);
+			beginCooldown();
+			return;
+		}
+
+		boolean movedSuccessfully = false;
 		{
 			try {
 				DebugLog.log("JUMP", "countdown complete, executing on thread: {}", Thread.currentThread().getName());
 
-				// Calculate absolute destination from relative movement
-				int destX = getBlockPos().getX() + moveX;
-				int destY = getBlockPos().getY() + moveY;
-				int destZ = getBlockPos().getZ() + moveZ;
+				// The Lua API stores forward/up/right. Convert through the bow direction only here,
+				// matching the 1.12.2 core's Transformation setup.
+				final BlockPos worldMovement = getWorldMovement();
+				int destX = getBlockPos().getX() + worldMovement.getX();
+				int destY = getBlockPos().getY() + worldMovement.getY();
+				int destZ = getBlockPos().getZ() + worldMovement.getZ();
 
-				DebugLog.log("JUMP", "Warp jump initiated: {} moving by {}, {}, {} to {}, {}, {}",
-					shipName, moveX, moveY, moveZ, destX, destY, destZ);
+				DebugLog.log("JUMP", "Warp jump initiated: {} local F/U/R {}, {}, {} -> world {}, {}, {} to {}, {}, {}",
+					shipName, moveX, moveY, moveZ, worldMovement.getX(), worldMovement.getY(),
+					worldMovement.getZ(), destX, destY, destZ);
 				DebugLog.log("JUMP", "energyStored={} required={} volume={}",
 					energyStored, required, volume);
-
-				// Build ship scan from dimensions
-				ShipScanner.ShipScanResult dimensionScan = buildShipFromDimensions();
 
 				// Execute warp using WarpEngine
 				int energyAfterJump = Math.max(0, energyStored - required);
 
 				DebugLog.log("JUMP", "About to call WarpEngine.executeWarp with energyAfterJump={}", energyAfterJump);
+				debugCoreNbt("pre-warp-source", save(new CompoundNBT()));
 				// Takeoff / landing: leaving through the ceiling or floor changes dimension, and the
 				// ship re-enters through the opposite boundary of the destination
 				final RegistryKey<World> transition = transitionTarget();
@@ -1013,7 +1250,6 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 					DebugLog.log("JUMP", "aborting: destination dimension '{}' did not resolve", targetDimension);
 					forceDestinationChunks(false);
 					beginCooldown();
-					future.complete(new Object[]{ false, "Unknown destination dimension: " + targetDimension });
 					return;
 				}
 				WarpEngine.WarpResult result = WarpEngine.executeWarp(level, destWorld, dimensionScan, destX, destY, destZ, energyAfterJump, rotationSteps);
@@ -1021,6 +1257,7 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 					result.success, result.message);
 
 				if (result.success) {
+					movedSuccessfully = true;
 					// Update destination core directly to preserve all settings
 					BlockPos destCorePos = new net.minecraft.util.math.BlockPos(destX, destY, destZ);
 					// Must look in the destination world, which may not be this one
@@ -1055,8 +1292,14 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 						// Cooldown lives on the ship that actually exists after the jump
 						destCore.jumpDelayTicks = jumpDelayTicks;
 						destCore.cooldownTicks = cooldownTicks;
+						destCore.invalidateAssemblyInspection();
+						destCore.debugCoreNbt("post-warp-copy-before-cooldown",
+							destCore.save(new CompoundNBT()));
 						destCore.beginCooldown();
 						destCore.setChanged();
+						destCore.syncBlockAppearance();
+						destCore.debugCoreNbt("post-warp-copy-final",
+							destCore.save(new CompoundNBT()));
 
 						// Announce from the destination core: its bounds now cover the moved crew
 						destCore.broadcastToOnboard(new StringTextComponent(
@@ -1074,25 +1317,17 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 					// Clear old block data at original position (so client knows core moved)
 					level.sendBlockUpdated(getBlockPos(), level.getBlockState(getBlockPos()), level.getBlockState(getBlockPos()), 3);
 
-					future.complete(new Object[]{
-						true,
-						String.format("%s (Used %,d FE)", result.message, required)
-					});
+					DebugLog.log("JUMP", "{} (Used {} FE)", result.message, required);
 				} else {
 					WarpDrive.logger.warn("Warp failed: {}", result.message);
 					// Collision or out-of-bounds: the original mod had a sound for exactly this
 					playShipSound(Registration.SOUND_COLLISION.get(), 1.0F, 1.0F);
 					broadcastToOnboard(new StringTextComponent(
 						TextFormatting.RED + "✖ WARP FAILED: " + result.message));
-					future.complete(new Object[]{
-						false,
-						result.message
-					});
 				}
 			} catch (Exception e) {
 				WarpDrive.logger.error("Exception during jump", e);
 				DebugLog.log("JUMP", "EXCEPTION during jump: {}", e);
-				future.completeExceptionally(e);
 			}
 		}
 
@@ -1100,7 +1335,7 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		forceDestinationChunks(false);
 
 		// If the origin core still exists (jump failed), cool down here instead
-		if (shipState != STATE_COOLDOWN) {
+		if (!movedSuccessfully && shipState != STATE_COOLDOWN) {
 			beginCooldown();
 		}
 	}
@@ -1120,6 +1355,39 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		for (final PlayerEntity player : level.getEntitiesOfClass(PlayerEntity.class, box)) {
 			player.displayClientMessage(message, true);   // true = action bar, above the hotbar
 		}
+	}
+
+	/** Send one authoritative end tick; clients animate the HUD locally until that tick. */
+	private void startCountdownHud(final int delayTicks) {
+		if (!(level instanceof ServerWorld)) {
+			return;
+		}
+		countdownHudRecipients.clear();
+		final long endTick = level.getGameTime() + delayTicks;
+		final int[] b = getShipBounds();
+		final AxisAlignedBB box = new AxisAlignedBB(b[0], b[1], b[2], b[3] + 1, b[4] + 1, b[5] + 1);
+		for (final PlayerEntity player : level.getEntitiesOfClass(PlayerEntity.class, box)) {
+			if (player instanceof ServerPlayerEntity) {
+				final ServerPlayerEntity serverPlayer = (ServerPlayerEntity) player;
+				countdownHudRecipients.add(serverPlayer.getUUID());
+				WarpDriveNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> serverPlayer),
+					ShipCountdownPacket.start(getBlockPos(), endTick));
+			}
+		}
+	}
+
+	/** Cancel the HUD for the original recipients even if they have since stepped off the ship. */
+	private void stopCountdownHud() {
+		if (level instanceof ServerWorld) {
+			for (final UUID uuid : countdownHudRecipients) {
+				final ServerPlayerEntity player = level.getServer().getPlayerList().getPlayer(uuid);
+				if (player != null) {
+					WarpDriveNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
+						ShipCountdownPacket.stop(getBlockPos()));
+				}
+			}
+		}
+		countdownHudRecipients.clear();
 	}
 
 	/** Play one of the mod's sounds at the core, audible to everyone nearby. */
@@ -1232,8 +1500,9 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		}
 
 		// Horizontal extent, honouring rotation, against the world border
-		final int destX = core.getX() + moveX;
-		final int destZ = core.getZ() + moveZ;
+		final BlockPos worldMovement = getWorldMovement();
+		final int destX = core.getX() + worldMovement.getX();
+		final int destZ = core.getZ() + worldMovement.getZ();
 		final int[] offsetsX = { b[0] - core.getX(), b[3] - core.getX() };
 		final int[] offsetsZ = { b[2] - core.getZ(), b[5] - core.getZ() };
 		for (final int ox : offsetsX) {
@@ -1310,8 +1579,9 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 
 		final int[] bounds = getShipBounds();
 		final BlockPos core = getBlockPos();
-		final int destX = core.getX() + moveX;
-		final int destZ = core.getZ() + moveZ;
+		final BlockPos worldMovement = getWorldMovement();
+		final int destX = core.getX() + worldMovement.getX();
+		final int destZ = core.getZ() + worldMovement.getZ();
 
 		// Rotate the four horizontal corners so a turned ship still covers the right chunks
 		final int[] offsetsX = { bounds[0] - core.getX(), bounds[3] - core.getX() };
@@ -1358,47 +1628,6 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		return forcedChunks.size();
 	}
 
-	private ShipScanner.ShipScanResult buildShipFromDimensions() {
-		// Build a rectangular ship based on dimensions (shares the bounds math with the renderer,
-		// so what you see highlighted is exactly what gets moved)
-		BlockPos corePos = getBlockPos();
-		final int[] bounds = getShipBounds();
-		int minX = bounds[0];
-		int minY = bounds[1];
-		int minZ = bounds[2];
-		int maxX = bounds[3];
-		int maxY = bounds[4];
-		int maxZ = bounds[5];
-
-		List<ShipScanner.ShipBlock> blocks = new java.util.ArrayList<>();
-
-		// Scan all blocks in the rectangular region
-		for (int y = minY; y <= maxY; y++) {
-			for (int x = minX; x <= maxX; x++) {
-				for (int z = minZ; z <= maxZ; z++) {
-					BlockPos pos = new net.minecraft.util.math.BlockPos(x, y, z);
-					net.minecraft.block.BlockState state = level.getBlockState(pos);
-
-					// Skip air blocks
-					if (!state.isAir()) {
-						TileEntity te = level.getBlockEntity(pos);
-						blocks.add(new ShipScanner.ShipBlock(pos, state, te));
-					}
-				}
-			}
-		}
-
-		return new ShipScanner.ShipScanResult(
-			true,
-			String.format("Scanned %d blocks", blocks.size()),
-			blocks,
-			minX, maxX,
-			minY, maxY,
-			minZ, maxZ,
-			corePos
-		);
-	}
-
 	// ===== Bounding Box Visualization =====
 
 	public void toggleBoundingBoxDisplay(PlayerEntity player) {
@@ -1439,10 +1668,6 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 			);
 		}
 	}
-
-	// ===== CC:Tweaked Peripheral Capability =====
-
-	private LazyOptional<IPeripheral> peripheralCap;
 
 	// ===== Energy Capability =====
 
@@ -1490,22 +1715,6 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 			return energyHandler.cast();
 		}
 
-		// CC:Tweaked peripheral capability
-		if (cap == Capabilities.CAPABILITY_PERIPHERAL) {
-			if (peripheralCap == null && level != null) {
-				IPeripheral peripheral = GenericPeripheralProvider.getPeripheral(level, worldPosition, side, invalidate -> {
-					if (peripheralCap != null) {
-						peripheralCap.invalidate();
-						peripheralCap = null;
-					}
-				});
-				if (peripheral != null) {
-					peripheralCap = LazyOptional.of(() -> peripheral);
-				}
-			}
-			return peripheralCap == null ? LazyOptional.empty() : peripheralCap.cast();
-		}
-
 		return super.getCapability(cap, side);
 	}
 
@@ -1513,10 +1722,6 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 	protected void invalidateCaps() {
 		super.invalidateCaps();
 		energyHandler.invalidate();
-		if (peripheralCap != null) {
-			peripheralCap.invalidate();
-			peripheralCap = null;
-		}
 	}
 
 	// ===== NBT Serialization =====
@@ -1535,9 +1740,6 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		if (shipName.isEmpty()) {
 			shipName = "Unnamed Ship";
 		}
-		moveX = nbt.getInt("MoveX");
-		moveY = nbt.getInt("MoveY");
-		moveZ = nbt.getInt("MoveZ");
 		showBoundingBox = nbt.getBoolean("ShowBoundingBox");
 		// Ships saved before facing existed used the fixed +Z mapping, which is SOUTH
 		final int facingIndex = nbt.contains("Facing") ? nbt.getInt("Facing") : Direction.SOUTH.get3DDataValue();
@@ -1545,9 +1747,32 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		if (facing.getAxis().isVertical()) {
 			facing = Direction.SOUTH;
 		}
+		if (nbt.contains("MoveX")) {
+			final int savedX = nbt.getInt("MoveX");
+			moveY = nbt.getInt("MoveY");
+			final int savedZ = nbt.getInt("MoveZ");
+			if (nbt.getInt("CoreDataVersion") < 2) {
+				// Version 1 accidentally stored world X/Y/Z. Invert the legacy facing transform once
+				// so existing 1.16 ships keep the same destination after this correction.
+				moveX = facing.getStepX() * savedX + facing.getStepZ() * savedZ;
+				moveZ = -facing.getStepZ() * savedX + facing.getStepX() * savedZ;
+			} else {
+				moveX = savedX;
+				moveZ = savedZ;
+			}
+		} else {
+			// Directly imported 1.12.2 NBT already uses ship-local field names.
+			moveX = nbt.getInt("moveFront");
+			moveY = nbt.getInt("moveUp");
+			moveZ = nbt.getInt("moveRight");
+		}
 		rotationSteps = ((nbt.getInt("RotationSteps") % 4) + 4) % 4;
 		command = nbt.contains("Command") ? nbt.getString("Command") : "MANUAL";
-		enabled = nbt.getBoolean("Enabled");
+		// Builds before CORE_DATA_VERSION accidentally defaulted cores to disabled. Upgrade those
+		// saves once so existing placed cores regain the 1.12.2 online/animated appearance.
+		enabled = nbt.contains("CoreDataVersion")
+		        ? nbt.getBoolean("Enabled")
+		        : !"OFFLINE".equals(command);
 		targetName = nbt.getString("TargetName");
 		targetDimension = nbt.getString("TargetDimension");
 		shipState = nbt.getInt("ShipState");
@@ -1560,6 +1785,8 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 			shipState = STATE_IDLE;
 			countdownRemaining = 0;
 		}
+		invalidateAssemblyInspection();
+		debugCoreNbt("load-applied", nbt);
 	}
 
 	@Nonnull
@@ -1582,6 +1809,7 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		nbt.putInt("RotationSteps", rotationSteps);
 		nbt.putString("Command", command);
 		nbt.putBoolean("Enabled", enabled);
+		nbt.putInt("CoreDataVersion", CORE_DATA_VERSION);
 		nbt.putString("TargetName", targetName);
 		nbt.putString("TargetDimension", targetDimension);
 		nbt.putInt("ShipState", shipState);
@@ -1598,7 +1826,9 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 	@Override
 	public CompoundNBT getUpdateTag() {
 		// Initial sync when the chunk is sent to the client
-		return save(new CompoundNBT());
+		final CompoundNBT nbt = save(new CompoundNBT());
+		debugCoreNbt("getUpdateTag-out", nbt);
+		return nbt;
 	}
 
 	// getUpdateTag/handleUpdateTag only cover the initial chunk load. Without these two,
@@ -1608,27 +1838,36 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 	@Nullable
 	@Override
 	public SUpdateTileEntityPacket getUpdatePacket() {
-		return new SUpdateTileEntityPacket(worldPosition, 1, save(new CompoundNBT()));
+		final CompoundNBT nbt = save(new CompoundNBT());
+		debugCoreNbt("getUpdatePacket-out", nbt);
+		return new SUpdateTileEntityPacket(worldPosition, 1, nbt);
 	}
 
 	@Override
 	public void onDataPacket(NetworkManager net, SUpdateTileEntityPacket pkt) {
+		debugCoreNbt("onDataPacket-in", pkt.getTag());
 		load(getBlockState(), pkt.getTag());
+		debugCoreNbt("onDataPacket-applied", pkt.getTag());
 		refreshRendererTracking();
 	}
 
 	@Override
 	public void handleUpdateTag(BlockState state, CompoundNBT nbt) {
 		// Receive data on client (initial chunk load, and the destination core after a jump)
+		debugCoreNbt("handleUpdateTag-in", nbt);
 		load(state, nbt);
+		debugCoreNbt("handleUpdateTag-applied", nbt);
 		refreshRendererTracking();
 	}
 
 	@Override
 	public void setRemoved() {
+		debugCoreNbt("setRemoved", null);
 		// Drop the box when the core is broken or moved away by a jump
 		if (level != null && level.isClientSide) {
 			BoundingBoxRenderer.untrack(getBlockPos());
+		} else if (shipState == STATE_COUNTDOWN) {
+			stopCountdownHud();
 		}
 		super.setRemoved();
 	}

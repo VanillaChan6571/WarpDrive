@@ -5,7 +5,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ArmorItem;
-import net.minecraft.item.ItemGroup;
+import cr0s.warpdrive.data.WarpDriveItemGroup;
 import net.minecraft.item.ItemStack;
 
 import javax.annotation.Nullable;
@@ -19,7 +19,7 @@ public class WarpArmorItem extends ArmorItem implements IBreathingHelmet {
 	private final WarpArmorMaterial warpMaterial;
 
 	public WarpArmorItem(final WarpArmorMaterial material, final EquipmentSlotType slot) {
-		super(material, slot, new Properties().tab(ItemGroup.TAB_COMBAT));
+		super(material, slot, new Properties().tab(WarpDriveItemGroup.MAIN));
 		this.warpMaterial = material;
 	}
 

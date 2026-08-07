@@ -1,0 +1,8 @@
+{
+    "parent":  "minecraft:block/cube_bottom_top",
+    "textures":  {
+                     "side":  "warpdrive:blocks/security_station-side",
+                     "top":  "warpdrive:blocks/security_station-top_bottom",
+                     "bottom":  "warpdrive:blocks/security_station-top_bottom"
+                 }
+}

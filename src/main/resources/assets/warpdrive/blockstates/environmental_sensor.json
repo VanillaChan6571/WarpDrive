@@ -1,37 +1,7 @@
 {
-    "forge_marker": 1,
-	"defaults": {
-		"textures": {
-			"inactive": "warpdrive:blocks/detection/environmental_sensor-inactive",
-			"active"  : "warpdrive:blocks/detection/environmental_sensor-active"
-		},
-		"transform": "forge:default-block"
-	},
-	"variants": {
-		"active=false,spinning=down_north" : { "model": "warpdrive:detection/environmental_sensor-horizontal", "textures": { "sensor": "#inactive" }, "x": 180, "y": 180 },
-		"active=false,spinning=down_south" : { "model": "warpdrive:detection/environmental_sensor-horizontal", "textures": { "sensor": "#inactive" }, "x": 180           },
-		"active=false,spinning=down_east"  : { "model": "warpdrive:detection/environmental_sensor-horizontal", "textures": { "sensor": "#inactive" }, "x": 180, "y": 270 },
-		"active=false,spinning=down_west"  : { "model": "warpdrive:detection/environmental_sensor-horizontal", "textures": { "sensor": "#inactive" }, "x": 180, "y":  90 },
-		"active=false,spinning=up_north"   : { "model": "warpdrive:detection/environmental_sensor-horizontal", "textures": { "sensor": "#inactive" },           "y": 180 },
-		"active=false,spinning=up_south"   : { "model": "warpdrive:detection/environmental_sensor-horizontal", "textures": { "sensor": "#inactive" }                     },
-		"active=false,spinning=up_east"    : { "model": "warpdrive:detection/environmental_sensor-horizontal", "textures": { "sensor": "#inactive" },           "y": 270 },
-		"active=false,spinning=up_west"    : { "model": "warpdrive:detection/environmental_sensor-horizontal", "textures": { "sensor": "#inactive" },           "y":  90 },
-		"active=false,spinning=north"      : { "model": "warpdrive:detection/environmental_sensor-vertical"  , "textures": { "sensor": "#inactive" },           "y": 180 },
-		"active=false,spinning=south"      : { "model": "warpdrive:detection/environmental_sensor-vertical"  , "textures": { "sensor": "#inactive" }                     },
-		"active=false,spinning=east"       : { "model": "warpdrive:detection/environmental_sensor-vertical"  , "textures": { "sensor": "#inactive" },           "y": 270 },
-		"active=false,spinning=west"       : { "model": "warpdrive:detection/environmental_sensor-vertical"  , "textures": { "sensor": "#inactive" },           "y":  90 },
-		
-		"active=true,spinning=down_north"  : { "model": "warpdrive:detection/environmental_sensor-horizontal", "textures": { "sensor": "#active"   }, "x": 180, "y": 180 },
-		"active=true,spinning=down_south"  : { "model": "warpdrive:detection/environmental_sensor-horizontal", "textures": { "sensor": "#active"   }, "x": 180           },
-		"active=true,spinning=down_east"   : { "model": "warpdrive:detection/environmental_sensor-horizontal", "textures": { "sensor": "#active"   }, "x": 180, "y": 270 },
-		"active=true,spinning=down_west"   : { "model": "warpdrive:detection/environmental_sensor-horizontal", "textures": { "sensor": "#active"   }, "x": 180, "y":  90 },
-		"active=true,spinning=up_north"    : { "model": "warpdrive:detection/environmental_sensor-horizontal", "textures": { "sensor": "#active"   },           "y": 180 },
-		"active=true,spinning=up_south"    : { "model": "warpdrive:detection/environmental_sensor-horizontal", "textures": { "sensor": "#active"   }                     },
-		"active=true,spinning=up_east"     : { "model": "warpdrive:detection/environmental_sensor-horizontal", "textures": { "sensor": "#active"   },           "y": 270 },
-		"active=true,spinning=up_west"     : { "model": "warpdrive:detection/environmental_sensor-horizontal", "textures": { "sensor": "#active"   },           "y":  90 },
-		"active=true,spinning=north"       : { "model": "warpdrive:detection/environmental_sensor-vertical"  , "textures": { "sensor": "#active"   },           "y": 180 },
-		"active=true,spinning=south"       : { "model": "warpdrive:detection/environmental_sensor-vertical"  , "textures": { "sensor": "#active"   }                     },
-		"active=true,spinning=east"        : { "model": "warpdrive:detection/environmental_sensor-vertical"  , "textures": { "sensor": "#active"   },           "y": 270 },
-		"active=true,spinning=west"        : { "model": "warpdrive:detection/environmental_sensor-vertical"  , "textures": { "sensor": "#active"   },           "y":  90 }
-	}
+    "variants":  {
+                     "":  {
+                              "model":  "warpdrive:block/catalog/environmental_sensor"
+                          }
+                 }
 }

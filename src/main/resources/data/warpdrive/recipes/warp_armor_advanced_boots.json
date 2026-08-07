@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:tools",
+  "pattern": [
+    "mam",
+    "fMf",
+    "w w"
+  ],
+  "key": {
+    "m": {
+      "item": "warpdrive:component-ceramic"
+    },
+    "a": {
+      "item": "warpdrive:warp_armor_basic_boots"
+    },
+    "f": {
+      "item": "warpdrive:component-biofiber"
+    },
+    "M": {
+      "item": "warpdrive:component-motor"
+    },
+    "w": {
+      "tag": "minecraft:wool"
+    }
+  },
+  "result": {
+    "item": "warpdrive:warp_armor_advanced_boots"
+  }
+}

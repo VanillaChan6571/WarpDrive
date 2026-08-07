@@ -1,27 +1,59 @@
 {
-	"forge_marker": 1,
-	"defaults": {
-		"model": "warpdrive:decoration/lamp_bubble.obj",
-		"transform": "forge:default-block"
-	},
-	"variants": {
-		"normal": [{}],
-		"inventory": [{}],
-		"active": {
-			"false": {
-				
-			},
-			"true": {
-				
-			}
-		},
-		"facing": {
-			"down" : { "x": 180 },
-			"up"   : { },
-			"north": { "x": 90 },
-			"south": { "x": -90 },
-			"west" : { "x": 90, "y": -90 },
-			"east" : { "x": 90, "y": 90 }
-		}
-	}
+  "multipart": [
+    {
+      "when": {
+        "facing": "up"
+      },
+      "apply": {
+        "model": "warpdrive:block/lamp_bubble"
+      }
+    },
+    {
+      "when": {
+        "facing": "down"
+      },
+      "apply": {
+        "model": "warpdrive:block/lamp_bubble",
+        "x": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "north"
+      },
+      "apply": {
+        "model": "warpdrive:block/lamp_bubble",
+        "x": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "south"
+      },
+      "apply": {
+        "model": "warpdrive:block/lamp_bubble",
+        "x": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west"
+      },
+      "apply": {
+        "model": "warpdrive:block/lamp_bubble",
+        "x": 90,
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "east"
+      },
+      "apply": {
+        "model": "warpdrive:block/lamp_bubble",
+        "x": 90,
+        "y": 90
+      }
+    }
+  ]
 }

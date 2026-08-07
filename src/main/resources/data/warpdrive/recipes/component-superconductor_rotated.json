@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:components",
+  "pattern": [
+    " p ",
+    "cec",
+    " p "
+  ],
+  "key": {
+    "c": {
+      "tag": "forge:storage_blocks/lapis"
+    },
+    "p": {
+      "item": "warpdrive:component-power_interface"
+    },
+    "e": {
+      "item": "warpdrive:component-ender_coil"
+    }
+  },
+  "result": {
+    "item": "warpdrive:component-superconductor"
+  }
+}

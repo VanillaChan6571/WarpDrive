@@ -1,0 +1,8 @@
+{
+    "parent":  "minecraft:block/stairs",
+    "textures":  {
+                     "bottom":  "warpdrive:blocks/hull/plain-orange",
+                     "top":  "warpdrive:blocks/hull/plain-orange",
+                     "side":  "warpdrive:blocks/hull/plain-orange"
+                 }
+}

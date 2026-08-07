@@ -1,0 +1,12 @@
+{
+    "parent":  "minecraft:block/cube",
+    "textures":  {
+                     "particle":  "warpdrive:blocks/detection/monitor-side",
+                     "down":  "warpdrive:blocks/detection/monitor-side",
+                     "up":  "warpdrive:blocks/detection/monitor-side",
+                     "north":  "warpdrive:blocks/detection/monitor-front",
+                     "south":  "warpdrive:blocks/detection/monitor-side",
+                     "west":  "warpdrive:blocks/detection/monitor-side",
+                     "east":  "warpdrive:blocks/detection/monitor-side"
+                 }
+}

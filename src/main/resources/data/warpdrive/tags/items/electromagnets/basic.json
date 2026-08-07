@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    "warpdrive:electromagnet.basic.plain",
+    "warpdrive:electromagnet.basic.glass"
+  ]
+}

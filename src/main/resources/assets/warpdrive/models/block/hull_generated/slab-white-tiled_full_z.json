@@ -1,0 +1,12 @@
+{
+    "parent":  "minecraft:block/cube",
+    "textures":  {
+                     "particle":  "warpdrive:blocks/hull/tiled_horizontal-white",
+                     "down":  "warpdrive:blocks/hull/tiled_horizontal-white",
+                     "up":  "warpdrive:blocks/hull/tiled_horizontal-white",
+                     "north":  "warpdrive:blocks/hull/tiled-white",
+                     "south":  "warpdrive:blocks/hull/tiled-white",
+                     "west":  "warpdrive:blocks/hull/tiled_vertical-white",
+                     "east":  "warpdrive:blocks/hull/tiled_vertical-white"
+                 }
+}

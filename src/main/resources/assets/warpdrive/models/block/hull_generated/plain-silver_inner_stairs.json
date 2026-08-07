@@ -1,0 +1,8 @@
+{
+    "parent":  "minecraft:block/inner_stairs",
+    "textures":  {
+                     "bottom":  "warpdrive:blocks/hull/plain-silver",
+                     "top":  "warpdrive:blocks/hull/plain-silver",
+                     "side":  "warpdrive:blocks/hull/plain-silver"
+                 }
+}

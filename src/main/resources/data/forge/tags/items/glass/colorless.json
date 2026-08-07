@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "warpdrive:bedrock_glass",
+    "warpdrive:void_shell.glass",
+    "warpdrive:electromagnet.basic.glass",
+    "warpdrive:electromagnet.advanced.glass",
+    "warpdrive:electromagnet.superior.glass",
+    "warpdrive:decorative-glass"
+  ]
+}

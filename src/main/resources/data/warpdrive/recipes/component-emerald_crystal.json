@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:components",
+  "pattern": [
+    " e ",
+    "BBB",
+    "qrq"
+  ],
+  "key": {
+    "e": {
+      "item": "minecraft:emerald"
+    },
+    "B": {
+      "item": "minecraft:iron_bars"
+    },
+    "q": {
+      "item": "minecraft:quartz"
+    },
+    "r": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "result": {
+    "item": "warpdrive:component-emerald_crystal"
+  }
+}

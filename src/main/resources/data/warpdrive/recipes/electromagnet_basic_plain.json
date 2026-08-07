@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "cdc",
+    "Cmt"
+  ],
+  "key": {
+    "c": {
+      "tag": "forge:ingots/iron"
+    },
+    "d": {
+      "tag": "forge:ingots/iron"
+    },
+    "C": {
+      "item": "warpdrive:component-capacitive_crystal"
+    },
+    "m": {
+      "item": "warpdrive:component-motor"
+    },
+    "t": {
+      "item": "warpdrive:component-glass_tank"
+    }
+  },
+  "result": {
+    "item": "warpdrive:electromagnet.basic.plain",
+    "count": 4
+  }
+}

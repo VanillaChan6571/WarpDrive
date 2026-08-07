@@ -1,0 +1,12 @@
+{
+    "parent":  "minecraft:block/cube",
+    "textures":  {
+                     "particle":  "warpdrive:blocks/energy/ic2_reactor_laser_cooler-side-valid",
+                     "down":  "warpdrive:blocks/energy/ic2_reactor_laser_cooler-side-valid",
+                     "up":  "warpdrive:blocks/energy/ic2_reactor_laser_cooler-side-valid",
+                     "north":  "warpdrive:blocks/energy/ic2_reactor_laser_cooler-head-valid",
+                     "south":  "warpdrive:blocks/energy/ic2_reactor_laser_cooler-side-valid",
+                     "west":  "warpdrive:blocks/energy/ic2_reactor_laser_cooler-side-valid",
+                     "east":  "warpdrive:blocks/energy/ic2_reactor_laser_cooler-side-valid"
+                 }
+}

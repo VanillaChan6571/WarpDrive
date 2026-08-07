@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:smelting",
+  "ingredient": {
+    "item": "warpdrive:component-raw_carbon_mesh"
+  },
+  "result": "warpdrive:component-carbon_fiber",
+  "experience": 0,
+  "cookingtime": 200
+}
