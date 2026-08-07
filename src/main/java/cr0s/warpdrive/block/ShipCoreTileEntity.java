@@ -805,9 +805,13 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 
 	private void debugCoreNbt(final String event, @Nullable final CompoundNBT nbt) {
 		final TileEntity worldTile = level == null ? null : level.getBlockEntity(worldPosition);
+		// TileEntity.load() runs before Chunk installs the new block entity into a World. Vanilla's
+		// getBlockState() tries to resolve its empty cache through level and therefore throws when
+		// called in that window. Logging must never be able to make Minecraft reject valid core NBT.
+		final Object blockState = level == null ? "<unbound>" : getBlockState();
 		DebugLog.logSided(level, "CORE-NBT",
 			"{} pos={} object={} removed={} worldObject={} block={} values={} tag={}",
-			event, worldPosition, objectId(), isRemoved(), objectId(worldTile), getBlockState(),
+			event, worldPosition, objectId(), isRemoved(), objectId(worldTile), blockState,
 			coreValues(), coreTagValues(nbt));
 	}
 

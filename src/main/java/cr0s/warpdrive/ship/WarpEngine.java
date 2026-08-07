@@ -508,8 +508,13 @@ public class WarpEngine {
 
     private static void clearSource(final World sourceWorld, final ShipScanner.ShipScanResult scanResult) {
         for (final ShipScanner.ShipBlock shipBlock : scanResult.blocks) {
-            sourceWorld.setBlock(shipBlock.pos, Blocks.AIR.defaultBlockState(), 2);
+            // The validated snapshot already contains this block entity's complete NBT. Detach the
+            // live instance before replacing its block, otherwise vanilla inventory blocks execute
+            // onRemove() while their chest/shulker/modded inventory is still accessible and spill a
+            // second copy into the world. The destination then restores the captured inventory too,
+            // producing exactly the jump duplication this clear phase must prevent.
             sourceWorld.removeBlockEntity(shipBlock.pos);
+            sourceWorld.setBlock(shipBlock.pos, Blocks.AIR.defaultBlockState(), 2);
         }
     }
 
