@@ -1,10 +1,11 @@
-# WarpDrive for 1.12.2
+# WarpDrive for 1.16.5
+### Still Development - Build at your own risk!
 [![WarpDrive Curse statistics](http://cf.way2muchnoise.eu/warpdrive.svg)](http://minecraft.curseforge.com/projects/warpdrive)
 [![Build Status](https://travis-ci.org/LemADEC/WarpDrive.svg?branch=MC1.7)](https://travis-ci.org/LemADEC/WarpDrive)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/cd8be2ef5d3b4874b2c05aedf1faba7b)](https://www.codacy.com/manual/LemADEC/WarpDrive?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=LemADEC/WarpDrive&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/dd939aed95ab4fac9eab9c2b63e0028b)](https://app.codacy.com/gh/VanillaChan6571/WarpDrive/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
-An update to the WarpDrive mod. Currently in progress.
-Adds so many new features, you won't recognize it from the original!
+An update to the WarpDrive mod for 1.16.5. Currently in progress.
+Faithful port with some modernization from 1.12.2!
 
 If you would like to help, find an issue and then fork the repository. If you can fix it, submit a pull request and we will accept it! This is valid even if you dont know how to code, modifications to textures, resources, wikis, and everything else are up for improvment.
 
@@ -14,11 +15,11 @@ See the official forum [here](https://www.minecraftforum.net/forums/mapping-and-
 
 ## Installation
 
-1.  Download WarpDrive.jar from the [Curse website](http://minecraft.curseforge.com/projects/warpdrive) and put it in your mods folder.
+1.  Download WarpDrive.jar from the [Curse website](http://minecraft.curseforge.com/projects/warpdrive) and put it in your mods folder. (Currently 1.12.2 is only option at this time)
 
-2.  To move your ship, you'll need either ComputerCraft or OpenComputer.
+2.  To move your ship, you'll ComputerCraft CC:Tweaked for 1.16.5 or Build a Ship Controller that comes with Warp Drive now.
 
-3.  FE/µI, EU and RF power are supported (including but not limited to IC2, GregTech, AdvancedSolarPanel, BigReactors, EnderIO, Thermal Expansion, ImmersiveEngineering).
+3.  FE/µI, EU and RF power are supported (#TODO - including but not limited to IC2, GregTech, AdvancedSolarPanel, BigReactors, EnderIO, Thermal Expansion, ImmersiveEngineering).
     ICBM, MFFS, Advanced Repulsion System, Advanced Solar Panels and GraviSuite are supported.
 
 ## Developping
