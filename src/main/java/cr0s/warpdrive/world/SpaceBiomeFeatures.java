@@ -45,8 +45,8 @@ public final class SpaceBiomeFeatures {
 		}
 
 		if (Registration.GIANT_ASTEROID_CONFIGURED != null) {
-			// Placed in an earlier stage so the scattered fields can settle around it rather than
-			// being overwritten by it
+			// This is the legacy asteroids_field stream. It runs after ordinary asteroids and
+			// celestial bodies so each chunk can apply the field's rocks, then its gas clouds.
 			event.getGeneration()
 				.getFeatures(GenerationStage.Decoration.SURFACE_STRUCTURES)
 				.add(() -> Registration.GIANT_ASTEROID_CONFIGURED);

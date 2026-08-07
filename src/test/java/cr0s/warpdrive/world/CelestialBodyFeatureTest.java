@@ -2,6 +2,8 @@ package cr0s.warpdrive.world;
 
 import org.junit.Test;
 
+import java.util.EnumSet;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -20,7 +22,18 @@ public class CelestialBodyFeatureTest {
 			assertEquals(first[index].y, second[index].y);
 			assertEquals(first[index].z, second[index].z);
 			assertEquals(first[index].radius, second[index].radius);
+			assertEquals(first[index].profile, second[index].profile);
 			assertEquals(first[index].moon, second[index].moon);
+			assertEquals(first[index].shellThicknesses.length, first[index].shellSeeds.length);
+			assertEquals(first[index].shellThicknesses.length, second[index].shellThicknesses.length);
+			int radiusFromShells = 0;
+			for (int shell = 0; shell < first[index].shellThicknesses.length; shell++) {
+				assertEquals(first[index].shellThicknesses[shell], second[index].shellThicknesses[shell]);
+				assertEquals(first[index].shellSeeds[shell], second[index].shellSeeds[shell]);
+				assertTrue(first[index].shellThicknesses[shell] >= 0);
+				radiusFromShells += first[index].shellThicknesses[shell];
+			}
+			assertEquals(first[index].radius, radiusFromShells);
 			assertTrue(first[index].y - first[index].radius >= 1);
 			assertTrue(first[index].y + first[index].radius <= 254);
 		}
@@ -45,5 +58,20 @@ public class CelestialBodyFeatureTest {
 				}
 			}
 		}
+	}
+
+	@Test
+	public void everyLegacyProfileIsReachable() {
+		final EnumSet<CelestialSystemLayout.Profile> profiles =
+			EnumSet.noneOf(CelestialSystemLayout.Profile.class);
+		for (int regionX = -20; regionX <= 20; regionX++) {
+			for (int regionZ = -20; regionZ <= 20; regionZ++) {
+				for (final CelestialSystemLayout.Body body :
+				     CelestialSystemLayout.systemBodies(246813579L, regionX, regionZ)) {
+					profiles.add(body.profile);
+				}
+			}
+		}
+		assertEquals(EnumSet.allOf(CelestialSystemLayout.Profile.class), profiles);
 	}
 }
