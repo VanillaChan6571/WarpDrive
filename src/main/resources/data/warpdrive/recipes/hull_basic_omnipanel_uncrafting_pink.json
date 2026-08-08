@@ -1,0 +1,34 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "group": "warpdrive:hulls",
+  "ingredients": [
+    {
+      "item": "warpdrive:hull.basic.omnipanel-pink"
+    },
+    {
+      "item": "warpdrive:hull.basic.omnipanel-pink"
+    },
+    {
+      "item": "warpdrive:hull.basic.omnipanel-pink"
+    },
+    {
+      "item": "warpdrive:hull.basic.omnipanel-pink"
+    },
+    {
+      "item": "warpdrive:hull.basic.omnipanel-pink"
+    },
+    {
+      "item": "warpdrive:hull.basic.omnipanel-pink"
+    },
+    {
+      "item": "warpdrive:hull.basic.omnipanel-pink"
+    },
+    {
+      "item": "warpdrive:hull.basic.omnipanel-pink"
+    }
+  ],
+  "result": {
+    "item": "warpdrive:hull.basic.glass-pink",
+    "count": 3
+  }
+}

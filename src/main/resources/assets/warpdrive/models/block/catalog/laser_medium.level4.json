@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "side": "warpdrive:blocks/laser_medium-side4",
+    "end": "warpdrive:blocks/laser_medium-top_bottom"
+  }
+}

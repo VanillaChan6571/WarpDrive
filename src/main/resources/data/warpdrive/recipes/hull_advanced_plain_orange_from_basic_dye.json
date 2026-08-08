@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:tainted_hulls",
+  "pattern": [
+    "cbc",
+    "bXb",
+    "cbc"
+  ],
+  "key": {
+    "b": {
+      "tag": "warpdrive:hulls/basic/plain"
+    },
+    "c": {
+      "item": "minecraft:obsidian"
+    },
+    "X": {
+      "tag": "forge:dyes/orange"
+    }
+  },
+  "result": {
+    "item": "warpdrive:hull.advanced.plain-orange",
+    "count": 4
+  }
+}

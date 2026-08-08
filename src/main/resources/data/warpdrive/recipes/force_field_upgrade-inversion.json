@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:components",
+  "pattern": [
+    "rgr",
+    "CCC",
+    "CCC"
+  ],
+  "key": {
+    "r": {
+      "item": "minecraft:redstone"
+    },
+    "g": {
+      "item": "minecraft:gold_nugget"
+    },
+    "C": {
+      "item": "warpdrive:component-diamond_coil"
+    }
+  },
+  "result": {
+    "item": "warpdrive:force_field_upgrade-inversion"
+  }
+}

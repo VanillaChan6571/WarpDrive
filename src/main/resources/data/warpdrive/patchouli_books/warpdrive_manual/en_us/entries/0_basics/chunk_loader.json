@@ -1,0 +1,17 @@
+{
+	"name": "Chunk loader",
+	"icon": "warpdrive:chunk_loader.advanced",
+	"category": "0_basics",
+	"pages": [
+		{
+			"type": "text",
+			"text": "$(item)Chunk loaders$() keep their own chunk loaded while they have energy. Use a redstone torch on the block to enable or disable it.$(br2)There's no recipe provided by default."
+		},
+		{
+			"type": "text",
+			"title": "Upgrades",
+			"text": "Up to two $(item)Emerald crystals$() increase the maximum loaded area; Lua can shape that area into a rectangle. Up to five $(item)Superconductors$() reduce energy use by 10% each.$(br2)Install a $(item)Computer interface$() before calling the CC:Tweaked API. Sneak-use an upgrade or an empty hand to remove one."
+		}
+	],
+	"sortnum": 16
+}

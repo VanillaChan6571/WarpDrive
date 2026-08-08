@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    " e ",
+    " m ",
+    " e "
+  ],
+  "key": {
+    "m": {
+      "item": "warpdrive:highly_advanced_machine"
+    },
+    "e": {
+      "item": "warpdrive:component-ender_coil"
+    }
+  },
+  "result": {
+    "item": "warpdrive:transporter_containment",
+    "count": 2
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    " I ",
+    "ISI",
+    " I "
+  ],
+  "key": {
+    "I": {
+      "tag": "forge:gems/diamond"
+    },
+    "S": {
+      "item": "warpdrive:siren_military.advanced"
+    }
+  },
+  "result": {
+    "item": "warpdrive:siren_military.superior"
+  }
+}

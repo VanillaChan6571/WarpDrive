@@ -1,0 +1,32 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "gtd",
+    "zlm",
+    "gt "
+  ],
+  "key": {
+    "t": {
+      "item": "warpdrive:component-motor"
+    },
+    "z": {
+      "item": "warpdrive:component-zoom"
+    },
+    "d": {
+      "item": "warpdrive:component-diamond_crystal"
+    },
+    "m": {
+      "item": "minecraft:iron_block"
+    },
+    "l": {
+      "item": "minecraft:daylight_detector"
+    },
+    "g": {
+      "tag": "forge:glass_panes/colorless"
+    }
+  },
+  "result": {
+    "item": "warpdrive:camera"
+  }
+}

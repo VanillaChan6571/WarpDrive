@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "group": "warpdrive:hulls",
+  "ingredients": [
+    {
+      "item": "warpdrive:hull.advanced.stairs_yellow"
+    },
+    {
+      "item": "warpdrive:hull.advanced.stairs_yellow"
+    },
+    {
+      "item": "warpdrive:hull.advanced.stairs_yellow"
+    },
+    {
+      "item": "warpdrive:hull.advanced.stairs_yellow"
+    }
+  ],
+  "result": {
+    "item": "warpdrive:hull.advanced.plain-yellow",
+    "count": 6
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "warpdrive:mining_laser",
+          "functions": [
+            {
+              "function": "minecraft:copy_nbt",
+              "source": "block_entity",
+              "ops": [
+                {
+                  "source": "enabled",
+                  "target": "BlockEntityTag.enabled",
+                  "op": "replace"
+                },
+                {
+                  "source": "enableSilktouch",
+                  "target": "BlockEntityTag.enableSilktouch",
+                  "op": "replace"
+                },
+                {
+                  "source": "layerOffset",
+                  "target": "BlockEntityTag.layerOffset",
+                  "op": "replace"
+                },
+                {
+                  "source": "mineAllBlocks",
+                  "target": "BlockEntityTag.mineAllBlocks",
+                  "op": "replace"
+                },
+                {
+                  "source": "currentLayer",
+                  "target": "BlockEntityTag.currentLayer",
+                  "op": "replace"
+                },
+                {
+                  "source": "pumpCount",
+                  "target": "BlockEntityTag.pumpCount",
+                  "op": "replace"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "conditions": [
+        {
+          "condition": "minecraft:survives_explosion"
+        }
+      ]
+    }
+  ]
+}

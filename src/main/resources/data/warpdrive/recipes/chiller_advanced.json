@@ -1,0 +1,32 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "ngn",
+    "dmd",
+    "bMb"
+  ],
+  "key": {
+    "n": {
+      "item": "minecraft:ice"
+    },
+    "g": {
+      "item": "minecraft:ghast_tear"
+    },
+    "d": {
+      "item": "minecraft:diamond"
+    },
+    "m": {
+      "item": "warpdrive:component-motor"
+    },
+    "b": {
+      "item": "minecraft:iron_bars"
+    },
+    "M": {
+      "tag": "warpdrive:electromagnets/advanced"
+    }
+  },
+  "result": {
+    "item": "warpdrive:chiller.advanced"
+  }
+}

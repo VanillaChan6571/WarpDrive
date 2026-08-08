@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:components",
+  "pattern": [
+    "CCC",
+    "cec",
+    "   "
+  ],
+  "key": {
+    "c": {
+      "item": "warpdrive:component-computer_interface"
+    },
+    "e": {
+      "item": "warpdrive:component-emerald_crystal"
+    },
+    "C": {
+      "item": "warpdrive:component-diamond_coil"
+    }
+  },
+  "result": {
+    "item": "warpdrive:force_field_upgrade-fusion"
+  }
+}

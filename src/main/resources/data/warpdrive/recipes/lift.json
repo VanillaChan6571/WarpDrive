@@ -1,0 +1,32 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "wlw",
+    "per",
+    "glg"
+  ],
+  "key": {
+    "r": {
+      "item": "minecraft:redstone"
+    },
+    "w": {
+      "tag": "minecraft:wool"
+    },
+    "l": {
+      "item": "warpdrive:component-lens"
+    },
+    "e": {
+      "item": "minecraft:ender_pearl"
+    },
+    "p": {
+      "item": "warpdrive:component-power_interface"
+    },
+    "g": {
+      "tag": "forge:glass_panes/colorless"
+    }
+  },
+  "result": {
+    "item": "warpdrive:lift"
+  }
+}

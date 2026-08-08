@@ -1,7 +1,25 @@
 {
-    "variants":  {
-                     "":  {
-                              "model":  "warpdrive:block/catalog/laser_tree_farm"
-                          }
-                 }
+  "variants": {
+    "mode=inactive": {
+      "model": "warpdrive:block/collection/laser_tree_farm-inactive"
+    },
+    "mode=farming_low_power": {
+      "model": "warpdrive:block/collection/laser_tree_farm-farming_low_power"
+    },
+    "mode=farming_powered": {
+      "model": "warpdrive:block/collection/laser_tree_farm-farming_powered"
+    },
+    "mode=scanning_low_power": {
+      "model": "warpdrive:block/collection/laser_tree_farm-scanning_low_power"
+    },
+    "mode=scanning_powered": {
+      "model": "warpdrive:block/collection/laser_tree_farm-scanning_powered"
+    },
+    "mode=planting_low_power": {
+      "model": "warpdrive:block/collection/laser_tree_farm-planting_low_power"
+    },
+    "mode=planting_powered": {
+      "model": "warpdrive:block/collection/laser_tree_farm-planting_powered"
+    }
+  }
 }

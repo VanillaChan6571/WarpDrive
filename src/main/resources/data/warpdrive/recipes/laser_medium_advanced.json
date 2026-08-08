@@ -1,0 +1,34 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "rAr",
+    "lBl",
+    "pm "
+  ],
+  "key": {
+    "r": {
+      "tag": "forge:dusts/redstone"
+    },
+    "A": {
+      "type": "forge:nbt",
+      "item": "minecraft:potion",
+      "nbt": "{Potion:\"minecraft:awkward\"}"
+    },
+    "l": {
+      "tag": "forge:gems/lapis"
+    },
+    "B": {
+      "item": "warpdrive:component-glass_tank"
+    },
+    "p": {
+      "item": "warpdrive:component-power_interface"
+    },
+    "m": {
+      "item": "minecraft:diamond_block"
+    }
+  },
+  "result": {
+    "item": "warpdrive:laser_medium.advanced"
+  }
+}

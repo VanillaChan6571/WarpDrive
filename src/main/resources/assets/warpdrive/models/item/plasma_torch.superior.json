@@ -1,6 +1,6 @@
 {
 	"parent": "item/generated",
 	"textures": {
-		"layer0": "warpdrive:items/atomic/electromagnetic_cell-empty"
+		"layer0": "warpdrive:items/tool/plasma_torch"
 	}
 }

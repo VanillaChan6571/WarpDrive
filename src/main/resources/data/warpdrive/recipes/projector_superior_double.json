@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    " e ",
+    "pmp",
+    " r "
+  ],
+  "key": {
+    "p": {
+      "item": "warpdrive:component-electromagnetic_projector"
+    },
+    "m": {
+      "item": "minecraft:beacon"
+    },
+    "e": {
+      "item": "warpdrive:component-ender_coil"
+    },
+    "r": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "result": {
+    "item": "warpdrive:projector.superior"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    " e ",
+    "CmC",
+    " r "
+  ],
+  "key": {
+    "C": {
+      "item": "warpdrive:component-diamond_coil"
+    },
+    "m": {
+      "item": "warpdrive:highly_advanced_machine"
+    },
+    "e": {
+      "item": "warpdrive:component-ender_coil"
+    },
+    "r": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "result": {
+    "item": "warpdrive:force_field_relay.advanced"
+  }
+}

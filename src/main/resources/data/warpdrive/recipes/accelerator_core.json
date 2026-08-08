@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "MmM",
+    "mcm",
+    "MmM"
+  ],
+  "key": {
+    "M": {
+      "item": "warpdrive:component-memory_crystal"
+    },
+    "m": {
+      "tag": "warpdrive:electromagnets/basic"
+    },
+    "c": {
+      "item": "warpdrive:accelerator_control_point"
+    }
+  },
+  "result": {
+    "item": "warpdrive:accelerator_core"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "BEB",
+    "rmr",
+    "rCr"
+  ],
+  "key": {
+    "B": {
+      "item": "warpdrive:component-biofiber"
+    },
+    "m": {
+      "item": "minecraft:diamond_block"
+    },
+    "r": {
+      "item": "warpdrive:component-rubber"
+    },
+    "E": {
+      "item": "warpdrive:component-emerald_crystal"
+    },
+    "C": {
+      "item": "warpdrive:component-computer_interface"
+    }
+  },
+  "result": {
+    "item": "warpdrive:virtual_assistant.basic"
+  }
+}

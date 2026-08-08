@@ -45,6 +45,19 @@ public class CatalogVariantBlockItem extends BlockItem {
 	}
 
 	public static int getVariant(final ItemStack itemStack) {
-		return itemStack.hasTag() ? itemStack.getTag().getInt(TAG_VARIANT) : 0;
+		if (!itemStack.hasTag()) {
+			return 0;
+		}
+		if (itemStack.getTag().contains(TAG_VARIANT)) {
+			return itemStack.getTag().getInt(TAG_VARIANT);
+		}
+		// Projector loot uses vanilla copy_state so the half/full property survives block breaking.
+		// BlockStateTag stores property values as strings, matching BlockItem's placement contract.
+		if (itemStack.getTag().contains("BlockStateTag")
+		 && "true".equals(itemStack.getTag().getCompound("BlockStateTag")
+			.getString("is_double_sided"))) {
+			return 1;
+		}
+		return 0;
 	}
 }

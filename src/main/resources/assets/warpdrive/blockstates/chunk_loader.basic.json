@@ -1,7 +1,6 @@
 {
-    "variants":  {
-                     "":  {
-                              "model":  "warpdrive:block/catalog/chunk_loader.basic"
-                          }
-                 }
+  "variants": {
+    "active=false": { "model": "warpdrive:block/catalog/chunk_loader.basic_offline" },
+    "active=true":  { "model": "warpdrive:block/catalog/chunk_loader.basic" }
+  }
 }

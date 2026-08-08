@@ -10,7 +10,7 @@ import net.minecraftforge.fml.network.simple.SimpleChannel;
  */
 public final class WarpDriveNetwork {
 
-	private static final String PROTOCOL_VERSION = "2";
+	private static final String PROTOCOL_VERSION = "5";
 
 	public static SimpleChannel CHANNEL;
 
@@ -40,6 +40,21 @@ public final class WarpDriveNetwork {
 			ShipCountdownPacket::encode,
 			ShipCountdownPacket::decode,
 			ShipCountdownPacket::handle);
+		CHANNEL.registerMessage(id++,
+			BeamEffectPacket.class,
+			BeamEffectPacket::encode,
+			BeamEffectPacket::decode,
+			BeamEffectPacket::handle);
+		CHANNEL.registerMessage(id++,
+			CameraLaserFirePacket.class,
+			CameraLaserFirePacket::encode,
+			CameraLaserFirePacket::decode,
+			CameraLaserFirePacket::handle);
+		CHANNEL.registerMessage(id++,
+			CloakPacket.class,
+			CloakPacket::encode,
+			CloakPacket::decode,
+			CloakPacket::handle);
 
 		WarpDrive.logger.info("Network channel registered ({} message types)", id);
 	}

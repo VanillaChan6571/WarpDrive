@@ -1,0 +1,32 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    " mp",
+    "tdt",
+    "glg"
+  ],
+  "key": {
+    "t": {
+      "item": "warpdrive:component-motor"
+    },
+    "d": {
+      "item": "warpdrive:component-diffraction_grating"
+    },
+    "l": {
+      "item": "warpdrive:component-lens"
+    },
+    "m": {
+      "item": "minecraft:diamond_block"
+    },
+    "p": {
+      "item": "minecraft:diamond_pickaxe"
+    },
+    "g": {
+      "tag": "forge:glass_panes/colorless"
+    }
+  },
+  "result": {
+    "item": "warpdrive:mining_laser"
+  }
+}

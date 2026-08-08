@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "group": "warpdrive:hulls",
+  "ingredients": [
+    {
+      "item": "warpdrive:hull.superior.stairs_brown"
+    },
+    {
+      "item": "warpdrive:hull.superior.stairs_brown"
+    },
+    {
+      "item": "warpdrive:hull.superior.stairs_brown"
+    },
+    {
+      "item": "warpdrive:hull.superior.stairs_brown"
+    }
+  ],
+  "result": {
+    "item": "warpdrive:hull.superior.plain-brown",
+    "count": 6
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "group": "warpdrive:hulls",
+  "ingredients": [
+    {
+      "item": "warpdrive:hull.superior.stairs_lime"
+    },
+    {
+      "item": "warpdrive:hull.superior.stairs_lime"
+    },
+    {
+      "item": "warpdrive:hull.superior.stairs_lime"
+    },
+    {
+      "item": "warpdrive:hull.superior.stairs_lime"
+    }
+  ],
+  "result": {
+    "item": "warpdrive:hull.superior.plain-lime",
+    "count": 6
+  }
+}

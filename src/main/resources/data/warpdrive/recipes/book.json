@@ -1,0 +1,36 @@
+{
+  "type": "forge:conditional",
+  "recipes": [
+    {
+      "conditions": [
+        {
+          "type": "forge:mod_loaded",
+          "modid": "patchouli"
+        }
+      ],
+      "recipe": {
+        "type": "minecraft:crafting_shaped",
+        "group": "warpdrive:tools",
+        "pattern": [
+          " g ",
+          "ibi",
+          " i "
+        ],
+        "key": {
+          "g": {
+            "tag": "forge:nuggets/gold"
+          },
+          "i": {
+            "tag": "forge:nuggets/iron"
+          },
+          "b": {
+            "item": "minecraft:book"
+          }
+        },
+        "result": {
+          "item": "warpdrive:book"
+        }
+      }
+    }
+  ]
+}

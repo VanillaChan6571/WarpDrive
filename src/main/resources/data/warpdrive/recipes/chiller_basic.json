@@ -1,0 +1,32 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "wgw",
+    "sms",
+    "bMb"
+  ],
+  "key": {
+    "w": {
+      "item": "minecraft:snow_block"
+    },
+    "g": {
+      "item": "minecraft:ghast_tear"
+    },
+    "s": {
+      "tag": "forge:ingots/iron"
+    },
+    "m": {
+      "item": "warpdrive:component-motor"
+    },
+    "b": {
+      "item": "minecraft:iron_bars"
+    },
+    "M": {
+      "tag": "warpdrive:electromagnets/basic"
+    }
+  },
+  "result": {
+    "item": "warpdrive:chiller.basic"
+  }
+}

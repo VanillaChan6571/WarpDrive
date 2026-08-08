@@ -1,7 +1,10 @@
 {
-    "variants":  {
-                     "":  {
-                              "model":  "warpdrive:block/catalog/biometric_scanner"
-                          }
-                 }
+  "multipart": [
+    { "when": { "facing": "north" }, "apply": { "model": "warpdrive:block/detection/biometric_scanner" } },
+    { "when": { "facing": "south" }, "apply": { "model": "warpdrive:block/detection/biometric_scanner", "y": 180 } },
+    { "when": { "facing": "west" }, "apply": { "model": "warpdrive:block/detection/biometric_scanner", "y": 270 } },
+    { "when": { "facing": "east" }, "apply": { "model": "warpdrive:block/detection/biometric_scanner", "y": 90 } },
+    { "when": { "facing": "up" }, "apply": { "model": "warpdrive:block/detection/biometric_scanner", "x": 90 } },
+    { "when": { "facing": "down" }, "apply": { "model": "warpdrive:block/detection/biometric_scanner", "x": 270 } }
+  ]
 }

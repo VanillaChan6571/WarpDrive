@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:tainted_hulls",
+  "pattern": [
+    "Xb ",
+    "bcb",
+    " b "
+  ],
+  "key": {
+    "b": {
+      "tag": "warpdrive:hulls/advanced/plain"
+    },
+    "c": {
+      "tag": "forge:gems/diamond"
+    },
+    "X": {
+      "tag": "forge:dyes/white"
+    }
+  },
+  "result": {
+    "item": "warpdrive:hull.superior.plain-white",
+    "count": 4
+  }
+}

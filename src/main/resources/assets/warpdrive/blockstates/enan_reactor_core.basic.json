@@ -1,7 +1,20 @@
 {
-    "variants":  {
-                     "":  {
-                              "model":  "warpdrive:block/catalog/enan_reactor_core.basic"
-                          }
-                 }
+  "variants": {
+    "energy=0,stability=0": { "model": "warpdrive:block/energy/enan_reactor_core_00" },
+    "energy=0,stability=1": { "model": "warpdrive:block/energy/enan_reactor_core_01" },
+    "energy=0,stability=2": { "model": "warpdrive:block/energy/enan_reactor_core_02" },
+    "energy=0,stability=3": { "model": "warpdrive:block/energy/enan_reactor_core_03" },
+    "energy=1,stability=0": { "model": "warpdrive:block/energy/enan_reactor_core_10" },
+    "energy=1,stability=1": { "model": "warpdrive:block/energy/enan_reactor_core_11" },
+    "energy=1,stability=2": { "model": "warpdrive:block/energy/enan_reactor_core_12" },
+    "energy=1,stability=3": { "model": "warpdrive:block/energy/enan_reactor_core_13" },
+    "energy=2,stability=0": { "model": "warpdrive:block/energy/enan_reactor_core_20" },
+    "energy=2,stability=1": { "model": "warpdrive:block/energy/enan_reactor_core_21" },
+    "energy=2,stability=2": { "model": "warpdrive:block/energy/enan_reactor_core_22" },
+    "energy=2,stability=3": { "model": "warpdrive:block/energy/enan_reactor_core_23" },
+    "energy=3,stability=0": { "model": "warpdrive:block/energy/enan_reactor_core_30" },
+    "energy=3,stability=1": { "model": "warpdrive:block/energy/enan_reactor_core_31" },
+    "energy=3,stability=2": { "model": "warpdrive:block/energy/enan_reactor_core_32" },
+    "energy=3,stability=3": { "model": "warpdrive:block/energy/enan_reactor_core_33" }
+  }
 }

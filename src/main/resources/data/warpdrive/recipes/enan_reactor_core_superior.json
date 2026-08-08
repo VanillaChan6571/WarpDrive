@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "lSl",
+    "CRC",
+    "lSl"
+  ],
+  "key": {
+    "C": {
+      "item": "warpdrive:component-reactor_core"
+    },
+    "R": {
+      "item": "warpdrive:enan_reactor_core.advanced"
+    },
+    "l": {
+      "item": "warpdrive:component-lens"
+    },
+    "S": {
+      "item": "warpdrive:component-superconductor"
+    }
+  },
+  "result": {
+    "item": "warpdrive:enan_reactor_core.superior"
+  }
+}

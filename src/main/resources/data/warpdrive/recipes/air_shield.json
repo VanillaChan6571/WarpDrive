@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "gog",
+    "oco",
+    "gog"
+  ],
+  "key": {
+    "g": {
+      "item": "minecraft:glowstone_dust"
+    },
+    "o": {
+      "tag": "warpdrive:hulls/basic/omnipanel"
+    },
+    "c": {
+      "item": "warpdrive:component-diamond_coil"
+    }
+  },
+  "result": {
+    "item": "warpdrive:air_shield",
+    "count": 4
+  }
+}

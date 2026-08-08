@@ -1,7 +1,8 @@
 {
-    "variants":  {
-                     "":  {
-                              "model":  "warpdrive:block/catalog/transporter_core"
-                          }
-                 }
+  "variants": {
+    "state=disabled":   { "model": "warpdrive:block/catalog/transporter_core_invalid" },
+    "state=idle":       { "model": "warpdrive:block/catalog/transporter_core_offline" },
+    "state=acquiring":  { "model": "warpdrive:block/catalog/transporter_core_low_power" },
+    "state=energizing": { "model": "warpdrive:block/catalog/transporter_core" }
+  }
 }

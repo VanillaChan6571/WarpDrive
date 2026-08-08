@@ -1,7 +1,19 @@
 {
-    "variants":  {
-                     "":  {
-                              "model":  "warpdrive:block/catalog/mining_laser"
-                          }
-                 }
+  "variants": {
+    "mode=inactive": {
+      "model": "warpdrive:block/collection/mining_laser-inactive"
+    },
+    "mode=scanning_low_power": {
+      "model": "warpdrive:block/collection/mining_laser-scanning_low_power"
+    },
+    "mode=scanning_powered": {
+      "model": "warpdrive:block/collection/mining_laser-scanning_powered"
+    },
+    "mode=mining_low_power": {
+      "model": "warpdrive:block/collection/mining_laser-mining_low_power"
+    },
+    "mode=mining_powered": {
+      "model": "warpdrive:block/collection/mining_laser-mining_powered"
+    }
+  }
 }

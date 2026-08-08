@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:components",
+  "pattern": [
+    "CCC",
+    "www",
+    "   "
+  ],
+  "key": {
+    "w": {
+      "tag": "minecraft:wool"
+    },
+    "C": {
+      "item": "warpdrive:component-diamond_coil"
+    }
+  },
+  "result": {
+    "item": "warpdrive:force_field_upgrade-silencer"
+  }
+}

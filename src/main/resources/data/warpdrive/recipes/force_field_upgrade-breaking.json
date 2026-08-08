@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:components",
+  "pattern": [
+    "CCC",
+    "sap",
+    "   "
+  ],
+  "key": {
+    "s": {
+      "item": "minecraft:diamond_axe"
+    },
+    "a": {
+      "item": "minecraft:diamond_shovel"
+    },
+    "p": {
+      "item": "minecraft:diamond_pickaxe"
+    },
+    "C": {
+      "item": "warpdrive:component-diamond_coil"
+    }
+  },
+  "result": {
+    "item": "warpdrive:force_field_upgrade-breaking",
+    "count": 2
+  }
+}

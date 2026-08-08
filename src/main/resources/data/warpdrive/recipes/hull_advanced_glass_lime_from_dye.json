@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:tainted_hulls",
+  "pattern": [
+    "###",
+    "#X#",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "tag": "warpdrive:hulls/advanced/glass"
+    },
+    "X": {
+      "tag": "forge:dyes/lime"
+    }
+  },
+  "result": {
+    "item": "warpdrive:hull.advanced.glass-lime",
+    "count": 8
+  }
+}

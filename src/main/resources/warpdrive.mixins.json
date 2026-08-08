@@ -5,7 +5,11 @@
   "compatibilityLevel": "JAVA_8",
   "refmap": "warpdrive.refmap.json",
   "mixins": [
-    "ItemEntityMixin"
+    "ItemEntityMixin",
+    "ExplosionAccessor"
+  ],
+  "client": [
+    "ChunkCloakMixin"
   ],
   "injectors": {
     "defaultRequire": 1

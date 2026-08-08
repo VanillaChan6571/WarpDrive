@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:components",
+  "pattern": [
+    "CCC",
+    " m ",
+    " mc"
+  ],
+  "key": {
+    "m": {
+      "item": "warpdrive:component-motor"
+    },
+    "c": {
+      "item": "warpdrive:component-computer_interface"
+    },
+    "C": {
+      "item": "warpdrive:component-diamond_coil"
+    }
+  },
+  "result": {
+    "item": "warpdrive:force_field_upgrade-rotation",
+    "count": 2
+  }
+}

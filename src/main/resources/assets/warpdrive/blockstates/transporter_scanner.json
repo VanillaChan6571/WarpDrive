@@ -1,7 +1,6 @@
 {
     "variants":  {
-                     "":  {
-                              "model":  "warpdrive:block/catalog/transporter_scanner"
-                          }
+                     "active=false": { "model": "warpdrive:block/catalog/transporter_scanner" },
+                     "active=true":  { "model": "warpdrive:block/catalog/transporter_scanner_active" }
                  }
 }

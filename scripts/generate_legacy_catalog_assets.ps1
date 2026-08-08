@@ -115,6 +115,7 @@ foreach ($name in $catalogBlocks) {
 	$statePath = Join-Path $blockstates ($name + '.json')
 	$modelPath = Join-Path $catalogModels ($name + '.json')
 	if (-not (Test-Path $statePath)) { throw "Missing legacy blockstate for $name" }
+	$currentState = Get-Content $statePath -Raw | ConvertFrom-Json
 	if (-not (Test-Path $modelPath)) {
 		$raw = [System.IO.File]::ReadAllText($statePath)
 		$customModel = Existing-Custom-Model $raw
@@ -125,9 +126,18 @@ foreach ($name in $catalogBlocks) {
 		}
 		Write-Json $modelPath $model
 	}
-	Write-Json $statePath ([ordered]@{
-		variants = [ordered]@{ '' = [ordered]@{ model = "warpdrive:block/catalog/$name" } }
-	})
+	# Ported machines now use properties or multipart definitions for their live state. Preserve
+	# those definitions when the catalog art is regenerated; only inert, single-model entries need
+	# the empty variant rewritten here.
+	$variantNames = if ($null -eq $currentState.variants) { @() }
+	                else { @($currentState.variants.PSObject.Properties.Name) }
+	$hasStatefulDefinition = ($null -ne $currentState.multipart) `
+		-or (@($variantNames | Where-Object { $_ -ne '' }).Count -gt 0)
+	if (-not $hasStatefulDefinition) {
+		Write-Json $statePath ([ordered]@{
+			variants = [ordered]@{ '' = [ordered]@{ model = "warpdrive:block/catalog/$name" } }
+		})
+	}
 	Write-Json (Join-Path $itemModels ($name + '.json')) ([ordered]@{
 		parent = "warpdrive:block/catalog/$name"
 	})
@@ -374,5 +384,5 @@ foreach ($tier in $tiers) {
 $language['itemGroup.warpdrive.hull'] = "WarpDrive's hulls"
 Write-Json $langPath $language
 
-Write-Host ("Generated {0} inert machine blocks, {1} hull blocks and {2} standalone items." -f `
+Write-Host ("Generated catalog assets for {0} machine blocks, {1} hull blocks and {2} standalone items." -f `
 	$catalogBlocks.Count, ($tiers.Count * $colors.Count * 6), $catalogItems.Count)

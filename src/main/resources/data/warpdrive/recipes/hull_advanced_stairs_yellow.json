@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:hulls",
+  "pattern": [
+    "p  ",
+    "pp ",
+    "ppp"
+  ],
+  "key": {
+    "p": {
+      "item": "warpdrive:hull.advanced.plain-yellow"
+    }
+  },
+  "result": {
+    "item": "warpdrive:hull.advanced.stairs_yellow",
+    "count": 4
+  }
+}

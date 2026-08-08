@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "p p",
+    "csc",
+    "p p"
+  ],
+  "key": {
+    "c": {
+      "item": "warpdrive:capacitor.advanced"
+    },
+    "p": {
+      "item": "warpdrive:component-carbon_fiber"
+    },
+    "s": {
+      "item": "warpdrive:component-superconductor"
+    }
+  },
+  "result": {
+    "item": "warpdrive:capacitor.superior"
+  }
+}

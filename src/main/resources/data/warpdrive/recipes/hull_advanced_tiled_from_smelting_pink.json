@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:smelting",
+  "ingredient": {
+    "item": "warpdrive:hull.advanced.plain-pink"
+  },
+  "result": "warpdrive:hull.advanced.tiled-pink",
+  "experience": 0.0,
+  "cookingtime": 200
+}

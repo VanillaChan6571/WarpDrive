@@ -1,0 +1,15 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:lever",
+    "minecraft:torch",
+    "minecraft:wall_torch",
+    "minecraft:redstone_torch",
+    "minecraft:redstone_wall_torch",
+    "warpdrive:air_flow",
+    "warpdrive:air_source",
+    "warpdrive:force_field.basic",
+    "warpdrive:force_field.advanced",
+    "warpdrive:force_field.superior"
+  ]
+}

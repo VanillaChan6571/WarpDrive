@@ -1,0 +1,17 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:item_frame",
+    "minecraft:painting",
+    "minecraft:leash_knot",
+    "minecraft:boat",
+    "minecraft:minecart",
+    "minecraft:chest_minecart",
+    "minecraft:furnace_minecart",
+    "minecraft:tnt_minecart",
+    "minecraft:hopper_minecart",
+    "minecraft:spawner_minecart",
+    "minecraft:end_crystal",
+    "minecraft:arrow"
+  ]
+}

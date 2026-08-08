@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "DCD",
+    "CSC",
+    "DCD"
+  ],
+  "key": {
+    "D": {
+      "item": "warpdrive:component-diamond_coil"
+    },
+    "C": {
+      "item": "warpdrive:component-diamond_crystal"
+    },
+    "S": {
+      "item": "warpdrive:virtual_assistant.basic"
+    }
+  },
+  "result": {
+    "item": "warpdrive:virtual_assistant.advanced"
+  }
+}

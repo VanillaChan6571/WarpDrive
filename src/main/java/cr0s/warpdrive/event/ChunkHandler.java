@@ -3,6 +3,7 @@ package cr0s.warpdrive.event;
 import cr0s.warpdrive.WarpDrive;
 import cr0s.warpdrive.data.AirSpreader;
 import cr0s.warpdrive.data.ChunkData;
+import cr0s.warpdrive.block.energy.EnanReactorCoreTileEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.RegistryKey;
 import net.minecraft.world.chunk.IChunk;
@@ -197,7 +198,9 @@ public class ChunkHandler {
 
 	private static void notifyBlockChanged(final IWorld iWorld, final BlockPos blockPos) {
 		if (iWorld instanceof World && blockPos != null) {
-			onBlockUpdated((World) iWorld, blockPos.getX(), blockPos.getY(), blockPos.getZ());
+			final World world = (World) iWorld;
+			onBlockUpdated(world, blockPos.getX(), blockPos.getY(), blockPos.getZ());
+			EnanReactorCoreTileEntity.notifyBlockChanged(world, blockPos);
 		}
 	}
 

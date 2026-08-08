@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "fd ",
+    "fm ",
+    "f  "
+  ],
+  "key": {
+    "f": {
+      "item": "warpdrive:component-flat_screen"
+    },
+    "d": {
+      "item": "warpdrive:component-diamond_crystal"
+    },
+    "m": {
+      "item": "minecraft:iron_block"
+    }
+  },
+  "result": {
+    "item": "warpdrive:monitor"
+  }
+}

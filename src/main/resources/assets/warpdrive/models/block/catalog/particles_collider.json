@@ -1,6 +1,6 @@
 {
     "parent":  "minecraft:block/cube_all",
     "textures":  {
-                     "all":  "warpdrive:blocks/atomic/particles_collider-online"
+                     "all":  "warpdrive:blocks/atomic/particles_collider-offline"
                  }
 }

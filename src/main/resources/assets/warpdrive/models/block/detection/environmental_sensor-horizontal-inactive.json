@@ -1,0 +1,7 @@
+{
+  "parent": "warpdrive:block/detection/environmental_sensor-horizontal",
+  "textures": {
+    "particle": "warpdrive:blocks/detection/environmental_sensor-inactive",
+    "sensor": "warpdrive:blocks/detection/environmental_sensor-inactive"
+  }
+}

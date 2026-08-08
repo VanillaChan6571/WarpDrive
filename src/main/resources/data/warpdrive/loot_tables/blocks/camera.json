@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "warpdrive:camera",
+          "functions": [
+            {
+              "function": "minecraft:copy_nbt",
+              "source": "block_entity",
+              "ops": [
+                { "source": "videoChannel", "target": "BlockEntityTag.videoChannel", "op": "replace" },
+                { "source": "recognitionUpgrades", "target": "BlockEntityTag.recognitionUpgrades", "op": "replace" }
+              ]
+            }
+          ]
+        }
+      ],
+      "conditions": [ { "condition": "minecraft:survives_explosion" } ]
+    }
+  ]
+}

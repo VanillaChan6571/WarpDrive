@@ -126,6 +126,19 @@ repositories {
         name = "CurseForge"
         url = "https://cursemaven.com"
     }
+
+    // Curios' official Maven, for the optional accessory-slot integration.
+    maven {
+        name = "TheIllusiveC4"
+        url = "https://maven.theillusivec4.top"
+    }
+
+    // Patchouli's official Maven. It is optional for players; the runtime dependency here lets
+    // the development bootstrap validate WarpDrive's bundled manual.
+    maven {
+        name = "BlameJared"
+        url = "https://maven.blamejared.com"
+    }
 }
 
 dependencies {
@@ -137,6 +150,14 @@ dependencies {
     // CC:Tweaked for 1.16.5
     compileOnly fg.deobf("org.squiddev:cc-tweaked-${config.minecraft_version}:${config.CCTweaked_version}")
     runtimeOnly fg.deobf("org.squiddev:cc-tweaked-${config.minecraft_version}:${config.CCTweaked_version}")
+
+	// Optional in the shipped mod. ManualBookItem uses reflection, so WarpDrive still starts when
+	// Patchouli is absent; including it in development exercises the real 1.16 book loader.
+	runtimeOnly fg.deobf("vazkii.patchouli:Patchouli:${config.Patchouli_version}")
+
+	// Optional accessory slots. CuriosCompat is reflection-only, so this is a development-time
+	// runtime dependency: it makes the air-tank slot testable without becoming a hard requirement.
+	runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:${config.Curios_version}")
 
 	// Pure calculation tests (movement costs, deterministic generation helpers).
 	testImplementation 'junit:junit:4.13.2'

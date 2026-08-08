@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "bottom": "warpdrive:blocks/collection/mining_laser-bottom",
+    "top": "warpdrive:blocks/collection/mining_laser-top",
+    "side": "warpdrive:blocks/collection/mining_laser-side_mining_low_power"
+  }
+}

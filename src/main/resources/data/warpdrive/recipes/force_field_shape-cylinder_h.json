@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:components",
+  "pattern": [
+    "C C",
+    " m ",
+    "C C"
+  ],
+  "key": {
+    "C": {
+      "item": "warpdrive:component-diamond_coil"
+    },
+    "m": {
+      "item": "warpdrive:component-memory_crystal"
+    }
+  },
+  "result": {
+    "item": "warpdrive:force_field_shape-cylinder_h"
+  }
+}

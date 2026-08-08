@@ -1,0 +1,21 @@
+{
+  "replace": false,
+  "values": [
+    "#minecraft:leaves",
+    "minecraft:snow",
+    "warpdrive:air_flow",
+    "warpdrive:air_source",
+    "warpdrive:gas",
+    "warpdrive:gas-blue",
+    "warpdrive:gas-dark",
+    "warpdrive:gas-darkness",
+    "warpdrive:gas-gray",
+    "warpdrive:gas-green",
+    "warpdrive:gas-milk",
+    "warpdrive:gas-orange",
+    "warpdrive:gas-siren",
+    "warpdrive:gas-violet",
+    "warpdrive:gas-white",
+    "warpdrive:gas-yellow"
+  ]
+}

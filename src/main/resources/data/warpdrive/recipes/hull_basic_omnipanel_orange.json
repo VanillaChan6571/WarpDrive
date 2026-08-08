@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:hulls",
+  "pattern": [
+    "ggg",
+    "ggg"
+  ],
+  "key": {
+    "g": {
+      "item": "warpdrive:hull.basic.glass-orange"
+    }
+  },
+  "result": {
+    "item": "warpdrive:hull.basic.omnipanel-orange",
+    "count": 16
+  }
+}

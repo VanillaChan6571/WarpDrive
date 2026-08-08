@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "warpdrive:warp_armor_basic_helmet",
+    "warpdrive:warp_armor_advanced_helmet",
+    "warpdrive:warp_armor_superior_helmet"
+  ]
+}

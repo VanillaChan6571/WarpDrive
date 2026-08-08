@@ -1,0 +1,6 @@
+{
+    "name": "移动",
+    "description": "本章内容包含进行实体移动的$(l:4_movement/lift)电梯$()和$(item)传送器$()，还会涉及如何进行$(item)飞船$()的移动和$(item)建造$()。",
+    "icon": "warpdrive:ship_token-20",
+    "sortnum": 4
+}

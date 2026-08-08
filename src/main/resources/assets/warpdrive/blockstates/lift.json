@@ -1,7 +1,8 @@
 {
-    "variants":  {
-                     "":  {
-                              "model":  "warpdrive:block/catalog/lift"
-                          }
-                 }
+  "variants": {
+    "mode=inactive": { "model": "warpdrive:block/catalog/lift" },
+    "mode=up": { "model": "warpdrive:block/catalog/lift.up" },
+    "mode=down": { "model": "warpdrive:block/catalog/lift.down" },
+    "mode=redstone": { "model": "warpdrive:block/catalog/lift" }
+  }
 }

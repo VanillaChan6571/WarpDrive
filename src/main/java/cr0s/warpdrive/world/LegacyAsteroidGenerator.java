@@ -4,11 +4,17 @@ import cr0s.warpdrive.data.Registration;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.ITag;
+import net.minecraft.tags.ITagCollection;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.ISeedReader;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -33,7 +39,109 @@ final class LegacyAsteroidGenerator {
 	};
 
 	private interface StateSource {
-		BlockState get();
+		/**
+		 * @param variant deterministic per-position hash, letting a source that resolves to several
+		 *                candidate blocks pick one without carrying its own RNG.
+		 * @return the state to place, or null when this source has nothing to offer - an optional
+		 *         ore whose tag no loaded mod fills. The caller then falls back to the base material.
+		 */
+		@Nullable
+		BlockState get(long variant);
+	}
+
+	/**
+	 * A deposit backed by {@code forge:ores/<material>} rather than a hard-coded block id.
+	 *
+	 * 1.12.2 listed every mod's ore explicitly, with priority chains such as
+	 * "thermalfoundation, else immersiveengineering, else ic2, else ...". Ore tags express the same
+	 * intent without WarpDrive knowing any mod exists, and 1.13 flattening invalidated those block
+	 * ids anyway.
+	 */
+	private static final class OreTagSource implements StateSource {
+
+		private final ResourceLocation[] tagIds;
+		/** Vanilla block for a material vanilla already has; null for a modded-only material. */
+		@Nullable
+		private final BlockState fallback;
+		/**
+		 * Tag contents change on datapack reload, so the collection identity is the cache key.
+		 * Chunk generation is multi-threaded: the pair is published as one immutable snapshot
+		 * through a volatile field, and a lost race only costs a redundant resolve.
+		 */
+		private volatile Resolved resolved;
+
+		private static final class Resolved {
+			private final ITagCollection<Block> collection;
+			private final List<BlockState> states;
+
+			private Resolved(final ITagCollection<Block> collection, final List<BlockState> states) {
+				this.collection = collection;
+				this.states = states;
+			}
+		}
+
+		private OreTagSource(@Nullable final Block fallback, final String... materials) {
+			this.tagIds = new ResourceLocation[materials.length];
+			for (int index = 0; index < materials.length; index++) {
+				tagIds[index] = new ResourceLocation("forge", "ores/" + materials[index]);
+			}
+			this.fallback = fallback == null ? null : fallback.defaultBlockState();
+		}
+
+		private List<BlockState> resolve() {
+			final ITagCollection<Block> collection = BlockTags.getAllTags();
+			final Resolved cached = resolved;
+			if (cached != null && cached.collection == collection) {
+				return cached.states;
+			}
+
+			final List<BlockState> states = new ArrayList<>();
+			if (fallback != null) {
+				states.add(fallback);
+			}
+			for (final ResourceLocation tagId : tagIds) {
+				final ITag<Block> tag = collection.getTagOrEmpty(tagId);
+				for (final Block block : tag.getValues()) {
+					// When vanilla already provides the material, only modded entries are additive.
+					// Otherwise a vanilla-only world would start seeing nether gold ore in overworld
+					// asteroids, which the 1.12.2 filler never did.
+					if (fallback != null) {
+						final ResourceLocation name = block.getRegistryName();
+						if (name == null || "minecraft".equals(name.getNamespace())) {
+							continue;
+						}
+					}
+					final BlockState state = block.defaultBlockState();
+					if (!states.contains(state)) {
+						states.add(state);
+					}
+				}
+			}
+
+			final List<BlockState> immutable = Collections.unmodifiableList(states);
+			resolved = new Resolved(collection, immutable);
+			return immutable;
+		}
+
+		@Nullable
+		@Override
+		public BlockState get(final long variant) {
+			final List<BlockState> states = resolve();
+			if (states.isEmpty()) {
+				return null;
+			}
+			return states.get((int) Math.floorMod(variant, states.size()));
+		}
+	}
+
+	/** A material vanilla has: the vanilla block plus any modded variant registered to the tag. */
+	private static StateSource oreTag(final Block vanilla, final String... materials) {
+		return new OreTagSource(vanilla, materials);
+	}
+
+	/** A modded-only material: contributes nothing when no loaded mod fills the tag. */
+	private static StateSource optionalOreTag(final String... materials) {
+		return new OreTagSource(null, materials);
 	}
 
 	private static final class Deposit {
@@ -80,25 +188,36 @@ final class LegacyAsteroidGenerator {
 
 		private BlockState pick(final long seed, final int x, final int y, final int z) {
 			final double value = unitHash(seed, x, y, z);
+			final long variant = variantHash(seed, x, y, z);
 			double cumulative = 0.0D;
 			for (final Deposit deposit : deposits) {
 				cumulative += deposit.ratio;
 				if (value < cumulative) {
-					return deposit.state.get();
+					final BlockState state = deposit.state.get(variant);
+					if (state != null) {
+						return state;
+					}
+					// An optional ore no loaded mod provides. Spend the slot on base material, using
+					// an independent roll so the skip does not always land on the first base.
+					return pickBase(unit(variant), variant);
 				}
 			}
 
 			// Ratio entries have fixed odds. The remaining interval is shared by weighted bases.
 			final double weightedValue = totalRatio >= 1.0D
 				? 0.0D : (value - totalRatio) / (1.0D - totalRatio);
+			return pickBase(weightedValue, variant);
+		}
+
+		private BlockState pickBase(final double weightedValue, final long variant) {
 			int roll = Math.min(totalWeight - 1, (int) (weightedValue * totalWeight));
 			for (final BaseMaterial base : bases) {
 				roll -= base.weight;
 				if (roll < 0) {
-					return base.state.get();
+					return base.state.get(variant);
 				}
 			}
-			return bases[0].state.get();
+			return bases[0].state.get(variant);
 		}
 	}
 
@@ -216,7 +335,7 @@ final class LegacyAsteroidGenerator {
 	}
 
 	private static StateSource state(final Block block) {
-		return block::defaultBlockState;
+		return variant -> block.defaultBlockState();
 	}
 
 	private static Deposit deposit(final double ratio, final Block block) {
@@ -256,38 +375,58 @@ final class LegacyAsteroidGenerator {
 	}
 
 	private static final Deposit[] NO_DEPOSITS = {};
+	// Ratios are the 1.12.2 fillerSets-default.xml values. Vanilla materials resolve through their
+	// ore tag so modded variants of the same material join in; the modded-only materials below carry
+	// the ratio the old per-mod filler chains used, and cost nothing when no mod fills the tag.
 	private static final Deposit[] COMMON_DEPOSITS = {
-		deposit(0.060D, Blocks.COAL_ORE),
-		deposit(0.040D, Blocks.IRON_ORE),
-		deposit(0.008D, Blocks.REDSTONE_ORE)
+		deposit(0.060D, oreTag(Blocks.COAL_ORE, "coal")),
+		deposit(0.040D, oreTag(Blocks.IRON_ORE, "iron")),
+		deposit(0.008D, oreTag(Blocks.REDSTONE_ORE, "redstone")),
+		deposit(0.048D, optionalOreTag("copper")),
+		deposit(0.032D, optionalOreTag("tin")),
+		deposit(0.032D, optionalOreTag("aluminum", "aluminium", "bauxite")),
+		deposit(0.024D, optionalOreTag("lead"))
 	};
 	private static final Deposit[] UNCOMMON_DEPOSITS = {
-		deposit(0.008D, Blocks.REDSTONE_ORE),
-		deposit(0.010D, Blocks.GOLD_ORE),
-		deposit(0.008D, Blocks.LAPIS_ORE)
+		deposit(0.008D, oreTag(Blocks.REDSTONE_ORE, "redstone")),
+		deposit(0.010D, oreTag(Blocks.GOLD_ORE, "gold")),
+		deposit(0.008D, oreTag(Blocks.LAPIS_ORE, "lapis")),
+		deposit(0.015D, optionalOreTag("silver")),
+		deposit(0.015D, optionalOreTag("nickel")),
+		deposit(0.015D, optionalOreTag("lead")),
+		deposit(0.015D, optionalOreTag("zinc")),
+		deposit(0.010D, optionalOreTag("osmium")),
+		deposit(0.010D, optionalOreTag("certus_quartz")),
+		deposit(0.008D, optionalOreTag("titanium")),
+		deposit(0.001D, optionalOreTag("uranium", "yellorite"))
 	};
 	private static final Deposit[] RARE_DEPOSITS = {
-		deposit(0.004D, Blocks.GOLD_ORE),
-		deposit(0.004D, Blocks.DIAMOND_ORE),
+		deposit(0.004D, oreTag(Blocks.GOLD_ORE, "gold")),
+		deposit(0.004D, oreTag(Blocks.DIAMOND_ORE, "diamond")),
 		// In the vanilla-only 1.12 filler group, 90% of rare sets selected emerald gems.
-		deposit(0.0009D, Blocks.EMERALD_ORE)
+		deposit(0.0009D, oreTag(Blocks.EMERALD_ORE, "emerald"))
 	};
-	private static final Deposit[] ALL_ORE_DEPOSITS = {
-		deposit(0.060D, Blocks.COAL_ORE),
-		deposit(0.040D, Blocks.IRON_ORE),
-		deposit(0.008D, Blocks.REDSTONE_ORE),
-		deposit(0.008D, Blocks.REDSTONE_ORE),
-		deposit(0.010D, Blocks.GOLD_ORE),
-		deposit(0.008D, Blocks.LAPIS_ORE),
-		deposit(0.004D, Blocks.GOLD_ORE),
-		deposit(0.004D, Blocks.DIAMOND_ORE),
-		deposit(0.0009D, Blocks.EMERALD_ORE)
-	};
+	private static final Deposit[] ALL_ORE_DEPOSITS =
+		concat(COMMON_DEPOSITS, UNCOMMON_DEPOSITS, RARE_DEPOSITS);
 	private static final Deposit[] NETHER_DEPOSITS = {
-		deposit(0.070D, Blocks.NETHER_QUARTZ_ORE),
+		deposit(0.070D, oreTag(Blocks.NETHER_QUARTZ_ORE, "quartz")),
 		deposit(0.0075D, Blocks.GLOWSTONE),
 		deposit(0.010D, Blocks.LAVA)
 	};
+
+	private static Deposit[] concat(final Deposit[]... groups) {
+		int length = 0;
+		for (final Deposit[] group : groups) {
+			length += group.length;
+		}
+		final Deposit[] merged = new Deposit[length];
+		int offset = 0;
+		for (final Deposit[] group : groups) {
+			System.arraycopy(group, 0, merged, offset, group.length);
+			offset += group.length;
+		}
+		return merged;
+	}
 
 	private static final MaterialGroup COMMON = new MaterialGroup(
 		weighted(20, set(COMMON_DEPOSITS, base(1, Blocks.STONE))),
@@ -308,7 +447,7 @@ final class LegacyAsteroidGenerator {
 	private static final MaterialSet NETHER_SET = set(NETHER_DEPOSITS,
 		base(100, Blocks.NETHERRACK), base(5, Blocks.LAVA));
 	private static final MaterialSet END_SET = new MaterialSet(
-		new Deposit[]{ deposit(0.001D, () -> Registration.IRIDIUM_BLOCK.get().defaultBlockState()) },
+		new Deposit[]{ deposit(0.001D, variant -> Registration.IRIDIUM_BLOCK.get().defaultBlockState()) },
 		base(100, Blocks.END_STONE));
 
 	private static final MaterialGroup RARE = new MaterialGroup(
@@ -406,7 +545,7 @@ final class LegacyAsteroidGenerator {
 
 	private static MaterialSet gasSet(final Random random) {
 		final String color = GAS_COLORS[random.nextInt(GAS_COLORS.length)];
-		final StateSource gas = () -> Registration.GAS_BLOCKS.get(color).get().defaultBlockState();
+		final StateSource gas = variant -> Registration.GAS_BLOCKS.get(color).get().defaultBlockState();
 		return set(NO_DEPOSITS, base(1, gas));
 	}
 
@@ -436,7 +575,7 @@ final class LegacyAsteroidGenerator {
 		}
 		if ((roll -= 1) < 0) {
 			return set(new Deposit[]{
-				deposit(0.0015D, () -> Registration.IRIDIUM_BLOCK.get().defaultBlockState()) },
+				deposit(0.0015D, variant -> Registration.IRIDIUM_BLOCK.get().defaultBlockState()) },
 				base(100, Blocks.QUARTZ_BLOCK));
 		}
 		return set(new Deposit[]{ deposit(0.005D, Blocks.IRON_BLOCK) },
@@ -529,7 +668,7 @@ final class LegacyAsteroidGenerator {
 		case END:
 			if (shellIndex == 0) return overlay(END_SET, NO_DEPOSITS,
 				base(30, Blocks.OBSIDIAN),
-				base(1, () -> Registration.IRIDIUM_BLOCK.get().defaultBlockState()));
+				base(1, variant -> Registration.IRIDIUM_BLOCK.get().defaultBlockState()));
 			if (shellIndex == 1) return overlay(END_SET, NO_DEPOSITS, base(60, Blocks.OBSIDIAN));
 			return END_SURFACE.pick(random);
 
@@ -569,7 +708,7 @@ final class LegacyAsteroidGenerator {
 	                                        final Random random, final int x, final int y, final int z) {
 		final boolean big = random.nextBoolean();
 		final int color = random.nextInt(GAS_COLORS.length);
-		final StateSource gas = () -> Registration.GAS_BLOCKS.get(GAS_COLORS[color])
+		final StateSource gas = variant -> Registration.GAS_BLOCKS.get(GAS_COLORS[color])
 			.get().defaultBlockState();
 		final MaterialGroup gasGroup = new MaterialGroup(
 			weighted(1, new MaterialSet(NO_DEPOSITS, new BaseMaterial(1, gas))));
@@ -753,7 +892,8 @@ final class LegacyAsteroidGenerator {
 					if (orb.coreState != null) {
 						for (final Core core : orb.cores) {
 							if (core.isAt(relativeX, relativeY, relativeZ)) {
-								blockState = orb.coreState.get();
+								blockState = orb.coreState.get(
+									variantHash(orb.materialSeed, x, y, z));
 								break;
 							}
 						}
@@ -790,8 +930,21 @@ final class LegacyAsteroidGenerator {
 	}
 
 	private static double unitHash(final long seed, final int x, final int y, final int z) {
-		final long value = mix(seed ^ (long) x * 0x632BE59BD9B4E019L
-			^ (long) y * 0x9E3779B97F4A7C15L ^ (long) z * 0x94D049BB133111EBL);
+		return unit(mix(seed ^ (long) x * 0x632BE59BD9B4E019L
+			^ (long) y * 0x9E3779B97F4A7C15L ^ (long) z * 0x94D049BB133111EBL));
+	}
+
+	/**
+	 * A second, independent per-position hash. Which material a position gets is chosen by
+	 * {@link #unitHash}; this one chooses between the equivalent blocks a single material can
+	 * resolve to, so adding a mod cannot shift where the deposits themselves land.
+	 */
+	private static long variantHash(final long seed, final int x, final int y, final int z) {
+		return mix(seed ^ 0x2545F4914F6CDD1DL ^ (long) x * 0x27D4EB2F165667C5L
+			^ (long) y * 0xD6E8FEB86659FD93L ^ (long) z * 0xA24BAED4963EE407L);
+	}
+
+	private static double unit(final long value) {
 		return (value >>> 11) * 0x1.0p-53;
 	}
 

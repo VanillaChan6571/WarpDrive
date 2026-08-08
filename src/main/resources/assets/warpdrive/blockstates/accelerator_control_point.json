@@ -1,7 +1,6 @@
 {
     "variants":  {
-                     "":  {
-                              "model":  "warpdrive:block/catalog/accelerator_control_point"
-                          }
+                     "active=false": { "model": "warpdrive:block/catalog/accelerator_control_point" },
+                     "active=true":  { "model": "warpdrive:block/catalog/accelerator_control_point_active" }
                  }
 }

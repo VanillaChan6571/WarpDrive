@@ -1,0 +1,32 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "ce ",
+    "pmc",
+    "cCM"
+  ],
+  "key": {
+    "e": {
+      "item": "minecraft:nether_star"
+    },
+    "c": {
+      "item": "warpdrive:component-capacitive_cluster"
+    },
+    "p": {
+      "item": "warpdrive:component-superconductor"
+    },
+    "M": {
+      "item": "warpdrive:component-memory_cluster"
+    },
+    "m": {
+      "item": "warpdrive:highly_advanced_machine"
+    },
+    "C": {
+      "item": "warpdrive:ship_core.advanced"
+    }
+  },
+  "result": {
+    "item": "warpdrive:ship_core.superior"
+  }
+}

@@ -38,14 +38,20 @@ public class ShipCoreBlock extends HorizontalBlock {
 
 	/** Matches the two render states used by the 1.12.2 Ship Core model. */
 	public static final BooleanProperty ACTIVE = BooleanProperty.create("active");
+	@Nullable private final ShipCoreTier tier;
 
 	public ShipCoreBlock() {
+		this(null);
+	}
+
+	public ShipCoreBlock(@Nullable final ShipCoreTier tier) {
 		super(Properties.of(Material.METAL)
 				.strength(5.0f, 6.0f)
 				.requiresCorrectToolForDrops()
 				.harvestTool(ToolType.PICKAXE)
 				.harvestLevel(2)
 		);
+		this.tier = tier;
 		registerDefaultState(stateDefinition.any()
 			.setValue(FACING, Direction.NORTH)
 			// ShipCoreTileEntity starts enabled, matching the 1.12.2 machine default. Keeping the
@@ -53,6 +59,10 @@ public class ShipCoreBlock extends HorizontalBlock {
 			// still in World's pendingBlockEntities queue.
 			.setValue(ACTIVE, true));
 	}
+
+	/** Null identifies the permissive untiered compatibility core. */
+	@Nullable
+	public ShipCoreTier getTier() { return tier; }
 
 	@Nullable
 	@Override

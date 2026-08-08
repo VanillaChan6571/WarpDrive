@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "EYE",
+    "YSY",
+    "EYE"
+  ],
+  "key": {
+    "E": {
+      "item": "warpdrive:component-ender_coil"
+    },
+    "Y": {
+      "item": "minecraft:ender_eye"
+    },
+    "S": {
+      "item": "warpdrive:virtual_assistant.advanced"
+    }
+  },
+  "result": {
+    "item": "warpdrive:virtual_assistant.superior"
+  }
+}

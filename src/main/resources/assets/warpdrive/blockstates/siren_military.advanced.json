@@ -1,7 +1,16 @@
 {
-    "variants":  {
-                     "":  {
-                              "model":  "warpdrive:block/catalog/siren_military.advanced"
-                          }
-                 }
+  "multipart": [
+    { "when": { "orientation": "down_north" }, "apply": { "model": "warpdrive:block/detection/siren_military.advanced-vertical", "x": 180 } },
+    { "when": { "orientation": "down_south" }, "apply": { "model": "warpdrive:block/detection/siren_military.advanced-vertical", "x": 180 } },
+    { "when": { "orientation": "down_west" }, "apply": { "model": "warpdrive:block/detection/siren_military.advanced-vertical", "x": 180 } },
+    { "when": { "orientation": "down_east" }, "apply": { "model": "warpdrive:block/detection/siren_military.advanced-vertical", "x": 180 } },
+    { "when": { "orientation": "up_north" }, "apply": { "model": "warpdrive:block/detection/siren_military.advanced-vertical" } },
+    { "when": { "orientation": "up_south" }, "apply": { "model": "warpdrive:block/detection/siren_military.advanced-vertical" } },
+    { "when": { "orientation": "up_west" }, "apply": { "model": "warpdrive:block/detection/siren_military.advanced-vertical" } },
+    { "when": { "orientation": "up_east" }, "apply": { "model": "warpdrive:block/detection/siren_military.advanced-vertical" } },
+    { "when": { "orientation": "north" }, "apply": { "model": "warpdrive:block/detection/siren_military.advanced-horizontal" } },
+    { "when": { "orientation": "south" }, "apply": { "model": "warpdrive:block/detection/siren_military.advanced-horizontal", "y": 180 } },
+    { "when": { "orientation": "west" }, "apply": { "model": "warpdrive:block/detection/siren_military.advanced-horizontal", "y": 270 } },
+    { "when": { "orientation": "east" }, "apply": { "model": "warpdrive:block/detection/siren_military.advanced-horizontal", "y": 90 } }
+  ]
 }

@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:hulls",
+  "pattern": [
+    "p  ",
+    "pp ",
+    "ppp"
+  ],
+  "key": {
+    "p": {
+      "item": "warpdrive:hull.superior.plain-cyan"
+    }
+  },
+  "result": {
+    "item": "warpdrive:hull.superior.stairs_cyan",
+    "count": 4
+  }
+}

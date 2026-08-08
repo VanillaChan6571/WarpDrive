@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "side": "warpdrive:blocks/movement/lift-side_up",
+    "bottom": "warpdrive:blocks/movement/lift-top_in",
+    "top": "warpdrive:blocks/movement/lift-top_out"
+  }
+}

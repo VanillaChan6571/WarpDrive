@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:tainted_hulls",
+  "pattern": [
+    "###",
+    "#X#",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "tag": "warpdrive:hulls/advanced/plain"
+    },
+    "X": {
+      "tag": "forge:dyes/light_gray"
+    }
+  },
+  "result": {
+    "item": "warpdrive:hull.advanced.plain-silver",
+    "count": 8
+  }
+}

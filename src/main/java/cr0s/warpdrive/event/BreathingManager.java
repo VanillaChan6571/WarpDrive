@@ -2,18 +2,21 @@ package cr0s.warpdrive.event;
 
 import cr0s.warpdrive.WarpDrive;
 import cr0s.warpdrive.api.IAirContainerItem;
+import cr0s.warpdrive.api.ItemSlotRef;
+import cr0s.warpdrive.compat.CuriosCompat;
 import cr0s.warpdrive.api.IBreathingHelmet;
 import cr0s.warpdrive.block.breathing.AbstractAirBlock;
 import cr0s.warpdrive.damage.WarpDamageSources;
+import cr0s.warpdrive.data.Registration;
+import cr0s.warpdrive.data.WarpDriveTags;
 import net.minecraft.block.Block;
-import net.minecraft.entity.CreatureAttribute;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.item.ArmorStandEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -21,10 +24,13 @@ import net.minecraft.world.World;
 import net.minecraftforge.event.entity.EntityLeaveWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
+import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -48,12 +54,13 @@ import java.util.concurrent.ConcurrentHashMap;
  *     Other living entities need only the helmet.
  *   - With no air left, asphyxia deals 2 damage every 20 ticks, bypassing armour.
  *
- * Not ported yet, all blocked on the air-block subsystem (AirSpreader / StateAir / ChunkHandler)
- * rather than on effort - until those land there are no breathable interiors, so a suit is required
- * everywhere in space:
- *   - air blocks and sealed rooms
- *   - IC2 compressed air cells
- *   - refilling tanks by electrolysing ice with a superior chestplate
+ *   - Tanks refill by right-clicking an air generator, or by electrolysing carried ice when the
+ *     player is wearing a superior chestplate and every tank has run dry.
+ *
+ * Air blocks and sealed rooms work: the air-block subsystem (AirSpreader / StateAir / ChunkHandler)
+ * landed, and hasAirBlock reads it.
+ *
+ * Still not ported: IC2 compressed air cells, which need IC2 - see COMPAT_NOTES.md
  */
 @Mod.EventBusSubscriber(modid = WarpDrive.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class BreathingManager {
@@ -77,6 +84,11 @@ public final class BreathingManager {
 		{ 0, 0, 1 }, { 0, 0, -1 }, { 1, 0, 0 }, { -1, 0, 0 } };
 	/** Interval between asphyxia hits once out of air. */
 	private static final int AIR_DROWN_TICKS = 20;
+	/**
+	 * Cost of electrolysing one block of ice, 1.12.2 AIR_ENERGY_FOR_ELECTROLYSE. That was 2000
+	 * internal units; this port maps internal units to FE 1:1, as the air generator tiers do.
+	 */
+	private static final int ENERGY_FOR_ELECTROLYSE = 2000;
 	/** Damage per asphyxia hit. */
 	private static final float ASPHYXIA_DAMAGE = 2.0F;
 
@@ -196,6 +208,23 @@ public final class BreathingManager {
 	}
 
 	/**
+	 * Every slot whose contents count as "carried" for breathing: the main inventory, plus any
+	 * Curios accessory slots when that mod is present.
+	 *
+	 * Returned as writable slot references rather than stacks because the breathing code drains and
+	 * replaces tanks, and a stack copied out of an item handler is not the stack in the handler.
+	 */
+	private static List<ItemSlotRef> carriedSlots(final PlayerEntity player) {
+		final NonNullList<ItemStack> inventory = player.inventory.items;
+		final List<ItemSlotRef> slots = new ArrayList<>(inventory.size() + 8);
+		for (int index = 0; index < inventory.size(); index++) {
+			slots.add(ItemSlotRef.ofList(inventory, index));
+		}
+		CuriosCompat.addWornSlots(player, slots);
+		return slots;
+	}
+
+	/**
 	 * Draw one breath from the player's inventory, returning how long it lasts, or 0 if there is
 	 * nothing left to breathe.
 	 *
@@ -203,13 +232,11 @@ public final class BreathingManager {
 	 * rather than leaving a spread of half-empty ones.
 	 */
 	private static int consumeAir(final ServerPlayerEntity player) {
-		final NonNullList<ItemStack> inventory = player.inventory.items;
-
-		int slotFound = -1;
+		ItemSlotRef slotFound = null;
 		float lowestFillRatio = Float.MAX_VALUE;
 
-		for (int slot = 0; slot < inventory.size(); slot++) {
-			final ItemStack itemStack = inventory.get(slot);
+		for (final ItemSlotRef slot : carriedSlots(player)) {
+			final ItemStack itemStack = slot.get();
 			if (itemStack.isEmpty() || !(itemStack.getItem() instanceof IAirContainerItem)) {
 				continue;
 			}
@@ -226,20 +253,121 @@ public final class BreathingManager {
 			}
 		}
 
-		if (slotFound < 0) {
+		if (slotFound == null) {
+			// Every tank is empty. A superior chestplate can still electrolyse ice into air.
+			final ItemStack itemStackChest = player.getItemBySlot(EquipmentSlotType.CHEST);
+			if (itemStackChest.getItem() == Registration.ARMOR
+					.get("warp_armor_superior_chestplate").get()) {
+				return electrolyseIceToAir(player);
+			}
 			return 0;
 		}
 
-		final ItemStack itemStack = inventory.get(slotFound);
+		final ItemStack itemStack = slotFound.get();
 		final IAirContainerItem container = (IAirContainerItem) itemStack.getItem();
 		final ItemStack consumed = container.consumeAir(itemStack);
 		if (consumed != itemStack) {
-			inventory.set(slotFound, consumed);
+			slotFound.set(consumed);
 		}
 		// Push the new damage value out so the tank's fill level updates on the client
 		player.inventoryMenu.broadcastChanges();
 
 		return container.getAirTicksPerConsumption(consumed);
+	}
+
+	/**
+	 * Last-ditch refill: electrolyse a block of ice into breathable air, drawing on a charged item
+	 * the player is carrying. Ported from 1.12.2 BreathingManager.electrolyseIceToAir.
+	 *
+	 * 1.12.2 accepted IC2 electric items, GregTech electric items, RF containers or Forge Energy,
+	 * whichever recognised the stack first. On 1.16.5 the first three no longer exist, and every FE
+	 * battery implements the capability, so checking CapabilityEnergy alone reproduces the original
+	 * reach rather than narrowing it. WarpDrive ships no powered item itself - as in 1.12.2, the
+	 * charge has to come from another mod.
+	 *
+	 * @return ticks of air granted, or 0 if the ingredients were not all present.
+	 */
+	private static int electrolyseIceToAir(final ServerPlayerEntity player) {
+		ItemSlotRef slotIce = null;
+		ItemSlotRef slotFirstContainer = null;
+		ItemSlotRef slotSecondContainer = null;
+		ItemSlotRef slotEnergy = null;
+
+		// one ice, one charged item, and up to two containers to fill
+		for (final ItemSlotRef slot : carriedSlots(player)) {
+			final ItemStack itemStack = slot.get();
+			if (itemStack.isEmpty()) {
+				continue;
+			}
+
+			if (itemStack.getItem() == Items.ICE) {
+				slotIce = slot;
+				if (slotSecondContainer != null && slotEnergy != null) {
+					break;
+				}
+
+			} else if ( itemStack.getCount() == 1
+			         && itemStack.getItem() instanceof IAirContainerItem ) {
+				final IAirContainerItem container = (IAirContainerItem) itemStack.getItem();
+				if (container.canContainAir(itemStack)) {
+					if (slotFirstContainer == null) {
+						slotFirstContainer = slot;
+					} else if (slotSecondContainer == null) {
+						slotSecondContainer = slot;
+						if (slotIce != null && slotEnergy != null) {
+							break;
+						}
+					}
+				}
+
+			} else if ( slotEnergy == null
+			         && canDrawEnergy(itemStack, ENERGY_FOR_ELECTROLYSE) ) {
+				slotEnergy = slot;
+				if (slotIce != null && slotSecondContainer != null) {
+					break;
+				}
+			}
+		}
+
+		if (slotEnergy == null || slotIce == null || slotFirstContainer == null) {
+			return 0;
+		}
+
+		final int energyProvided = slotEnergy.get()
+			.getCapability(CapabilityEnergy.ENERGY)
+			.map(energyStorage -> energyStorage.extractEnergy(ENERGY_FOR_ELECTROLYSE, false))
+			.orElse(0);
+		if (energyProvided <= 0) {
+			return 0;
+		}
+
+		slotIce.get().shrink(1);
+
+		// One block of ice fills both containers when the player is carrying two
+		int ticksAir = fillContainer(slotFirstContainer);
+		if (slotSecondContainer != null) {
+			ticksAir = fillContainer(slotSecondContainer);
+		}
+		player.inventoryMenu.broadcastChanges();
+
+		// as in 1.12.2, the breath drawn from the fresh tank is free
+		return ticksAir;
+	}
+
+	private static int fillContainer(final ItemSlotRef slot) {
+		final ItemStack itemStack = slot.get();
+		final IAirContainerItem container = (IAirContainerItem) itemStack.getItem();
+		final ItemStack itemStackFull = container.getFullAirContainer(itemStack);
+		slot.set(itemStackFull);
+		return container.getAirTicksPerConsumption(itemStackFull);
+	}
+
+	/** Whether this stack is a charged battery the electrolyser could draw the full cost from. */
+	private static boolean canDrawEnergy(final ItemStack itemStack, final int amount) {
+		return itemStack.getCapability(CapabilityEnergy.ENERGY)
+			.map(energyStorage -> energyStorage.canExtract()
+			                   && energyStorage.getEnergyStored() >= amount)
+			.orElse(false);
 	}
 
 	/**
@@ -265,7 +393,8 @@ public final class BreathingManager {
 
 		final Item itemHelmet = helmet.getItem();
 		return itemHelmet instanceof IBreathingHelmet
-		    && ((IBreathingHelmet) itemHelmet).canBreath(entity);
+			? ((IBreathingHelmet) itemHelmet).canBreath(entity)
+			: helmet.getItem().is(WarpDriveTags.BREATHING_HELMETS);
 	}
 
 	/**
@@ -278,7 +407,8 @@ public final class BreathingManager {
 	 */
 	public static int getStoredAirTicks(@Nonnull final PlayerEntity player) {
 		int storedTicks = 0;
-		for (final ItemStack itemStack : player.inventory.items) {
+		for (final ItemSlotRef slot : carriedSlots(player)) {
+			final ItemStack itemStack = slot.get();
 			if (itemStack.isEmpty() || !(itemStack.getItem() instanceof IAirContainerItem)) {
 				continue;
 			}
@@ -292,7 +422,8 @@ public final class BreathingManager {
 	/** Total air the player could carry with every tank full, in ticks. */
 	public static int getAirCapacityTicks(@Nonnull final PlayerEntity player) {
 		int capacityTicks = 0;
-		for (final ItemStack itemStack : player.inventory.items) {
+		for (final ItemSlotRef slot : carriedSlots(player)) {
+			final ItemStack itemStack = slot.get();
 			if (itemStack.isEmpty() || !(itemStack.getItem() instanceof IAirContainerItem)) {
 				continue;
 			}
@@ -303,10 +434,60 @@ public final class BreathingManager {
 		return capacityTicks;
 	}
 
-	/** Fraction of total air capacity still stored across the player's tanks, for the HUD gauge. */
+	/**
+	 * Fraction of total air capacity still stored across the player's tanks, for the HUD gauge.
+	 *
+	 * Ice a superior chestplate could still electrolyse counts towards both the reserve and the
+	 * capacity, exactly as in 1.12.2 - carrying ice and a charged battery visibly buys you time.
+	 * Deliberately not folded into {@link #getStoredAirTicks}, which backs the time-remaining
+	 * readout and should report air you actually have bottled.
+	 */
 	public static float getAirReserveRatio(@Nonnull final PlayerEntity player) {
-		final int capacityTicks = getAirCapacityTicks(player);
-		return capacityTicks > 0 ? getStoredAirTicks(player) / (float) capacityTicks : 0.0F;
+		final int bonusTicks = getElectrolyseBonusTicks(player);
+		final int capacityTicks = getAirCapacityTicks(player) + bonusTicks;
+		return capacityTicks > 0
+		     ? (getStoredAirTicks(player) + bonusTicks) / (float) capacityTicks
+		     : 0.0F;
+	}
+
+	/** Air the player could still electrolyse out of carried ice, in ticks. */
+	private static int getElectrolyseBonusTicks(@Nonnull final PlayerEntity player) {
+		if (player.getItemBySlot(EquipmentSlotType.CHEST).getItem()
+				!= Registration.ARMOR.get("warp_armor_superior_chestplate").get()) {
+			return 0;
+		}
+
+		int countAirContainer = 0;
+		int countIce = 0;
+		int countEnergy = 0;
+		ItemStack itemStackAirContainer = ItemStack.EMPTY;
+		for (final ItemSlotRef slot : carriedSlots(player)) {
+			final ItemStack itemStack = slot.get();
+			if (itemStack.isEmpty()) {
+				continue;
+			}
+			if (itemStack.getItem() instanceof IAirContainerItem) {
+				countAirContainer++;
+				itemStackAirContainer = itemStack;
+			} else if (itemStack.getItem() == Items.ICE) {
+				countIce += itemStack.getCount();
+			} else if (canDrawEnergy(itemStack, ENERGY_FOR_ELECTROLYSE)) {
+				countEnergy += itemStack.getCapability(CapabilityEnergy.ENERGY)
+					.map(energyStorage -> energyStorage.getEnergyStored() / ENERGY_FOR_ELECTROLYSE)
+					.orElse(0);
+			}
+		}
+
+		if (countAirContainer < 1 || countIce <= 0 || countEnergy <= 0) {
+			return 0;
+		}
+
+		final IAirContainerItem container = (IAirContainerItem) itemStackAirContainer.getItem();
+		// at most two containers refilled, each run needing both ice and charge
+		return Math.min(2, countAirContainer)
+		     * Math.min(countIce, countEnergy)
+		     * container.getMaxAirStorage(itemStackAirContainer)
+		     * container.getAirTicksPerConsumption(itemStackAirContainer);
 	}
 
 	/**
@@ -337,17 +518,15 @@ public final class BreathingManager {
 	}
 
 	/**
-	 * Stand-in for 1.12.2's Dictionary.isLivingWithoutAir, which was a configurable list. Creative
-	 * and spectator players are exempt too, as they were before.
+	 * Creative and spectator players are exempt directly. Every other exemption comes from the
+	 * datapack form of 1.12.2's LivingWithoutAir Dictionary classification.
 	 */
 	private static boolean isExempt(final LivingEntity entity) {
 		if (entity instanceof PlayerEntity) {
 			final PlayerEntity player = (PlayerEntity) entity;
 			return player.isCreative() || player.isSpectator();
 		}
-		return entity instanceof ArmorStandEntity
-		    || entity.getMobType() == CreatureAttribute.UNDEAD
-		    || entity.canBreatheUnderwater();
+		return entity.getType().is(WarpDriveTags.LIVING_WITHOUT_AIR);
 	}
 
 	@SubscribeEvent

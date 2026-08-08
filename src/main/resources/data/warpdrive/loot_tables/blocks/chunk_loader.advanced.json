@@ -1,0 +1,31 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "warpdrive:chunk_loader.advanced",
+          "functions": [
+            {
+              "function": "minecraft:copy_nbt",
+              "source": "block_entity",
+              "ops": [
+                { "source": "energy", "target": "BlockEntityTag.energy", "op": "replace" },
+                { "source": "name", "target": "BlockEntityTag.name", "op": "replace" },
+                { "source": "radiusXneg", "target": "BlockEntityTag.radiusXneg", "op": "replace" },
+                { "source": "radiusXpos", "target": "BlockEntityTag.radiusXpos", "op": "replace" },
+                { "source": "radiusZneg", "target": "BlockEntityTag.radiusZneg", "op": "replace" },
+                { "source": "radiusZpos", "target": "BlockEntityTag.radiusZpos", "op": "replace" },
+                { "source": "isPowered", "target": "BlockEntityTag.isPowered", "op": "replace" },
+                { "source": "upgrades", "target": "BlockEntityTag.upgrades", "op": "replace" }
+              ]
+            }
+          ]
+        }
+      ],
+      "conditions": [ { "condition": "minecraft:survives_explosion" } ]
+    }
+  ]
+}

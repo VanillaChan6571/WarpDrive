@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "warpdrive:transporter_beacon",
+          "functions": [
+            {
+              "function": "minecraft:copy_nbt",
+              "source": "block_entity",
+              "ops": [
+                { "source": "energy", "target": "energy", "op": "replace" },
+                { "source": "transporterUuid", "target": "transporterUuid", "op": "replace" },
+                { "source": "transporterName", "target": "transporterName", "op": "replace" }
+              ]
+            }
+          ]
+        }
+      ],
+      "conditions": [ { "condition": "minecraft:survives_explosion" } ]
+    }
+  ]
+}

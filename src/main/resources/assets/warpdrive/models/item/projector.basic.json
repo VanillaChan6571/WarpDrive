@@ -1,3 +1,11 @@
 {
-    "parent":  "warpdrive:block/catalog/projector.basic"
+  "parent": "warpdrive:block/catalog/projector.basic",
+  "overrides": [
+    {
+      "predicate": {
+        "warpdrive:projector_variant": 1
+      },
+      "model": "warpdrive:block/forcefield/projector_full.basic"
+    }
+  ]
 }

@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:hulls",
+  "pattern": [
+    "bbb"
+  ],
+  "key": {
+    "b": {
+      "item": "warpdrive:hull.superior.plain-lime"
+    }
+  },
+  "result": {
+    "item": "warpdrive:hull.superior.slab_lime",
+    "count": 6
+  }
+}

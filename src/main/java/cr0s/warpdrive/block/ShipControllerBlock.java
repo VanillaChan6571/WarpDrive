@@ -1,6 +1,5 @@
 package cr0s.warpdrive.block;
 
-import cr0s.warpdrive.data.Registration;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.HorizontalBlock;
@@ -38,18 +37,27 @@ import javax.annotation.Nullable;
 public class ShipControllerBlock extends HorizontalBlock {
 
 	public static final BooleanProperty CONNECTED = BooleanProperty.create("connected");
+	@Nullable private final ShipCoreTier tier;
 
 	public ShipControllerBlock() {
+		this(null);
+	}
+
+	public ShipControllerBlock(@Nullable final ShipCoreTier tier) {
 		super(Properties.of(Material.METAL)
 			.strength(3.5F, 8.0F)
 			.sound(net.minecraft.block.SoundType.METAL)
 			.requiresCorrectToolForDrops()
 			.harvestTool(ToolType.PICKAXE)
 			.harvestLevel(1));
+		this.tier = tier;
 		registerDefaultState(stateDefinition.any()
 			.setValue(FACING, Direction.NORTH)
 			.setValue(CONNECTED, false));
 	}
+
+	@Nullable
+	public ShipCoreTier getTier() { return tier; }
 
 	@Override
 	public boolean hasTileEntity(final BlockState state) {
@@ -111,7 +119,7 @@ public class ShipControllerBlock extends HorizontalBlock {
 
 	private static boolean hasAdjacentCore(final IBlockReader world, final BlockPos pos) {
 		for (final Direction direction : Direction.values()) {
-			if (world.getBlockState(pos.relative(direction)).getBlock() == Registration.SHIP_CORE_BLOCK.get()) {
+			if (world.getBlockState(pos.relative(direction)).getBlock() instanceof ShipCoreBlock) {
 				return true;
 			}
 		}

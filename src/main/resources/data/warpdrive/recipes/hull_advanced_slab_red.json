@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:hulls",
+  "pattern": [
+    "bbb"
+  ],
+  "key": {
+    "b": {
+      "item": "warpdrive:hull.advanced.plain-red"
+    }
+  },
+  "result": {
+    "item": "warpdrive:hull.advanced.slab_red",
+    "count": 6
+  }
+}

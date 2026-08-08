@@ -1,0 +1,6 @@
+{
+    "name": "Combat",
+    "description": "This chapter is all about combat, from protection with $(l:5_combat/hull)ship hull$() and $(item)force fields$(), to $(item)laser weapons$().",
+    "icon": "warpdrive:hull.advanced.stairs_orange",
+    "sortnum": 5
+}

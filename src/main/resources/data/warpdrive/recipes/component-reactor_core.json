@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:components",
+  "pattern": [
+    "shs",
+    "hmh",
+    "shs"
+  ],
+  "key": {
+    "s": {
+      "item": "minecraft:nether_star"
+    },
+    "h": {
+      "tag": "warpdrive:hulls/superior/plain"
+    },
+    "m": {
+      "item": "warpdrive:highly_advanced_machine"
+    }
+  },
+  "result": {
+    "item": "warpdrive:component-reactor_core"
+  }
+}

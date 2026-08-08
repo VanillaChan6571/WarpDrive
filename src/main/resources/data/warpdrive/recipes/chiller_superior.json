@@ -1,0 +1,32 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "hgh",
+    "eme",
+    "bMb"
+  ],
+  "key": {
+    "h": {
+      "item": "minecraft:packed_ice"
+    },
+    "g": {
+      "item": "minecraft:ghast_tear"
+    },
+    "e": {
+      "item": "minecraft:emerald"
+    },
+    "m": {
+      "item": "warpdrive:component-motor"
+    },
+    "b": {
+      "item": "minecraft:iron_bars"
+    },
+    "M": {
+      "tag": "warpdrive:electromagnets/superior"
+    }
+  },
+  "result": {
+    "item": "warpdrive:chiller.superior"
+  }
+}

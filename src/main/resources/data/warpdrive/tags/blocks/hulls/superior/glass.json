@@ -1,0 +1,21 @@
+{
+  "replace": false,
+  "values": [
+    "warpdrive:hull.superior.glass-white",
+    "warpdrive:hull.superior.glass-orange",
+    "warpdrive:hull.superior.glass-magenta",
+    "warpdrive:hull.superior.glass-light_blue",
+    "warpdrive:hull.superior.glass-yellow",
+    "warpdrive:hull.superior.glass-lime",
+    "warpdrive:hull.superior.glass-pink",
+    "warpdrive:hull.superior.glass-gray",
+    "warpdrive:hull.superior.glass-silver",
+    "warpdrive:hull.superior.glass-cyan",
+    "warpdrive:hull.superior.glass-purple",
+    "warpdrive:hull.superior.glass-blue",
+    "warpdrive:hull.superior.glass-brown",
+    "warpdrive:hull.superior.glass-green",
+    "warpdrive:hull.superior.glass-red",
+    "warpdrive:hull.superior.glass-black"
+  ]
+}

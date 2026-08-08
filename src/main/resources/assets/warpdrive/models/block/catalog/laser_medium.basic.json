@@ -1,6 +1,7 @@
 {
-    "parent":  "minecraft:block/cube_all",
+    "parent":  "minecraft:block/cube_column",
     "textures":  {
-                     "all":  "warpdrive:blocks/laser_medium-side0"
+                     "side":  "warpdrive:blocks/laser_medium-side0",
+                     "end":  "warpdrive:blocks/laser_medium-top_bottom"
                  }
 }

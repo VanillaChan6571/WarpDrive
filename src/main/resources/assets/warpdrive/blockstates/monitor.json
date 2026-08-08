@@ -1,7 +1,10 @@
 {
-    "variants":  {
-                     "":  {
-                              "model":  "warpdrive:block/catalog/monitor"
-                          }
-                 }
+  "variants": {
+    "facing=down":  { "model": "warpdrive:block/catalog/monitor", "x": 90 },
+    "facing=up":    { "model": "warpdrive:block/catalog/monitor", "x": 270 },
+    "facing=north": { "model": "warpdrive:block/catalog/monitor" },
+    "facing=south": { "model": "warpdrive:block/catalog/monitor", "y": 180 },
+    "facing=west":  { "model": "warpdrive:block/catalog/monitor", "y": 270 },
+    "facing=east":  { "model": "warpdrive:block/catalog/monitor", "y": 90 }
+  }
 }

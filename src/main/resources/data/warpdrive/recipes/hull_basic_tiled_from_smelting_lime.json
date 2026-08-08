@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:smelting",
+  "ingredient": {
+    "item": "warpdrive:hull.basic.plain-lime"
+  },
+  "result": "warpdrive:hull.basic.tiled-lime",
+  "experience": 0.0,
+  "cookingtime": 200
+}

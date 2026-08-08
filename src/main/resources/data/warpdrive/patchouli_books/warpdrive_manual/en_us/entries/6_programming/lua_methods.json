@@ -1,0 +1,12 @@
+{
+	"name": "LUA methods",
+	"icon": "warpdrive:component-computer_interface",
+	"category": "6_programming",
+	"pages": [
+		{
+			"type": "text",
+			"text": "-placeholder-"
+		}
+	],
+	"sortnum": 1
+}

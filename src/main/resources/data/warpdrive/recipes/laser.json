@@ -1,0 +1,32 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "gtr",
+    "ldm",
+    "gt "
+  ],
+  "key": {
+    "t": {
+      "item": "warpdrive:component-motor"
+    },
+    "d": {
+      "item": "warpdrive:component-diffraction_grating"
+    },
+    "l": {
+      "item": "warpdrive:component-lens"
+    },
+    "m": {
+      "item": "minecraft:diamond_block"
+    },
+    "r": {
+      "item": "minecraft:redstone"
+    },
+    "g": {
+      "tag": "forge:glass_panes/colorless"
+    }
+  },
+  "result": {
+    "item": "warpdrive:laser"
+  }
+}

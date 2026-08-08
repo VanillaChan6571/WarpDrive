@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:smelting",
+  "ingredient": {
+    "item": "warpdrive:hull.basic.plain-blue"
+  },
+  "result": "warpdrive:hull.basic.tiled-blue",
+  "experience": 0.0,
+  "cookingtime": 200
+}

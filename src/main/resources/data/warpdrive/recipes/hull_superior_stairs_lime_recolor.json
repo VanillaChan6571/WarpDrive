@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "group": "warpdrive:tainted_hulls",
+  "ingredients": [
+    {
+      "tag": "warpdrive:hulls/superior/stairs"
+    },
+    {
+      "tag": "forge:dyes/lime"
+    }
+  ],
+  "result": {
+    "item": "warpdrive:hull.superior.stairs_lime"
+  }
+}

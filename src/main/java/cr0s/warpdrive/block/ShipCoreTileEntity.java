@@ -1,6 +1,7 @@
 package cr0s.warpdrive.block;
 
 import cr0s.warpdrive.WarpDrive;
+import cr0s.warpdrive.block.detection.SecurityStationTileEntity;
 import cr0s.warpdrive.data.Registration;
 import cr0s.warpdrive.debug.DebugLog;
 import cr0s.warpdrive.network.ShipCountdownPacket;
@@ -9,6 +10,7 @@ import cr0s.warpdrive.render.BoundingBoxRenderer;
 import cr0s.warpdrive.ship.ShipScanner;
 import cr0s.warpdrive.ship.WarpEngine;
 import dan200.computercraft.api.lua.LuaFunction;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -22,6 +24,7 @@ import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
 import cr0s.warpdrive.data.DimensionAltitude;
+import cr0s.warpdrive.data.CelestialCoordinates;
 import cr0s.warpdrive.data.ShipMovementType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.ResourceLocation;
@@ -56,9 +59,22 @@ import java.util.UUID;
  */
 public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntity {
 
+	/**
+	 * Warp isolation, from 1.12.2 WarpDriveConfig.RADAR_*_ISOLATION_*. A ring of isolation blocks
+	 * around the core hides the ship from radar, scaling from 12% at two blocks to 100% at sixteen.
+	 */
+	private static final int ISOLATION_RANGE = 2;
+	private static final int ISOLATION_MIN_BLOCKS = 2;
+	private static final int ISOLATION_MAX_BLOCKS = 16;
+	private static final double ISOLATION_MIN_EFFECT = 0.12D;
+	private static final double ISOLATION_MAX_EFFECT = 1.00D;
+
+	private int isolationBlocksCount = 0;
+	private double isolationRate = 0.0D;
+
 	// Energy storage
 	private int energyStored = 0;
-	private static final int MAX_ENERGY = 10_000_000; // 10M FE
+	private static final int UNTIERED_MAX_ENERGY = 10_000_000;
 	private static final int MAX_TRANSFER = 10_000;    // 10K FE/t
 
 	// Ship dimensions (classic WarpDrive 1.12.2 style), relative to `facing`
@@ -69,6 +85,7 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 	private int dimUp = 0;
 	private int dimDown = 0;
 	private String shipName = "Unnamed Ship";
+	private UUID signatureUuid = UUID.randomUUID();
 
 	// Which way the ship's bow points. SOUTH reproduces the original hard-coded mapping exactly
 	// (front=+Z, back=-Z, right=+X, left=-X), so existing ships keep their current bounds.
@@ -147,6 +164,32 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		super(Registration.SHIP_CORE_TILE.get());
 	}
 
+	@Nullable
+	private ShipCoreTier getCoreTier() {
+		return getCoreTier(getBlockState());
+	}
+
+	@Nullable
+	private static ShipCoreTier getCoreTier(final BlockState blockState) {
+		return blockState.getBlock() instanceof ShipCoreBlock
+			? ((ShipCoreBlock) blockState.getBlock()).getTier() : null;
+	}
+
+	private int getMaximumEnergyCapacity() {
+		final ShipCoreTier tier = getCoreTier();
+		return tier == null ? UNTIERED_MAX_ENERGY : tier.getCapacity();
+	}
+
+	private static int getMaximumEnergyCapacity(final BlockState blockState) {
+		final ShipCoreTier tier = getCoreTier(blockState);
+		return tier == null ? UNTIERED_MAX_ENERGY : tier.getCapacity();
+	}
+
+	private int getMaximumAxisSize() {
+		final ShipCoreTier tier = getCoreTier();
+		return tier == null ? ShipScanner.MAX_SHIP_SIDE : tier.getMaximumSide();
+	}
+
 	@Override
 	public void onLoad() {
 		super.onLoad();
@@ -161,7 +204,16 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 			facing = blockState.getValue(ShipCoreBlock.FACING);
 		}
 		appearanceSyncPending = !level.isClientSide;
+		if (!level.isClientSide) {
+			cr0s.warpdrive.data.GlobalRegionRegistry.registerShip(this);
+		}
 		debugCoreNbt("onLoad-exit", null);
+	}
+
+	@Override
+	public void onChunkUnloaded() {
+		cr0s.warpdrive.data.GlobalRegionRegistry.unregisterShip(this);
+		super.onChunkUnloaded();
 	}
 
 	/** Called by ShipCoreBlock after placement so movement and rendering start in the same frame. */
@@ -260,12 +312,13 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		if (front < 0 || back < 0 || left < 0 || right < 0 || up < 0 || down < 0) {
 			return new Object[]{ false, "All dimensions must be >= 0" };
 		}
-		if ((long) front + back > ShipScanner.MAX_SHIP_SIDE
-		 || (long) left + right > ShipScanner.MAX_SHIP_SIDE
-		 || (long) up + down > ShipScanner.MAX_SHIP_SIDE) {
+		final int maximumAxisSize = getMaximumAxisSize();
+		if ((long) front + back > maximumAxisSize
+		 || (long) left + right > maximumAxisSize
+		 || (long) up + down > maximumAxisSize) {
 			return new Object[]{ false, String.format(
 				"Each ship axis must be at most %d blocks, excluding the core",
-				ShipScanner.MAX_SHIP_SIDE) };
+				maximumAxisSize) };
 		}
 
 		final long volume = ((long) front + back + 1L)
@@ -281,6 +334,9 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		dimDown = down;
 		invalidateAssemblyInspection();
 		setChanged();
+		if (level != null && !level.isClientSide) {
+			cr0s.warpdrive.data.GlobalRegionRegistry.updateShip(this);
+		}
 
 		// Sync to client
 		if (level != null && !level.isClientSide) {
@@ -334,7 +390,7 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 			return new Object[]{ false, "Amount must be positive" };
 		}
 
-		int added = Math.min(MAX_ENERGY - energyStored, amount);
+		int added = Math.min(getMaximumEnergyCapacity() - energyStored, amount);
 		energyStored += added;
 		setChanged();
 
@@ -345,8 +401,9 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 
 	@LuaFunction
 	public final Object[] setEnergy(int amount) {
-		if (amount < 0 || amount > MAX_ENERGY) {
-			return new Object[]{ false, String.format("Amount must be 0-%,d", MAX_ENERGY) };
+		final int maximumEnergy = getMaximumEnergyCapacity();
+		if (amount < 0 || amount > maximumEnergy) {
+			return new Object[]{ false, String.format("Amount must be 0-%,d", maximumEnergy) };
 		}
 
 		energyStored = amount;
@@ -455,7 +512,7 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 	/** Legacy: local energyStored, energyMax, energyUnits = ship.getEnergyStatus() */
 	@LuaFunction
 	public final Object[] getEnergyStatus() {
-		return new Object[]{ energyStored, MAX_ENERGY, "FE" };
+		return new Object[]{ energyStored, getMaximumEnergyCapacity(), "FE" };
 	}
 
 	/** Legacy: local success, maxJumpDistance = ship.getMaxJumpDistance() */
@@ -508,8 +565,90 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		}
 
 		cachedInspection = ShipScanner.inspectShip(level, getBlockPos(), getShipBounds());
+		final ShipCoreTier tier = getCoreTier();
+		if (cachedInspection.success && tier != null) {
+			if (cachedInspection.blockCount < tier.getMinimumMass()) {
+				cachedInspection = new ShipScanner.ShipInspection(false,
+					String.format("Ship mass %,d is below the %s minimum of %,d blocks",
+						cachedInspection.blockCount, tier.getName(), tier.getMinimumMass()),
+					cachedInspection.blockCount, cachedInspection.envelopeVolume,
+					cachedInspection.securityStationPos);
+			} else if (cachedInspection.blockCount > tier.getMaximumMass()) {
+				cachedInspection = new ShipScanner.ShipInspection(false,
+					String.format("Ship mass %,d exceeds the %s maximum of %,d blocks",
+						cachedInspection.blockCount, tier.getName(), tier.getMaximumMass()),
+					cachedInspection.blockCount, cachedInspection.envelopeVolume,
+					cachedInspection.securityStationPos);
+			}
+		}
 		cachedInspectionTick = now;
+		updateIsolation();
+		if (!level.isClientSide) {
+			cr0s.warpdrive.data.GlobalRegionRegistry.updateShip(this);
+		}
 		return cachedInspection;
+	}
+
+	/**
+	 * Count the warp isolation blocks around the core and derive the isolation rate, from 1.12.2
+	 * TileEntityShipCore.doScanAssembly. Recomputed with the assembly inspection, which is the same
+	 * cadence the original used.
+	 *
+	 * Isolation hides a ship from radar. The loaded-provider global registry consumes this value
+	 * probabilistically for every local radar scan.
+	 */
+	private void updateIsolation() {
+		if (level == null) {
+			return;
+		}
+		final BlockPos pos = getBlockPos();
+		final int xMin = pos.getX() - ISOLATION_RANGE;
+		final int xMax = pos.getX() + ISOLATION_RANGE;
+		final int zMin = pos.getZ() - ISOLATION_RANGE;
+		final int zMax = pos.getZ() + ISOLATION_RANGE;
+		// scanned one block higher than it is low, to encourage isolating floor and ceiling both
+		final int yMin = Math.max(0, pos.getY() - ISOLATION_RANGE + 1);
+		final int yMax = Math.min(255, pos.getY() + ISOLATION_RANGE + 1);
+
+		final Block blockIsolation = Registration.WARP_ISOLATION.get();
+		final BlockPos.Mutable mutable = new BlockPos.Mutable();
+		int count = 0;
+		for (int y = yMin; y <= yMax; y++) {
+			for (int x = xMin; x <= xMax; x++) {
+				for (int z = zMin; z <= zMax; z++) {
+					mutable.set(x, y, z);
+					if (level.getBlockState(mutable).getBlock() == blockIsolation) {
+						count++;
+					}
+				}
+			}
+		}
+
+		isolationBlocksCount = count;
+		final double previousRate = isolationRate;
+		if (count >= ISOLATION_MIN_BLOCKS) {
+			// linear from the minimum effect at the minimum count, capped at 100%
+			isolationRate = Math.min(1.0D, ISOLATION_MIN_EFFECT
+				+ (count - ISOLATION_MIN_BLOCKS)
+				* (ISOLATION_MAX_EFFECT - ISOLATION_MIN_EFFECT)
+				/ (ISOLATION_MAX_BLOCKS - ISOLATION_MIN_BLOCKS));
+		} else {
+			isolationRate = 0.0D;
+		}
+		if (previousRate != isolationRate) {
+			DebugLog.log("JUMP", "isolation at {} is now {} blocks ({}%)",
+				pos, isolationBlocksCount, isolationRate * 100.0D);
+		}
+	}
+
+	/** Number of warp isolation blocks currently surrounding the core. */
+	public int getIsolationBlocksCount() {
+		return isolationBlocksCount;
+	}
+
+	/** How well this ship is hidden from radar, 0.0 to 1.0. For the radar port to read. */
+	public double getIsolationRate() {
+		return isolationRate;
 	}
 
 	private void cacheAssemblySnapshot(final ShipScanner.ShipScanResult snapshot) {
@@ -558,7 +697,27 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 	/** Legacy guard: nil means "no ship core attached". */
 	@LuaFunction
 	public final Object[] isInterfaced() {
-		return new Object[]{ true };
+		return new Object[]{ true, "CC:Tweaked peripheral available." };
+	}
+
+	/** Common legacy computer API inherited from TileEntityAbstractInterfaced in 1.12.2. */
+	@LuaFunction
+	public final Object[] getTier() {
+		final ShipCoreTier tier = getCoreTier();
+		return tier == null
+			? new Object[]{ 1, "basic" }
+			: new Object[]{ tier.getLegacyIndex(), tier.getName() };
+	}
+
+	/** Ship cores have no installable upgrades in the native 1.16 implementation. */
+	@LuaFunction
+	public final Object[] getUpgrades() {
+		return new Object[]{ false, "No installable upgrades." };
+	}
+
+	@LuaFunction
+	public final Object[] getVersion() {
+		return WarpDrive.getVersionNumbers();
 	}
 
 	/**
@@ -642,8 +801,14 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		DebugLog.log("SHIP", "command set to {} (confirmed={}, enabled={})", command, confirmed, enabled);
 		setChanged();
 		syncBlockAppearance();
-		if (confirmed && enabled && "MANUAL".equals(command)) {
-			return jump();
+		if (confirmed && enabled) {
+			if ("MANUAL".equals(command)) {
+				return jump();
+			}
+			if ("GATE".equals(command)) {
+				return new Object[]{ false,
+					"Jump gates are unavailable: the legacy gate-core refactor was never registered or completed." };
+			}
 		}
 		return new Object[]{ command, confirmed };
 	}
@@ -830,7 +995,8 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 			.append(" U").append(dimUp).append(" D").append(dimDown).append('\n');
 		report.append("volume        : ").append(getShipVolume()).append('\n');
 		report.append("movement      : ").append(moveX).append(", ").append(moveY).append(", ").append(moveZ).append('\n');
-		report.append("energyStored  : ").append(energyStored).append(" / ").append(MAX_ENERGY).append('\n');
+		report.append("energyStored  : ").append(energyStored).append(" / ")
+			.append(getMaximumEnergyCapacity()).append('\n');
 		report.append("energyNeeded  : ").append(calculateEnergyRequired()).append('\n');
 		report.append("showBoundBox  : ").append(showBoundingBox).append('\n');
 		report.append("CC:Tweaked    : ").append(
@@ -1069,6 +1235,43 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		return shipName;
 	}
 
+	public UUID getSignatureUUID() { return signatureUuid; }
+
+	/** Last assembly mass already computed by the status cache; never initiates a recursive scan. */
+	public int getKnownShipMass() {
+		return cachedInspection == null ? 0 : cachedInspection.blockCount;
+	}
+
+	/** Refresh the persistent global-region snapshot from a radar or lifecycle query. */
+	public void refreshGlobalRegion() {
+		if (level == null || level.isClientSide || isRemoved()) return;
+		inspectAssembly(false);
+		cr0s.warpdrive.data.GlobalRegionRegistry.updateShip(this);
+	}
+
+	@Nullable
+	private SecurityStationTileEntity getSecurityStation() {
+		if (level == null) return null;
+		final ShipScanner.ShipInspection inspection = inspectAssembly(false);
+		if (inspection.securityStationPos == null) return null;
+		final TileEntity tileEntity = level.getBlockEntity(inspection.securityStationPos);
+		return tileEntity instanceof SecurityStationTileEntity
+			&& ((SecurityStationTileEntity) tileEntity).isEnabled()
+			? (SecurityStationTileEntity) tileEntity : null;
+	}
+
+	/** No enabled station means unrestricted crew, exactly as in 1.12.2. */
+	public boolean isCrewMember(final PlayerEntity player) {
+		final SecurityStationTileEntity securityStation = getSecurityStation();
+		return securityStation == null || securityStation.isAttachedPlayer(player);
+	}
+
+	@Nullable
+	public String getFirstOnlineCrew() {
+		final SecurityStationTileEntity securityStation = getSecurityStation();
+		return securityStation == null ? null : securityStation.getFirstOnlinePlayer();
+	}
+
 	@LuaFunction
 	public final Object[] setName(String name) {
 		if (name == null || name.trim().isEmpty()) {
@@ -1077,6 +1280,9 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 
 		shipName = name.trim();
 		setChanged();
+		if (level != null && !level.isClientSide) {
+			cr0s.warpdrive.data.GlobalRegionRegistry.updateShip(this);
+		}
 
 		WarpDrive.logger.info("Ship renamed to: {}", shipName);
 
@@ -1255,6 +1461,10 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 					forceDestinationChunks(false);
 					beginCooldown();
 					return;
+				}
+				if (destWorld != level) {
+					destX = CelestialCoordinates.mapHorizontal(level, destWorld, destX);
+					destZ = CelestialCoordinates.mapHorizontal(level, destWorld, destZ);
 				}
 				WarpEngine.WarpResult result = WarpEngine.executeWarp(level, destWorld, dimensionScan, destX, destY, destZ, energyAfterJump, rotationSteps);
 				DebugLog.log("JUMP", "WarpEngine.executeWarp returned: success={} message='{}'",
@@ -1505,8 +1715,12 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 
 		// Horizontal extent, honouring rotation, against the world border
 		final BlockPos worldMovement = getWorldMovement();
-		final int destX = core.getX() + worldMovement.getX();
-		final int destZ = core.getZ() + worldMovement.getZ();
+		final int rawDestX = core.getX() + worldMovement.getX();
+		final int rawDestZ = core.getZ() + worldMovement.getZ();
+		final int destX = destinationWorld == level ? rawDestX
+			: CelestialCoordinates.mapHorizontal(level, destinationWorld, rawDestX);
+		final int destZ = destinationWorld == level ? rawDestZ
+			: CelestialCoordinates.mapHorizontal(level, destinationWorld, rawDestZ);
 		final int[] offsetsX = { b[0] - core.getX(), b[3] - core.getX() };
 		final int[] offsetsZ = { b[2] - core.getZ(), b[5] - core.getZ() };
 		for (final int ox : offsetsX) {
@@ -1584,8 +1798,12 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		final int[] bounds = getShipBounds();
 		final BlockPos core = getBlockPos();
 		final BlockPos worldMovement = getWorldMovement();
-		final int destX = core.getX() + worldMovement.getX();
-		final int destZ = core.getZ() + worldMovement.getZ();
+		final int rawDestX = core.getX() + worldMovement.getX();
+		final int rawDestZ = core.getZ() + worldMovement.getZ();
+		final int destX = serverWorld == level ? rawDestX
+			: CelestialCoordinates.mapHorizontal(level, serverWorld, rawDestX);
+		final int destZ = serverWorld == level ? rawDestZ
+			: CelestialCoordinates.mapHorizontal(level, serverWorld, rawDestZ);
 
 		// Rotate the four horizontal corners so a turned ship still covers the right chunks
 		final int[] offsetsX = { bounds[0] - core.getX(), bounds[3] - core.getX() };
@@ -1678,7 +1896,8 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 	private final LazyOptional<IEnergyStorage> energyHandler = LazyOptional.of(() -> new IEnergyStorage() {
 		@Override
 		public int receiveEnergy(int maxReceive, boolean simulate) {
-			int received = Math.min(MAX_ENERGY - energyStored, Math.min(maxReceive, MAX_TRANSFER));
+			int received = Math.min(getMaximumEnergyCapacity() - energyStored,
+				Math.min(maxReceive, MAX_TRANSFER));
 			if (!simulate) {
 				energyStored += received;
 				setChanged();
@@ -1698,7 +1917,7 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 
 		@Override
 		public int getMaxEnergyStored() {
-			return MAX_ENERGY;
+			return getMaximumEnergyCapacity();
 		}
 
 		@Override
@@ -1733,7 +1952,7 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 	@Override
 	public void load(@Nonnull BlockState state, @Nonnull CompoundNBT nbt) {
 		super.load(state, nbt);
-		energyStored = nbt.getInt("Energy");
+		energyStored = Math.max(0, Math.min(getMaximumEnergyCapacity(state), nbt.getInt("Energy")));
 		dimFront = nbt.getInt("DimFront");
 		dimBack = nbt.getInt("DimBack");
 		dimLeft = nbt.getInt("DimLeft");
@@ -1744,6 +1963,7 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		if (shipName.isEmpty()) {
 			shipName = "Unnamed Ship";
 		}
+		signatureUuid = nbt.hasUUID("SignatureUUID") ? nbt.getUUID("SignatureUUID") : UUID.randomUUID();
 		showBoundingBox = nbt.getBoolean("ShowBoundingBox");
 		// Ships saved before facing existed used the fixed +Z mapping, which is SOUTH
 		final int facingIndex = nbt.contains("Facing") ? nbt.getInt("Facing") : Direction.SOUTH.get3DDataValue();
@@ -1805,6 +2025,7 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		nbt.putInt("DimUp", dimUp);
 		nbt.putInt("DimDown", dimDown);
 		nbt.putString("ShipName", shipName);
+		nbt.putUUID("SignatureUUID", signatureUuid);
 		nbt.putInt("MoveX", moveX);
 		nbt.putInt("MoveY", moveY);
 		nbt.putInt("MoveZ", moveZ);
@@ -1867,6 +2088,12 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 	@Override
 	public void setRemoved() {
 		debugCoreNbt("setRemoved", null);
+		if (level != null && !level.isClientSide
+		 && !(level.getBlockState(getBlockPos()).getBlock() instanceof ShipCoreBlock)) {
+			cr0s.warpdrive.data.GlobalRegionRegistry.removeShip(this);
+		} else {
+			cr0s.warpdrive.data.GlobalRegionRegistry.unregisterShip(this);
+		}
 		// Drop the box when the core is broken or moved away by a jump
 		if (level != null && level.isClientSide) {
 			BoundingBoxRenderer.untrack(getBlockPos());

@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "rwr",
+    "msm",
+    "rcr"
+  ],
+  "key": {
+    "r": {
+      "item": "warpdrive:component-rubber"
+    },
+    "s": {
+      "item": "warpdrive:component-emerald_crystal"
+    },
+    "m": {
+      "item": "warpdrive:component-memory_crystal"
+    },
+    "w": {
+      "item": "minecraft:diamond_sword"
+    },
+    "c": {
+      "item": "warpdrive:ship_controller.advanced"
+    }
+  },
+  "result": {
+    "item": "warpdrive:weapon_controller"
+  }
+}

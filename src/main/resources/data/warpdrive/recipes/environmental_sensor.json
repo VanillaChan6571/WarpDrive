@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "   ",
+    "dcd",
+    "rCr"
+  ],
+  "key": {
+    "r": {
+      "item": "warpdrive:component-rubber"
+    },
+    "c": {
+      "item": "minecraft:clock"
+    },
+    "d": {
+      "item": "minecraft:daylight_detector"
+    },
+    "C": {
+      "item": "warpdrive:component-computer_interface"
+    }
+  },
+  "result": {
+    "item": "warpdrive:environmental_sensor"
+  }
+}

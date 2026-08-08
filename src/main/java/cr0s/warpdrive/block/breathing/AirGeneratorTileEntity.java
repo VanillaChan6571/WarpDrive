@@ -1,23 +1,17 @@
 package cr0s.warpdrive.block.breathing;
 
 import cr0s.warpdrive.api.ExceptionChunkNotLoaded;
+import cr0s.warpdrive.block.AbstractEnergyTileEntity;
 import cr0s.warpdrive.data.ChunkData;
 import cr0s.warpdrive.data.Registration;
 import cr0s.warpdrive.data.StateAir;
 import cr0s.warpdrive.debug.DebugLog;
 import cr0s.warpdrive.event.ChunkHandler;
 import net.minecraft.block.BlockState;
-import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.energy.CapabilityEnergy;
-import net.minecraftforge.energy.IEnergyStorage;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
@@ -35,7 +29,7 @@ import javax.annotation.Nullable;
  * is finally removed, so a failing reactor depressurises a ship gradually rather than killing
  * everyone the instant the lights go out.
  */
-public class AirGeneratorTileEntity extends TileEntity implements ITickableTileEntity {
+public class AirGeneratorTileEntity extends AbstractEnergyTileEntity implements ITickableTileEntity {
 
 	/** Interval between air pushes, 1.12.2 BREATHING_AIR_GENERATION_TICKS. */
 	private static final int AIR_GENERATION_TICKS = 40;
@@ -43,10 +37,7 @@ public class AirGeneratorTileEntity extends TileEntity implements ITickableTileE
 	/** Accepted per transfer, matching 1.12.2's generator input rate. */
 	private static final int MAX_TRANSFER = 4096;
 
-	private static final String TAG_ENERGY = "energy";
-
 	private int tickUpdate;
-	private int energyStored;
 
 	public AirGeneratorTileEntity() {
 		super(Registration.AIR_GENERATOR_TILE.get());
@@ -61,7 +52,7 @@ public class AirGeneratorTileEntity extends TileEntity implements ITickableTileE
 		     : Direction.NORTH;
 	}
 
-	private AirGeneratorTier getTier() {
+	public AirGeneratorTier getTier() {
 		final BlockState blockState = getBlockState();
 		return blockState.getBlock() instanceof AirGeneratorBlock
 		     ? ((AirGeneratorBlock) blockState.getBlock()).getTier()
@@ -126,11 +117,9 @@ public class AirGeneratorTileEntity extends TileEntity implements ITickableTileE
 		                     ? tier.getEnergyPerExistingAirBlock()
 		                     : tier.getEnergyPerNewAirBlock();
 
-		if (energyStored >= energyCost) {
+		if (consumeEnergy(energyCost, false)) {
 			final short range = (short) (tier.getRange() - 1);
 			stateAir.setAirSource(level, direction, range);
-			energyStored -= energyCost;
-			setChanged();
 			return true;
 		}
 
@@ -141,78 +130,31 @@ public class AirGeneratorTileEntity extends TileEntity implements ITickableTileE
 			stateAir.removeAirSource(level);
 		}
 		DebugLog.log("AIR", "generator at {} has {} of {} energy, needs {} - air decaying",
-			getBlockPos(), energyStored, tier.getMaxEnergyStored(), energyCost);
+			getBlockPos(), getEnergyStored(), tier.getMaxEnergyStored(), energyCost);
 		return false;
 	}
 
 	// ===== energy =====
 
-	private final LazyOptional<IEnergyStorage> energyHandler = LazyOptional.of(() -> new IEnergyStorage() {
-		@Override
-		public int receiveEnergy(final int maxReceive, final boolean simulate) {
-			final int capacity = getTier().getMaxEnergyStored();
-			final int received = Math.min(capacity - energyStored, Math.min(maxReceive, MAX_TRANSFER));
-			if (!simulate && received > 0) {
-				energyStored += received;
-				setChanged();
-			}
-			return Math.max(0, received);
-		}
-
-		@Override
-		public int extractEnergy(final int maxExtract, final boolean simulate) {
-			return 0;   // consumer only
-		}
-
-		@Override
-		public int getEnergyStored() {
-			return energyStored;
-		}
-
-		@Override
-		public int getMaxEnergyStored() {
-			return getTier().getMaxEnergyStored();
-		}
-
-		@Override
-		public boolean canExtract() {
-			return false;
-		}
-
-		@Override
-		public boolean canReceive() {
-			return true;
-		}
-	});
-
-	@Nonnull
 	@Override
-	public <T> LazyOptional<T> getCapability(@Nonnull final Capability<T> cap, @Nullable final Direction side) {
-		// Accepts from any face: the vent is one face and cabling the other five would be fiddly
-		if (cap == CapabilityEnergy.ENERGY) {
-			return energyHandler.cast();
-		}
-		return super.getCapability(cap, side);
+	public int getMaxEnergyStored() {
+		return getTier().getMaxEnergyStored();
 	}
 
 	@Override
-	protected void invalidateCaps() {
-		super.invalidateCaps();
-		energyHandler.invalidate();
+	protected int getMaxReceive() {
+		return MAX_TRANSFER;
 	}
 
 	@Override
-	public void load(@Nonnull final BlockState blockState, @Nonnull final CompoundNBT tagCompound) {
-		super.load(blockState, tagCompound);
-		energyStored = tagCompound.getInt(TAG_ENERGY);
+	protected int getMaxExtract() {
+		return 0;   // consumer only
 	}
 
-	@Nonnull
+	/** Accepts from any face: the vent is one face and cabling the other five would be fiddly. */
 	@Override
-	public CompoundNBT save(@Nonnull final CompoundNBT tagCompound) {
-		super.save(tagCompound);
-		tagCompound.putInt(TAG_ENERGY, energyStored);
-		return tagCompound;
+	protected boolean canReceiveFrom(@Nullable final Direction side) {
+		return true;
 	}
 
 	private void setActive(final boolean isActive) {

@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "hoh",
+    "odo",
+    "hoh"
+  ],
+  "key": {
+    "h": {
+      "tag": "warpdrive:hulls/basic/plain"
+    },
+    "o": {
+      "item": "minecraft:obsidian"
+    },
+    "d": {
+      "item": "minecraft:diamond"
+    }
+  },
+  "result": {
+    "item": "warpdrive:particles_collider"
+  }
+}

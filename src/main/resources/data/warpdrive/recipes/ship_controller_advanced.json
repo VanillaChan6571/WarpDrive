@@ -1,0 +1,32 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "ce ",
+    "pmc",
+    "cCM"
+  ],
+  "key": {
+    "e": {
+      "item": "warpdrive:component-emerald_crystal"
+    },
+    "c": {
+      "item": "warpdrive:component-ender_coil"
+    },
+    "p": {
+      "item": "minecraft:ender_pearl"
+    },
+    "M": {
+      "item": "warpdrive:component-memory_cluster"
+    },
+    "m": {
+      "item": "minecraft:diamond_block"
+    },
+    "C": {
+      "item": "warpdrive:ship_controller"
+    }
+  },
+  "result": {
+    "item": "warpdrive:ship_controller.advanced"
+  }
+}

@@ -1,7 +1,20 @@
 {
-    "variants":  {
-                     "":  {
-                              "model":  "warpdrive:block/catalog/force_field.basic"
-                          }
-                 }
+  "multipart": [
+    { "when": { "camouflaged": "false", "frequency": "0" }, "apply": { "model": "warpdrive:block/forcefield/force_field-0" } },
+    { "when": { "camouflaged": "false", "frequency": "1" }, "apply": { "model": "warpdrive:block/forcefield/force_field-1" } },
+    { "when": { "camouflaged": "false", "frequency": "2" }, "apply": { "model": "warpdrive:block/forcefield/force_field-2" } },
+    { "when": { "camouflaged": "false", "frequency": "3" }, "apply": { "model": "warpdrive:block/forcefield/force_field-3" } },
+    { "when": { "camouflaged": "false", "frequency": "4" }, "apply": { "model": "warpdrive:block/forcefield/force_field-4" } },
+    { "when": { "camouflaged": "false", "frequency": "5" }, "apply": { "model": "warpdrive:block/forcefield/force_field-5" } },
+    { "when": { "camouflaged": "false", "frequency": "6" }, "apply": { "model": "warpdrive:block/forcefield/force_field-6" } },
+    { "when": { "camouflaged": "false", "frequency": "7" }, "apply": { "model": "warpdrive:block/forcefield/force_field-7" } },
+    { "when": { "camouflaged": "false", "frequency": "8" }, "apply": { "model": "warpdrive:block/forcefield/force_field-8" } },
+    { "when": { "camouflaged": "false", "frequency": "9" }, "apply": { "model": "warpdrive:block/forcefield/force_field-9" } },
+    { "when": { "camouflaged": "false", "frequency": "10" }, "apply": { "model": "warpdrive:block/forcefield/force_field-10" } },
+    { "when": { "camouflaged": "false", "frequency": "11" }, "apply": { "model": "warpdrive:block/forcefield/force_field-11" } },
+    { "when": { "camouflaged": "false", "frequency": "12" }, "apply": { "model": "warpdrive:block/forcefield/force_field-12" } },
+    { "when": { "camouflaged": "false", "frequency": "13" }, "apply": { "model": "warpdrive:block/forcefield/force_field-13" } },
+    { "when": { "camouflaged": "false", "frequency": "14" }, "apply": { "model": "warpdrive:block/forcefield/force_field-14" } },
+    { "when": { "camouflaged": "false", "frequency": "15" }, "apply": { "model": "warpdrive:block/forcefield/force_field-15" } }
+  ]
 }

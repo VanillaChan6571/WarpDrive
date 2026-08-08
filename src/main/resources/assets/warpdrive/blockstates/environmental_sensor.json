@@ -1,7 +1,16 @@
 {
-    "variants":  {
-                     "":  {
-                              "model":  "warpdrive:block/catalog/environmental_sensor"
-                          }
-                 }
+  "variants": {
+    "active=false,facing=up": { "model": "warpdrive:block/detection/environmental_sensor-horizontal-inactive" },
+    "active=true,facing=up": { "model": "warpdrive:block/detection/environmental_sensor-horizontal" },
+    "active=false,facing=down": { "model": "warpdrive:block/detection/environmental_sensor-horizontal-inactive", "x": 180 },
+    "active=true,facing=down": { "model": "warpdrive:block/detection/environmental_sensor-horizontal", "x": 180 },
+    "active=false,facing=south": { "model": "warpdrive:block/detection/environmental_sensor-vertical-inactive" },
+    "active=true,facing=south": { "model": "warpdrive:block/detection/environmental_sensor-vertical" },
+    "active=false,facing=north": { "model": "warpdrive:block/detection/environmental_sensor-vertical-inactive", "y": 180 },
+    "active=true,facing=north": { "model": "warpdrive:block/detection/environmental_sensor-vertical", "y": 180 },
+    "active=false,facing=east": { "model": "warpdrive:block/detection/environmental_sensor-vertical-inactive", "y": 90 },
+    "active=true,facing=east": { "model": "warpdrive:block/detection/environmental_sensor-vertical", "y": 90 },
+    "active=false,facing=west": { "model": "warpdrive:block/detection/environmental_sensor-vertical-inactive", "y": 270 },
+    "active=true,facing=west": { "model": "warpdrive:block/detection/environmental_sensor-vertical", "y": 270 }
+  }
 }

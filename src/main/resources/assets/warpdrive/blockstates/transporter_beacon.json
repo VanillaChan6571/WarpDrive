@@ -1,7 +1,8 @@
 {
-    "variants":  {
-                     "":  {
-                              "model":  "warpdrive:block/catalog/transporter_beacon"
-                          }
-                 }
+  "variants": {
+    "active=false,deployed=false": { "model": "warpdrive:block/catalog/transporter_beacon_packed_inactive" },
+    "active=true,deployed=false":  { "model": "warpdrive:block/catalog/transporter_beacon_packed_active" },
+    "active=false,deployed=true":  { "model": "warpdrive:block/catalog/transporter_beacon_deployed_inactive" },
+    "active=true,deployed=true":   { "model": "warpdrive:block/catalog/transporter_beacon_deployed_active" }
+  }
 }

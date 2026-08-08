@@ -1,0 +1,21 @@
+{
+  "replace": false,
+  "values": [
+    "warpdrive:hull.basic.omnipanel-white",
+    "warpdrive:hull.basic.omnipanel-orange",
+    "warpdrive:hull.basic.omnipanel-magenta",
+    "warpdrive:hull.basic.omnipanel-light_blue",
+    "warpdrive:hull.basic.omnipanel-yellow",
+    "warpdrive:hull.basic.omnipanel-lime",
+    "warpdrive:hull.basic.omnipanel-pink",
+    "warpdrive:hull.basic.omnipanel-gray",
+    "warpdrive:hull.basic.omnipanel-silver",
+    "warpdrive:hull.basic.omnipanel-cyan",
+    "warpdrive:hull.basic.omnipanel-purple",
+    "warpdrive:hull.basic.omnipanel-blue",
+    "warpdrive:hull.basic.omnipanel-brown",
+    "warpdrive:hull.basic.omnipanel-green",
+    "warpdrive:hull.basic.omnipanel-red",
+    "warpdrive:hull.basic.omnipanel-black"
+  ]
+}

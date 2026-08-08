@@ -1,7 +1,7 @@
 {
     "variants":  {
-                     "":  {
-                              "model":  "warpdrive:block/catalog/radar"
-                          }
+                     "mode=inactive": { "model": "warpdrive:block/catalog/radar" },
+                     "mode=active":   { "model": "warpdrive:block/catalog/radar_active" },
+                     "mode=scanning": { "model": "warpdrive:block/catalog/radar_scanning" }
                  }
 }

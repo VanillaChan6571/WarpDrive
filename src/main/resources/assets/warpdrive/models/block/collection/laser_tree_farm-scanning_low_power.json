@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "bottom": "warpdrive:blocks/collection/laser_tree_farm-bottom",
+    "top": "warpdrive:blocks/collection/laser_tree_farm-top",
+    "side": "warpdrive:blocks/collection/laser_tree_farm-side_scanning_low_power"
+  }
+}

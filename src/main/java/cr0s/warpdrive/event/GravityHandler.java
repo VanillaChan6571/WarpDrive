@@ -1,7 +1,7 @@
 package cr0s.warpdrive.event;
 
 import cr0s.warpdrive.WarpDrive;
-import cr0s.warpdrive.item.WarpArmorItem;
+import cr0s.warpdrive.data.WarpDriveTags;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -36,15 +36,16 @@ import java.util.UUID;
  *   - In open void it drops to 0.001, which is what makes you drift rather than fall. Hyperspace
  *     adds a random jitter of +/-0.005 on top, so the value goes negative about half the time and
  *     you get pushed around instead of settling.
- *   - Sneaking is the descent control in the void: 0.02 while wearing WarpDrive armour, 0.005
- *     without. Without this you have no way down once you are off the hull.
+	 *   - Sneaking is the descent control in the void: 0.02 while wearing space-flight equipment,
+	 *     0.005 without. Without this you have no way down once you are off the hull.
  *
  * Note the field/void split is what actually makes space feel like 1.12.2. A flat 0.025 everywhere
  * still falls 25x faster than the void value, so you sink instead of floating.
  *
- * Still not ported: dropped items. 1.12.2 gave them their own gravity and drag curve
- * (GravityManager.getItemGravity / getItemGravity2); the attribute only exists on LivingEntity, and
- * 1.16.5 Forge has no generic per-entity tick event, so items still fall at vanilla speed.
+ * Dropped items are handled too, but not through the attribute - that only exists on LivingEntity,
+ * and Forge has no per-entity tick event for the rest. ItemEntityMixin substitutes the gravity and
+ * drag constants inside ItemEntity.tick instead, which is where the 1.12.2 CoreMod rewrote them.
+ * See getItemGravity / getItemDrag below.
  */
 @Mod.EventBusSubscriber(modid = WarpDrive.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class GravityHandler {
@@ -183,7 +184,8 @@ public final class GravityHandler {
 
 		// Open void. Sneaking is the only way to make headway downwards.
 		if (entity.isShiftKeyDown()) {
-			return hasWarpArmour(entity) ? VOID_SNEAK_IN_ARMOUR : VOID_SNEAK_UNPROTECTED;
+			return hasSpaceFlightEquipment(entity)
+				? VOID_SNEAK_IN_ARMOUR : VOID_SNEAK_UNPROTECTED;
 		}
 
 		if (inHyperspace) {
@@ -244,12 +246,11 @@ public final class GravityHandler {
 	}
 
 	/**
-	 * 1.12.2 tested the FlyInSpace dictionary tag here, which covered jetpacks from other mods.
-	 * Dictionary is not ported yet, so this stands in with WarpDrive's own armour.
+	 * The 1.12.2 FlyInSpace Dictionary classification, now reloadable through an item tag.
 	 */
-	private static boolean hasWarpArmour(final LivingEntity entity) {
+	private static boolean hasSpaceFlightEquipment(final LivingEntity entity) {
 		for (final ItemStack armour : entity.getArmorSlots()) {
-			if (!armour.isEmpty() && armour.getItem() instanceof WarpArmorItem) {
+			if (armour.getItem().is(WarpDriveTags.FLY_IN_SPACE)) {
 				return true;
 			}
 		}

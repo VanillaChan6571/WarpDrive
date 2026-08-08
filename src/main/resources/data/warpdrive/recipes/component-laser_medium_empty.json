@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:components",
+  "pattern": [
+    "   ",
+    "gBg",
+    "pm "
+  ],
+  "key": {
+    "g": {
+      "item": "warpdrive:component-glass_tank"
+    },
+    "B": {
+      "type": "forge:nbt",
+      "item": "minecraft:potion",
+      "nbt": "{Potion:\"minecraft:awkward\"}"
+    },
+    "p": {
+      "item": "warpdrive:component-power_interface"
+    },
+    "m": {
+      "item": "warpdrive:highly_advanced_machine"
+    }
+  },
+  "result": {
+    "item": "warpdrive:component-laser_medium_empty"
+  }
+}

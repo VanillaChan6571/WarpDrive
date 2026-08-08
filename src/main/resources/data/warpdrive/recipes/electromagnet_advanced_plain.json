@@ -1,0 +1,24 @@
+{
+  "type": "warpdrive:particle_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "mpm",
+    "pip",
+    "mpm"
+  ],
+  "key": {
+    "i": {
+      "item": "warpdrive:electromagnetic_cell.basic-ion"
+    },
+    "p": {
+      "item": "warpdrive:component-power_interface"
+    },
+    "m": {
+      "item": "warpdrive:electromagnet.basic.plain"
+    }
+  },
+  "result": {
+    "item": "warpdrive:electromagnet.advanced.plain",
+    "count": 6
+  }
+}

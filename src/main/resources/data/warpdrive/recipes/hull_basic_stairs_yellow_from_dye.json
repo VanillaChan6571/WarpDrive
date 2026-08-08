@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:tainted_hulls",
+  "pattern": [
+    "###",
+    "#X#",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "tag": "warpdrive:hulls/basic/stairs"
+    },
+    "X": {
+      "tag": "forge:dyes/yellow"
+    }
+  },
+  "result": {
+    "item": "warpdrive:hull.basic.stairs_yellow",
+    "count": 8
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "type": "warpdrive:particle_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "mtm",
+    "sps",
+    "mMm"
+  ],
+  "key": {
+    "t": {
+      "item": "warpdrive:component-glass_tank"
+    },
+    "s": {
+      "item": "warpdrive:component-superconductor"
+    },
+    "p": {
+      "item": "warpdrive:electromagnetic_cell.basic-proton"
+    },
+    "M": {
+      "item": "warpdrive:component-motor"
+    },
+    "m": {
+      "item": "warpdrive:electromagnet.advanced.glass"
+    }
+  },
+  "result": {
+    "item": "warpdrive:electromagnet.superior.glass",
+    "count": 6
+  }
+}

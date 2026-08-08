@@ -1,0 +1,6 @@
+{
+    "name": "Movement",
+    "description": "This chapter covers everything about moving from entities with $(l:4_movement/lift)lifts$(), and $(item)transporters$(), to $(item)ships$() and how $(item)build them$().",
+    "icon": "warpdrive:ship_token-20",
+    "sortnum": 4
+}

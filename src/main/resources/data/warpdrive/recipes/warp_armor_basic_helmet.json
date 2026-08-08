@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:tools",
+  "pattern": [
+    "mmm",
+    "mgm",
+    "ici"
+  ],
+  "key": {
+    "m": {
+      "item": "warpdrive:component-rubber"
+    },
+    "g": {
+      "tag": "warpdrive:hulls/basic/glass"
+    },
+    "c": {
+      "item": "warpdrive:component-air_canister_empty"
+    },
+    "i": {
+      "tag": "forge:nuggets/iron"
+    }
+  },
+  "result": {
+    "item": "warpdrive:warp_armor_basic_helmet"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "CpC",
+    "lml",
+    "CcC"
+  ],
+  "key": {
+    "m": {
+      "item": "warpdrive:component-reactor_core"
+    },
+    "l": {
+      "item": "warpdrive:component-lens"
+    },
+    "p": {
+      "item": "warpdrive:component-power_interface"
+    },
+    "c": {
+      "item": "warpdrive:component-computer_interface"
+    },
+    "C": {
+      "item": "warpdrive:component-capacitive_crystal"
+    }
+  },
+  "result": {
+    "item": "warpdrive:enan_reactor_core.basic"
+  }
+}

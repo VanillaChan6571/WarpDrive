@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "psh",
+    "s s",
+    "hsp"
+  ],
+  "key": {
+    "h": {
+      "tag": "warpdrive:hulls/basic/glass"
+    },
+    "p": {
+      "item": "warpdrive:component-power_interface"
+    },
+    "s": {
+      "tag": "forge:ingots/iron"
+    }
+  },
+  "result": {
+    "item": "warpdrive:void_shell.glass",
+    "count": 6
+  }
+}

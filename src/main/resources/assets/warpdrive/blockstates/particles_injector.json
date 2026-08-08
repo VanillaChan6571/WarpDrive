@@ -1,7 +1,6 @@
 {
     "variants":  {
-                     "":  {
-                              "model":  "warpdrive:block/catalog/particles_injector"
-                          }
+                     "active=false": { "model": "warpdrive:block/catalog/particles_injector" },
+                     "active=true":  { "model": "warpdrive:block/catalog/particles_injector_active" }
                  }
 }

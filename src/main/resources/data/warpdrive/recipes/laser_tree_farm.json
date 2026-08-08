@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "glg",
+    "tlt",
+    "am "
+  ],
+  "key": {
+    "t": {
+      "item": "warpdrive:component-motor"
+    },
+    "l": {
+      "item": "warpdrive:component-lens"
+    },
+    "m": {
+      "item": "minecraft:iron_block"
+    },
+    "a": {
+      "item": "minecraft:iron_axe"
+    },
+    "g": {
+      "tag": "forge:glass_panes/colorless"
+    }
+  },
+  "result": {
+    "item": "warpdrive:laser_tree_farm"
+  }
+}

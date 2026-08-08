@@ -1,0 +1,28 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:command_block",
+    "minecraft:chain_command_block",
+    "minecraft:repeating_command_block",
+    "minecraft:end_gateway",
+    "minecraft:end_portal",
+    "minecraft:end_portal_frame",
+    "minecraft:nether_portal",
+    "minecraft:structure_block",
+    "minecraft:jigsaw",
+    "minecraft:moving_piston",
+    "warpdrive:bedrock_glass",
+    "warpdrive:lamp_bubble",
+    "warpdrive:lamp_flat",
+    "warpdrive:lamp_long",
+    "#warpdrive:hulls/basic/plain",
+    "#warpdrive:hulls/basic/glass",
+    "#warpdrive:hulls/advanced/plain",
+    "#warpdrive:hulls/advanced/glass",
+    "#warpdrive:hulls/superior/plain",
+    "#warpdrive:hulls/superior/glass",
+    "warpdrive:force_field.basic",
+    "warpdrive:force_field.advanced",
+    "warpdrive:force_field.superior"
+  ]
+}

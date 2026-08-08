@@ -1,7 +1,10 @@
 package cr0s.warpdrive.event;
 
 import cr0s.warpdrive.WarpDrive;
+import cr0s.warpdrive.data.WarpDriveTags;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.inventory.EquipmentSlotType;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.EntityLeaveWorldEvent;
@@ -38,9 +41,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * entity's vertical motion, so the speed has to be sampled each tick beforehand - the same reason
  * 1.12.2 kept its own entity_yMotion map.
  *
- * Not ported: Dictionary's NoFallDamage equipment tag (default IC2 rubber boots), which cancelled
- * damage outright. Dictionary is still legacy-only, and there is no WarpDrive item that carried
- * that tag, so there is nothing to substitute without inventing behaviour.
+	 * NoFallDamage equipment is checked before the dimension-specific speed remap, matching the
+	 * global 1.12.2 handler. The classification is a datapack item tag, so other 1.16 mods can add
+	 * their boots or jetpacks without a hard dependency.
  */
 @Mod.EventBusSubscriber(modid = WarpDrive.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class FallDamageHandler {
@@ -74,6 +77,14 @@ public final class FallDamageHandler {
 		final LivingEntity entity = event.getEntityLiving();
 		if (entity == null || entity.level == null || entity.level.isClientSide) {
 			return;
+		}
+		for (final EquipmentSlotType slot : EquipmentSlotType.values()) {
+			final ItemStack equipment = entity.getItemBySlot(slot);
+			if (equipment.getItem().is(WarpDriveTags.NO_FALL_DAMAGE)) {
+				LAST_MOTION_Y.remove(entity.getId());
+				event.setCanceled(true);
+				return;
+			}
 		}
 		if (!isReducedGravity(entity.level)) {
 			// Drop any stale sample so a jump taken right after leaving the dimension is judged

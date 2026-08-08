@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:hulls",
+  "pattern": [
+    "s",
+    "s"
+  ],
+  "key": {
+    "s": {
+      "item": "warpdrive:hull.superior.slab_green"
+    }
+  },
+  "result": {
+    "item": "warpdrive:hull.superior.plain-green"
+  }
+}

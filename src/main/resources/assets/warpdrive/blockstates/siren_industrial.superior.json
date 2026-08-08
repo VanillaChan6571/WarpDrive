@@ -1,7 +1,16 @@
 {
-    "variants":  {
-                     "":  {
-                              "model":  "warpdrive:block/catalog/siren_industrial.superior"
-                          }
-                 }
+  "multipart": [
+    { "when": { "orientation": "down_north" }, "apply": { "model": "warpdrive:block/detection/siren_industrial.superior", "x": 180, "y": 180 } },
+    { "when": { "orientation": "down_south" }, "apply": { "model": "warpdrive:block/detection/siren_industrial.superior", "x": 180 } },
+    { "when": { "orientation": "down_west" }, "apply": { "model": "warpdrive:block/detection/siren_industrial.superior", "x": 180, "y": 90 } },
+    { "when": { "orientation": "down_east" }, "apply": { "model": "warpdrive:block/detection/siren_industrial.superior", "x": 180, "y": 270 } },
+    { "when": { "orientation": "up_north" }, "apply": { "model": "warpdrive:block/detection/siren_industrial.superior", "y": 180 } },
+    { "when": { "orientation": "up_south" }, "apply": { "model": "warpdrive:block/detection/siren_industrial.superior" } },
+    { "when": { "orientation": "up_west" }, "apply": { "model": "warpdrive:block/detection/siren_industrial.superior", "y": 90 } },
+    { "when": { "orientation": "up_east" }, "apply": { "model": "warpdrive:block/detection/siren_industrial.superior", "y": 270 } },
+    { "when": { "orientation": "north" }, "apply": { "model": "warpdrive:block/detection/siren_industrial.superior", "x": 90 } },
+    { "when": { "orientation": "south" }, "apply": { "model": "warpdrive:block/detection/siren_industrial.superior", "x": 90, "y": 180 } },
+    { "when": { "orientation": "west" }, "apply": { "model": "warpdrive:block/detection/siren_industrial.superior", "x": 90, "y": 270 } },
+    { "when": { "orientation": "east" }, "apply": { "model": "warpdrive:block/detection/siren_industrial.superior", "x": 90, "y": 90 } }
+  ]
 }

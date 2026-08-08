@@ -1,0 +1,17 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:armor_stand",
+    "minecraft:creeper",
+    "minecraft:elder_guardian",
+    "minecraft:guardian",
+    "minecraft:skeleton",
+    "minecraft:skeleton_horse",
+    "minecraft:wither",
+    "minecraft:wither_skeleton",
+    "minecraft:zombie",
+    "minecraft:zombie_horse",
+    "minecraft:zombified_piglin",
+    "minecraft:zombie_villager"
+  ]
+}

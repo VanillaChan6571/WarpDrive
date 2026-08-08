@@ -1,0 +1,17 @@
+{
+  "replace": false,
+  "values": [
+    "warpdrive:warp_armor_basic_helmet",
+    "warpdrive:warp_armor_basic_chestplate",
+    "warpdrive:warp_armor_basic_leggings",
+    "warpdrive:warp_armor_basic_boots",
+    "warpdrive:warp_armor_advanced_helmet",
+    "warpdrive:warp_armor_advanced_chestplate",
+    "warpdrive:warp_armor_advanced_leggings",
+    "warpdrive:warp_armor_advanced_boots",
+    "warpdrive:warp_armor_superior_helmet",
+    "warpdrive:warp_armor_superior_chestplate",
+    "warpdrive:warp_armor_superior_leggings",
+    "warpdrive:warp_armor_superior_boots"
+  ]
+}

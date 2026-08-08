@@ -1,0 +1,39 @@
+{
+  "type": "forge:conditional",
+  "recipes": [
+    {
+      "conditions": [
+        {
+          "type": "forge:mod_loaded",
+          "modid": "ic2"
+        }
+      ],
+      "recipe": {
+        "type": "minecraft:crafting_shaped",
+        "group": "warpdrive:machines",
+        "pattern": [
+          "cld",
+          "lhl",
+          "dlc"
+        ],
+        "key": {
+          "l": {
+            "item": "warpdrive:component-lens"
+          },
+          "h": {
+            "item": "ic2:overclocked_heat_vent"
+          },
+          "c": {
+            "item": "ic2:hex_heat_storage"
+          },
+          "d": {
+            "item": "ic2:hex_heat_storage"
+          }
+        },
+        "result": {
+          "item": "warpdrive:ic2_reactor_laser_focus"
+        }
+      }
+    }
+  ]
+}

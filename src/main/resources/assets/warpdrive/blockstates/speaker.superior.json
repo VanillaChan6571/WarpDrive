@@ -1,7 +1,10 @@
 {
-    "variants":  {
-                     "":  {
-                              "model":  "warpdrive:block/catalog/speaker.superior"
-                          }
-                 }
+  "variants": {
+    "facing=down": { "model": "warpdrive:block/catalog/speaker.superior", "x": 90 },
+    "facing=up": { "model": "warpdrive:block/catalog/speaker.superior", "x": 270 },
+    "facing=north": { "model": "warpdrive:block/catalog/speaker.superior" },
+    "facing=south": { "model": "warpdrive:block/catalog/speaker.superior", "y": 180 },
+    "facing=west": { "model": "warpdrive:block/catalog/speaker.superior", "y": 270 },
+    "facing=east": { "model": "warpdrive:block/catalog/speaker.superior", "y": 90 }
+  }
 }

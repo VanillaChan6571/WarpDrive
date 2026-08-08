@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:tainted_hulls",
+  "pattern": [
+    "###",
+    "#X#",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "tag": "warpdrive:hulls/basic/glass"
+    },
+    "X": {
+      "tag": "forge:dyes/blue"
+    }
+  },
+  "result": {
+    "item": "warpdrive:hull.basic.glass-blue",
+    "count": 8
+  }
+}

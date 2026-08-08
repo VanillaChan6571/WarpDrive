@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "lrl",
+    "rmr",
+    "lrl"
+  ],
+  "key": {
+    "l": {
+      "tag": "forge:storage_blocks/lapis"
+    },
+    "r": {
+      "tag": "forge:storage_blocks/redstone"
+    },
+    "m": {
+      "item": "warpdrive:component-laser_medium_empty"
+    }
+  },
+  "result": {
+    "item": "warpdrive:laser_medium.superior"
+  }
+}

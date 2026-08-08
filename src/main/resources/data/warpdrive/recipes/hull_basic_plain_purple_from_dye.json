@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:tainted_hulls",
+  "pattern": [
+    "###",
+    "#X#",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "tag": "warpdrive:hulls/basic/plain"
+    },
+    "X": {
+      "tag": "forge:dyes/purple"
+    }
+  },
+  "result": {
+    "item": "warpdrive:hull.basic.plain-purple",
+    "count": 8
+  }
+}

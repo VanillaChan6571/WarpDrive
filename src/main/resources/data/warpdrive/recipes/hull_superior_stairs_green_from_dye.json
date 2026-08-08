@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:tainted_hulls",
+  "pattern": [
+    "###",
+    "#X#",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "tag": "warpdrive:hulls/superior/stairs"
+    },
+    "X": {
+      "tag": "forge:dyes/green"
+    }
+  },
+  "result": {
+    "item": "warpdrive:hull.superior.stairs_green",
+    "count": 8
+  }
+}

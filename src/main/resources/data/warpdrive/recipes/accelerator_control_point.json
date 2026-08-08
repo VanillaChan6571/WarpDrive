@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "hd ",
+    "vc ",
+    "he "
+  ],
+  "key": {
+    "h": {
+      "item": "minecraft:hopper"
+    },
+    "d": {
+      "item": "warpdrive:component-diamond_crystal"
+    },
+    "e": {
+      "item": "warpdrive:component-emerald_crystal"
+    },
+    "c": {
+      "item": "warpdrive:component-computer_interface"
+    },
+    "v": {
+      "tag": "warpdrive:void_shells"
+    }
+  },
+  "result": {
+    "item": "warpdrive:accelerator_control_point"
+  }
+}

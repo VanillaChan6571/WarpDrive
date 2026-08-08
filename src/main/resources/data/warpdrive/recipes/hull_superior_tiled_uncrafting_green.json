@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "group": "warpdrive:hulls",
+  "ingredients": [
+    {
+      "item": "warpdrive:hull.superior.tiled-green"
+    }
+  ],
+  "result": {
+    "item": "warpdrive:hull.superior.plain-green"
+  }
+}

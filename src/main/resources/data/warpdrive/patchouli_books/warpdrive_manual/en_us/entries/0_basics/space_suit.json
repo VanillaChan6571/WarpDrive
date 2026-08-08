@@ -1,0 +1,63 @@
+{
+	"name": "Space suit",
+	"icon": "warpdrive:warp_armor_advanced_chestplate",
+	"category": "0_basics",
+	"pages": [
+		{
+			"type": "text",
+			"text": "$(item)Warp armors$() are you usual protection clothing from mobs and such, nothing new here as long as you're on Earth.$(br2)Now when it comes to $(item)space$(), they become mandatory equipment to survive in the void, well, as long as you want to keep $(item)breathing$() that is."
+		},
+		{
+			"type": "text",
+			"text": "There's 3 tiers of space suits available, each with their own perks: $(li)$(item)Emergency$(0) armor is cheap, just enough to breath, $(li)$(item)Re-entry$(0) armor can sustain atmospheric burn and fall damage, quite useful when 'falling' from space$()$(li)$(item)Warp$(0) armor adds an ice electrolyzer for compact air storage."
+		},
+		{
+			"type": "crafting",
+			"recipe": "warpdrive:warp_armor_basic_helmet",
+			"recipe2": "warpdrive:warp_armor_basic_chestplate",
+			"title": "Emergency armor",
+			"text": ""
+		},
+		{
+			"type": "crafting",
+			"recipe": "warpdrive:warp_armor_basic_leggings",
+			"recipe2": "warpdrive:warp_armor_basic_boots",
+			"title": " ",
+			"text": ""
+		},
+		{
+			"type": "crafting",
+			"recipe": "warpdrive:warp_armor_advanced_helmet",
+			"recipe2": "warpdrive:warp_armor_advanced_chestplate",
+			"title": "Re-entry armor",
+			"text": ""
+		},
+		{
+			"type": "crafting",
+			"recipe": "warpdrive:warp_armor_advanced_leggings",
+			"recipe2": "warpdrive:warp_armor_advanced_boots",
+			"title": " ",
+			"text": ""
+		},
+		{
+			"type": "crafting",
+			"recipe": "warpdrive:warp_armor_superior_helmet",
+			"recipe2": "warpdrive:warp_armor_superior_chestplate",
+			"title": "Warp armor",
+			"text": ""
+		},
+		{
+			"type": "crafting",
+			"recipe": "warpdrive:warp_armor_superior_leggings",
+			"recipe2": "warpdrive:warp_armor_superior_boots",
+			"title": " ",
+			"text": ""
+		},
+		{
+			"type": "text",
+			"title": "Ice electrolyzer",
+			"text": "$(item)Warp armor$() refills your empty air tanks as long as you have $(item)Ice$() and a $(item)energy storage item$() in your inventory. You'll need 2000 $(item)EU$() or equivalent $(item)FE$() or $(item)RF$() per operation."
+		}
+	],
+	"sortnum": 14
+}

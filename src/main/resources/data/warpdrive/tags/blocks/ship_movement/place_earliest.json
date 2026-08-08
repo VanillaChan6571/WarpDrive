@@ -1,0 +1,15 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:obsidian",
+    "warpdrive:lamp_bubble",
+    "warpdrive:lamp_flat",
+    "warpdrive:lamp_long",
+    "#warpdrive:hulls/basic/plain",
+    "#warpdrive:hulls/basic/glass",
+    "#warpdrive:hulls/advanced/plain",
+    "#warpdrive:hulls/advanced/glass",
+    "#warpdrive:hulls/superior/plain",
+    "#warpdrive:hulls/superior/glass"
+  ]
+}

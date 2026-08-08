@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "group": "warpdrive:tainted_hulls",
+  "ingredients": [
+    {
+      "tag": "warpdrive:hulls/superior/glass"
+    },
+    {
+      "tag": "forge:dyes/yellow"
+    }
+  ],
+  "result": {
+    "item": "warpdrive:hull.superior.glass-yellow"
+  }
+}

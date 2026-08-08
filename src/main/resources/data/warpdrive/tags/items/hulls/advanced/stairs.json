@@ -1,0 +1,21 @@
+{
+  "replace": false,
+  "values": [
+    "warpdrive:hull.advanced.stairs_white",
+    "warpdrive:hull.advanced.stairs_orange",
+    "warpdrive:hull.advanced.stairs_magenta",
+    "warpdrive:hull.advanced.stairs_light_blue",
+    "warpdrive:hull.advanced.stairs_yellow",
+    "warpdrive:hull.advanced.stairs_lime",
+    "warpdrive:hull.advanced.stairs_pink",
+    "warpdrive:hull.advanced.stairs_gray",
+    "warpdrive:hull.advanced.stairs_silver",
+    "warpdrive:hull.advanced.stairs_cyan",
+    "warpdrive:hull.advanced.stairs_purple",
+    "warpdrive:hull.advanced.stairs_blue",
+    "warpdrive:hull.advanced.stairs_brown",
+    "warpdrive:hull.advanced.stairs_green",
+    "warpdrive:hull.advanced.stairs_red",
+    "warpdrive:hull.advanced.stairs_black"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:hulls",
+  "pattern": [
+    "bbb"
+  ],
+  "key": {
+    "b": {
+      "item": "warpdrive:hull.basic.plain-purple"
+    }
+  },
+  "result": {
+    "item": "warpdrive:hull.basic.slab_purple",
+    "count": 6
+  }
+}

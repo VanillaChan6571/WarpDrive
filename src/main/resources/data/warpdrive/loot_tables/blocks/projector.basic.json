@@ -1,0 +1,119 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "warpdrive:projector.basic",
+          "functions": [
+            {
+              "function": "minecraft:copy_state",
+              "block": "warpdrive:projector.basic",
+              "properties": [
+                "is_double_sided"
+              ]
+            },
+            {
+              "function": "minecraft:copy_nbt",
+              "source": "block_entity",
+              "ops": [
+                {
+                  "source": "energy",
+                  "target": "BlockEntityTag.energy",
+                  "op": "replace"
+                },
+                {
+                  "source": "beamFrequency",
+                  "target": "BlockEntityTag.beamFrequency",
+                  "op": "replace"
+                },
+                {
+                  "source": "enabled",
+                  "target": "BlockEntityTag.enabled",
+                  "op": "replace"
+                },
+                {
+                  "source": "shape",
+                  "target": "BlockEntityTag.shape",
+                  "op": "replace"
+                },
+                {
+                  "source": "minX",
+                  "target": "BlockEntityTag.minX",
+                  "op": "replace"
+                },
+                {
+                  "source": "minY",
+                  "target": "BlockEntityTag.minY",
+                  "op": "replace"
+                },
+                {
+                  "source": "minZ",
+                  "target": "BlockEntityTag.minZ",
+                  "op": "replace"
+                },
+                {
+                  "source": "maxX",
+                  "target": "BlockEntityTag.maxX",
+                  "op": "replace"
+                },
+                {
+                  "source": "maxY",
+                  "target": "BlockEntityTag.maxY",
+                  "op": "replace"
+                },
+                {
+                  "source": "maxZ",
+                  "target": "BlockEntityTag.maxZ",
+                  "op": "replace"
+                },
+                {
+                  "source": "translationX",
+                  "target": "BlockEntityTag.translationX",
+                  "op": "replace"
+                },
+                {
+                  "source": "translationY",
+                  "target": "BlockEntityTag.translationY",
+                  "op": "replace"
+                },
+                {
+                  "source": "translationZ",
+                  "target": "BlockEntityTag.translationZ",
+                  "op": "replace"
+                },
+                {
+                  "source": "rotationYaw",
+                  "target": "BlockEntityTag.rotationYaw",
+                  "op": "replace"
+                },
+                {
+                  "source": "rotationPitch",
+                  "target": "BlockEntityTag.rotationPitch",
+                  "op": "replace"
+                },
+                {
+                  "source": "rotationRoll",
+                  "target": "BlockEntityTag.rotationRoll",
+                  "op": "replace"
+                },
+                {
+                  "source": "upgrades",
+                  "target": "BlockEntityTag.upgrades",
+                  "op": "replace"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "conditions": [
+        {
+          "condition": "minecraft:survives_explosion"
+        }
+      ]
+    }
+  ]
+}

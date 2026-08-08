@@ -1,7 +1,6 @@
 {
-    "variants":  {
-                     "":  {
-                              "model":  "warpdrive:block/catalog/ship_scanner.superior"
-                          }
-                 }
+  "variants": {
+    "active=false": { "model": "warpdrive:block/catalog/ship_scanner.superior" },
+    "active=true": { "model": "warpdrive:block/catalog/ship_scanner.superior" }
+  }
 }

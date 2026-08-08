@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:tainted_hulls",
+  "pattern": [
+    " b ",
+    "bcb",
+    " C "
+  ],
+  "key": {
+    "c": {
+      "item": "minecraft:blue_concrete"
+    },
+    "b": {
+      "item": "minecraft:iron_bars"
+    },
+    "C": {
+      "item": "warpdrive:component-ceramic"
+    }
+  },
+  "result": {
+    "item": "warpdrive:hull.basic.plain-blue",
+    "count": 4
+  }
+}

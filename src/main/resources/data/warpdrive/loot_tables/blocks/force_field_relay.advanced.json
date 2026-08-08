@@ -1,0 +1,42 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "warpdrive:force_field_relay.advanced",
+          "functions": [
+            {
+              "function": "minecraft:copy_nbt",
+              "source": "block_entity",
+              "ops": [
+                {
+                  "source": "beamFrequency",
+                  "target": "BlockEntityTag.beamFrequency",
+                  "op": "replace"
+                },
+                {
+                  "source": "enabled",
+                  "target": "BlockEntityTag.enabled",
+                  "op": "replace"
+                },
+                {
+                  "source": "upgrade",
+                  "target": "BlockEntityTag.upgrade",
+                  "op": "replace"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "conditions": [
+        {
+          "condition": "minecraft:survives_explosion"
+        }
+      ]
+    }
+  ]
+}

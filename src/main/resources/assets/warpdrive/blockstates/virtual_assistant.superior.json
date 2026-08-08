@@ -1,7 +1,6 @@
 {
     "variants":  {
-                     "":  {
-                              "model":  "warpdrive:block/catalog/virtual_assistant.superior"
-                          }
+                     "active=false": { "model": "warpdrive:block/catalog/virtual_assistant.superior" },
+                     "active=true":  { "model": "warpdrive:block/catalog/virtual_assistant.superior_active" }
                  }
 }

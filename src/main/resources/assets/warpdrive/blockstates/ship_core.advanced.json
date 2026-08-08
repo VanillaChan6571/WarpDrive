@@ -1,7 +1,12 @@
 {
-    "variants":  {
-                     "":  {
-                              "model":  "warpdrive:block/catalog/ship_core.advanced"
-                          }
-                 }
+  "variants": {
+    "active=false,facing=north": { "model": "warpdrive:block/ship_core_off" },
+    "active=false,facing=east":  { "model": "warpdrive:block/ship_core_off_east" },
+    "active=false,facing=south": { "model": "warpdrive:block/ship_core_off_south" },
+    "active=false,facing=west":  { "model": "warpdrive:block/ship_core_off_west" },
+    "active=true,facing=north": { "model": "warpdrive:block/ship_core_on_1" },
+    "active=true,facing=east":  { "model": "warpdrive:block/ship_core_on_4" },
+    "active=true,facing=south": { "model": "warpdrive:block/ship_core_on_2" },
+    "active=true,facing=west":  { "model": "warpdrive:block/ship_core_on_3" }
+  }
 }

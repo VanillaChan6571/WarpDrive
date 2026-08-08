@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:hulls",
+  "pattern": [
+    "gpg",
+    "pFp",
+    "gpg"
+  ],
+  "key": {
+    "g": {
+      "tag": "forge:glass/colorless"
+    },
+    "p": {
+      "item": "warpdrive:hull.superior.plain-red"
+    },
+    "F": {
+      "item": "minecraft:glowstone_dust"
+    }
+  },
+  "result": {
+    "item": "warpdrive:hull.superior.glass-red",
+    "count": 4
+  }
+}

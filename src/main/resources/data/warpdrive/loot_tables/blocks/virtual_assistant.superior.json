@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:block",
+  "pools": [{
+    "rolls": 1,
+    "entries": [{ "type": "minecraft:item", "name": "warpdrive:virtual_assistant.superior" }],
+    "conditions": [{ "condition": "minecraft:survives_explosion" }]
+  }]
+}

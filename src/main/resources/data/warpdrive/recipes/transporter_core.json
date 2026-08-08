@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    " E ",
+    "pmd",
+    " c "
+  ],
+  "key": {
+    "m": {
+      "item": "warpdrive:highly_advanced_machine"
+    },
+    "c": {
+      "item": "warpdrive:component-computer_interface"
+    },
+    "d": {
+      "item": "warpdrive:component-diamond_crystal"
+    },
+    "E": {
+      "item": "warpdrive:component-emerald_crystal"
+    },
+    "p": {
+      "item": "warpdrive:component-power_interface"
+    }
+  },
+  "result": {
+    "item": "warpdrive:transporter_core"
+  }
+}

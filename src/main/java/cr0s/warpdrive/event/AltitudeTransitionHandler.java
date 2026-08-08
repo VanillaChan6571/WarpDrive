@@ -1,6 +1,7 @@
 package cr0s.warpdrive.event;
 
 import cr0s.warpdrive.WarpDrive;
+import cr0s.warpdrive.data.CelestialCoordinates;
 import cr0s.warpdrive.data.DimensionAltitude;
 import cr0s.warpdrive.debug.DebugLog;
 import cr0s.warpdrive.item.WarpArmorItem;
@@ -34,11 +35,9 @@ import java.util.function.Function;
  *
  * Without this, falling in space is simply fatal, which is both un-1.12.2 and unrecoverable.
  *
- * Deviation: 1.12.2 chose the destination through CelestialObjectManager, descending only when
- * actually in orbit of a child object and wrapping otherwise. That configuration is not ported yet,
- * so the parent/child chain is hardcoded - hyperspace descends to space, space descends to the
- * overworld. When celestial objects land, this becomes an orbit lookup and the wrap branch starts
- * being reachable from space too.
+ * The old XML map needed an orbit lookup because several worlds shared one dimension. In the
+ * current one-world-per-layer design the child covers the complete layer, while universal
+ * coordinates preserve the 8:1 hyperspace scale during transfer.
  */
 @Mod.EventBusSubscriber(modid = WarpDrive.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class AltitudeTransitionHandler {
@@ -90,8 +89,8 @@ public final class AltitudeTransitionHandler {
 			return;
 		}
 
-		final double x = entity.getX();
-		final double z = entity.getZ();
+		final double x = CelestialCoordinates.mapHorizontal(entity.level, destination, entity.getX());
+		final double z = CelestialCoordinates.mapHorizontal(entity.level, destination, entity.getZ());
 		final double y = fromSpace ? REENTRY_ALTITUDE : DESCENT_ALTITUDE;
 
 		entity.fallDistance = ARRIVAL_FALL_TOLERANCE;

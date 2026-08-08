@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:tainted_hulls",
+  "pattern": [
+    "###",
+    "#X#",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "tag": "warpdrive:hulls/advanced/stairs"
+    },
+    "X": {
+      "tag": "forge:dyes/red"
+    }
+  },
+  "result": {
+    "item": "warpdrive:hull.advanced.stairs_red",
+    "count": 8
+  }
+}

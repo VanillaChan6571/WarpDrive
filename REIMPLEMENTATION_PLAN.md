@@ -124,17 +124,18 @@ Registry<DimensionType> dimensionRegistry = ...
 
 **Deliverable**: Ship Core block that responds to Lua commands
 
-### Phase 2: Ship Scanning & Energy (Week 2)
-**Goal**: Ship structure detection and energy system
+### Phase 2: Ship Scanning & Energy — COMPLETE
+**Goal**: Ship structure detection, schematic building and energy system
 
 **Tasks**:
-1. Implement flood-fill ship scanner
-2. Create Capacitor block + TileEntity (energy storage)
-3. Implement energy cost calculation
-4. Add ship size validation
-5. Test: Scan ship, check energy requirements
+1. ✅ Implement the configured-envelope ship inspector used by the core
+2. ✅ Implement the tiered ship-scanner machine, native/legacy schematics and ship-token deployment
+3. ✅ Create Capacitor block + TileEntity (energy storage)
+4. ✅ Implement energy cost calculation
+5. ✅ Add ship size and scanner tier validation
+6. ✅ Test deterministic schematic rotation/name safety and movement energy costs
 
-**Deliverable**: Ship scanner that reports ship size and energy needs
+**Deliverable**: Working ship inspection, tiered schematic capture/deployment, tokens and energy model
 
 ### Phase 3: Warp Mechanics (Week 2-3)
 **Goal**: Actually teleport ships
@@ -187,6 +188,10 @@ Travel between layers uses **both** a ship command and altitude ascent.
 **Phase 4 completion status**
 - [x] air tanks with three finite-capacity tiers, chest-slot consumption and HUD integration
 - [x] altitude ascent / descent for players and ships across overworld, space and hyperspace
+- [x] shared universal coordinates: contiguous vertical layers, 1:1 overworld/space XZ and 8:1
+      hyperspace XZ, used by player transitions, ship jumps and radar
+- [x] persistent global ship-region snapshots for cross-dimension radar and crew membership without
+      loading remote chunks
 - [x] faithful movement-type energy equation and mass/range factors; hyperspace's cheaper local
       distance naturally compounds with its 8:1 coordinate scale for long-haul travel
 - [x] field/void gravity nuance for living entities and separate zero-g item handling
@@ -329,10 +334,12 @@ dependencies {
 - [ ] Basic Lua commands respond (getEnergyStored, etc.)
 
 ### Phase 2
-- [ ] Ship scanner finds all connected blocks
-- [ ] Ship size validation works (max size enforcement)
-- [ ] Energy cost calculation correct
-- [ ] Capacitor stores and transfers energy
+- [x] Ship core inspector captures every non-air block in its configured envelope
+- [x] Ship scanner saves/restores block states and block-entity NBT with rotation and protection checks
+- [x] Ship tokens materialize a named schematic through a configured scanner station
+- [x] Ship/scanner size validation works (axis and mass enforcement)
+- [x] Energy cost calculation correct
+- [x] Capacitor stores and transfers energy
 
 ### Phase 3
 - [ ] Ship warps within same dimension
@@ -371,10 +378,10 @@ dependencies {
 
 ## Future Enhancements (Post-MVP)
 
-- Force fields
+- Force-field performance and visual polish beyond the completed 1.12.2 behaviour port
 - Weapon systems
-- Cloaking
-- Radar/scanners
+- Cloaking visual/performance polish beyond the restored 1.12.2 machine contract
+- Additional radar/scanner region types beyond the restored ship echoes
 - Multiple ship cores per ship
 - Ship-to-ship combat
 - Programmable autopilot
@@ -382,4 +389,4 @@ dependencies {
 
 ---
 
-**Next Step**: Start Phase 1 - Create Ship Core block with CC:Tweaked integration!
+**Next Step**: Continue the registry-by-registry port tracked in `PORT_CHECKLIST.md`.

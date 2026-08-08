@@ -1,0 +1,1 @@
+{ "parent": "minecraft:block/cube_bottom_top", "textures": { "side": "warpdrive:blocks/energy/enan_reactor_core-side01", "top": "warpdrive:blocks/energy/enan_reactor_core-top_bottom", "bottom": "warpdrive:blocks/energy/enan_reactor_core-top_bottom" } }

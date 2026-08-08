@@ -1,3 +1,3 @@
 {
-    "parent":  "warpdrive:block/catalog/mining_laser"
+  "parent": "warpdrive:block/collection/mining_laser-inactive"
 }

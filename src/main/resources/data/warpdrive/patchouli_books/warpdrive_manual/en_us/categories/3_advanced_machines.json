@@ -1,0 +1,6 @@
+{
+    "name": "Advanced machines",
+    "description": "This chapter is about advanced machines for detection like $(l:3_advanced_machines/camera_and_monitor)cameras$(), $(item)radar$() and $(item)sirens$(), advanced $(item)energy production$() and atomic science with the $(item)Large Hadron Collider$().",
+    "icon": "warpdrive:electromagnetic_cell.basic-strange_matter",
+    "sortnum": 3
+}

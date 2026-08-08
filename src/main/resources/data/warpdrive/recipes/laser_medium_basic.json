@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "   ",
+    "dwd",
+    "pm "
+  ],
+  "key": {
+    "d": {
+      "tag": "forge:dyes"
+    },
+    "w": {
+      "type": "forge:nbt",
+      "item": "minecraft:potion",
+      "nbt": "{Potion:\"minecraft:water\"}"
+    },
+    "p": {
+      "tag": "forge:nuggets/gold"
+    },
+    "m": {
+      "item": "minecraft:iron_block"
+    }
+  },
+  "result": {
+    "item": "warpdrive:laser_medium.basic"
+  }
+}

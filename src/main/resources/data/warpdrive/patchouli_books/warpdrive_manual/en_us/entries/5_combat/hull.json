@@ -1,0 +1,90 @@
+{
+	"name": "Hull",
+	"icon": "warpdrive:hull.advanced.stairs_orange",
+	"category": "5_combat",
+	"pages": [
+		{
+			"type": "text",
+			"text": "$(item)Ship hull$() is an important part of your ship appearance and defense. Hull blocks provide different type of direct and indirect damage absorption.$(br2)Higher tiers may sustain multiple hits before degrading into a lower tier. Basic tier is fairly weak and break easily, causing breach in your ship."
+		},
+		{
+			"type": "image",
+			"border": true,
+			"images": [ "warpdrive:textures/book/hull.png" ],
+			"text": "Hulls are available in many different textures and shapes."
+		},
+		{
+			"type": "crafting",
+			"recipe": "warpdrive:hull_basic_plain_white_from_ceramic",
+			"title": "Basic hull (plain)",
+			"text": "All hulls come in 16 colors.$(br2)Basic hull is craftable from ceramic or Forge-tagged steel."
+		},
+		{
+			"type": "crafting",
+			"recipe": "warpdrive:hull_basic_plain_blue_from_steel",
+			"recipe2": "warpdrive:hull_basic_plain_black_from_steel",
+			"title": " "
+		},
+		{
+			"type": "crafting",
+			"recipe": "warpdrive:hull_advanced_plain_gray_from_basic_dye",
+			"title": "Advanced hull (plain)",
+			"text": "Only plain hulls can be upgraded.$(br2)Dye is optional here."
+		},
+		{
+			"type": "crafting",
+			"recipe": "warpdrive:hull_superior_plain_magenta_from_advanced_dye",
+			"title": "Superior hull (plain)",
+			"text": "Only plain hulls can be upgraded.$(br2)Dye is optional here."
+		},
+		{
+			"type": "smelting",
+			"recipe": "warpdrive:hull_basic_tiled_from_smelting_white",
+			"title": "Tiled & tainted variants",
+			"text": "Smelting a plain hull gives you a tiled variant of it. Craft it alone to get back the original plain.$(br2)Dyes can be used to convert between textures, same as wool."
+		},
+		{
+			"type": "crafting",
+			"recipe": "warpdrive:hull_basic_plain_yellow_recolor",
+			"recipe2": "warpdrive:hull_basic_plain_blue_recolor",
+			"title": " "
+		},
+		{
+			"type": "crafting",
+			"recipe": "warpdrive:hull_basic_slab_orange",
+			"title": "Slab variants",
+			"text": "Hull slabs are available in every tier and color and can be recycled into full hull blocks."
+		},
+		{
+			"type": "crafting",
+			"recipe": "warpdrive:hull_basic_slab_red",
+			"recipe2": "warpdrive:hull_basic_slab_uncrafting_blue",
+			"title": " "
+		},
+		{
+			"type": "crafting",
+			"recipe": "warpdrive:hull_basic_glass_white",
+			"title": "Glass variants",
+			"text": "Transparent hull offers the same protection as opaque ones. However, they do add a bit of light to your ship. Sadly, due to their glowstone treatment, glass hull can't be recycled nor upgraded."
+		},
+		{
+			"type": "crafting",
+			"recipe": "warpdrive:hull_basic_glass_orange_from_dye",
+			"recipe2": "warpdrive:hull_basic_glass_blue_recolor",
+			"title": " "
+		},
+		{
+			"type": "crafting",
+			"recipe": "warpdrive:hull_basic_omnipanel_white",
+			"title": "Omnipanel variants",
+			"text": "Unlike vanilla panels, omnipanel hulls are connecting both horizontally and vertically to full blocks."
+		},
+		{
+			"type": "crafting",
+			"recipe": "warpdrive:hull_basic_omnipanel_uncrafting_white",
+			"title": " ",
+			"text": "Omnipanels can be recycled to glass hull."
+		}
+	],
+	"sortnum": 1
+}

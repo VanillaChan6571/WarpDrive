@@ -1,0 +1,6 @@
+{
+    "name": "About the mod",
+    "description": "This chapter covers general information about the $(item)Mod$().",
+    "icon": "minecraft:player_head{SkullOwner:'LemADEC'}",
+    "sortnum": 7
+}

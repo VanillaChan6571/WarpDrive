@@ -1,0 +1,57 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "warpdrive:laser_tree_farm",
+          "functions": [
+            {
+              "function": "minecraft:copy_nbt",
+              "source": "block_entity",
+              "ops": [
+                {
+                  "source": "enabled",
+                  "target": "BlockEntityTag.enabled",
+                  "op": "replace"
+                },
+                {
+                  "source": "enableSilktouch",
+                  "target": "BlockEntityTag.enableSilktouch",
+                  "op": "replace"
+                },
+                {
+                  "source": "radiusX",
+                  "target": "BlockEntityTag.radiusX",
+                  "op": "replace"
+                },
+                {
+                  "source": "radiusZ",
+                  "target": "BlockEntityTag.radiusZ",
+                  "op": "replace"
+                },
+                {
+                  "source": "breakLeaves",
+                  "target": "BlockEntityTag.breakLeaves",
+                  "op": "replace"
+                },
+                {
+                  "source": "tapTrees",
+                  "target": "BlockEntityTag.tapTrees",
+                  "op": "replace"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "conditions": [
+        {
+          "condition": "minecraft:survives_explosion"
+        }
+      ]
+    }
+  ]
+}

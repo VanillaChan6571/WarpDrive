@@ -1,0 +1,45 @@
+{
+  "type": "forge:conditional",
+  "recipes": [
+    {
+      "conditions": [
+        {
+          "type": "forge:mod_loaded",
+          "modid": "ic2"
+        }
+      ],
+      "recipe": {
+        "type": "minecraft:crafting_shaped",
+        "group": "warpdrive:machines",
+        "pattern": [
+          "gCp",
+          "lme",
+          "gC "
+        ],
+        "key": {
+          "l": {
+            "item": "warpdrive:component-lens"
+          },
+          "e": {
+            "item": "warpdrive:component-emerald_crystal"
+          },
+          "C": {
+            "item": "warpdrive:component-capacitive_crystal"
+          },
+          "p": {
+            "item": "warpdrive:component-power_interface"
+          },
+          "g": {
+            "tag": "forge:glass_panes/colorless"
+          },
+          "m": {
+            "item": "minecraft:diamond_block"
+          }
+        },
+        "result": {
+          "item": "warpdrive:ic2_reactor_laser_cooler"
+        }
+      }
+    }
+  ]
+}

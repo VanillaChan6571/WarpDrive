@@ -25,10 +25,9 @@ import javax.annotation.Nullable;
  * descent and the ascent that undoes it are geometrically consistent, so a ship that takes off and
  * immediately lands ends up roughly where it started.
  *
- * This is a stand-in for 1.12.2's CelestialObjectManager, which resolved the same relationships
- * from XML and additionally checked whether you were actually in orbit of the object below. Until
- * that configuration is ported the chain is fixed, which means space always descends to the
- * overworld rather than only where a planet exists beneath you.
+ * The 1.12.2 XML map packed several worlds into shared dimensions. This port intentionally uses
+ * one full dimension per layer instead, so the relationship is fixed and global. Horizontal
+ * coordinate scaling and universal positions live in {@link CelestialCoordinates}.
  */
 public final class DimensionAltitude {
 

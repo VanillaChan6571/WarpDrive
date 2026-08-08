@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:decorations",
+  "pattern": [
+    " g ",
+    "glg",
+    " h "
+  ],
+  "key": {
+    "g": {
+      "tag": "forge:glass/colorless"
+    },
+    "l": {
+      "item": "minecraft:redstone_lamp"
+    },
+    "h": {
+      "tag": "warpdrive:hulls/basic/plain"
+    }
+  },
+  "result": {
+    "item": "warpdrive:lamp_flat"
+  }
+}

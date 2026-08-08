@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    "geg",
+    "geg",
+    "gcg"
+  ],
+  "key": {
+    "e": {
+      "item": "warpdrive:electromagnetic_cell.advanced-empty"
+    },
+    "g": {
+      "item": "minecraft:gold_nugget"
+    },
+    "c": {
+      "item": "warpdrive:component-capacitive_crystal"
+    }
+  },
+  "result": {
+    "item": "warpdrive:electromagnetic_cell.superior-empty",
+    "count": 2
+  }
+}

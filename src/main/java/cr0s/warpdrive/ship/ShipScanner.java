@@ -1,12 +1,13 @@
 package cr0s.warpdrive.ship;
 
 import cr0s.warpdrive.WarpDrive;
+import cr0s.warpdrive.block.detection.SecurityStationTileEntity;
+import cr0s.warpdrive.data.Registration;
+import cr0s.warpdrive.data.WarpDriveTags;
 import cr0s.warpdrive.debug.DebugLog;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.ITag;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
@@ -17,6 +18,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Queue;
@@ -33,13 +35,6 @@ public class ShipScanner {
     public static final int MAX_SHIP_SIDE = 127; // Legacy creative-tier maximum, excluding the core block
     private static final int MAX_SCAN_RADIUS = 128; // Max distance from core
 
-    /**
-     * Datapack extension point for blocks which must never be carried by a ship. This replaces the
-     * hard-coded 1.12.2 Dictionary list while still allowing modpacks to add compatibility entries.
-     */
-    private static final ITag.INamedTag<Block> SHIP_ANCHORS =
-        BlockTags.bind(WarpDrive.MODID + ":ship_movement/anchors");
-
     private ShipScanner() {
     }
 
@@ -51,7 +46,8 @@ public class ShipScanner {
                                               @Nonnull final BlockPos corePos,
                                               @Nonnull final int[] bounds) {
         final BoxScan scan = scanBox(world, corePos, bounds, false);
-        return new ShipInspection(scan.success, scan.message, scan.blockCount, scan.envelopeVolume);
+        return new ShipInspection(scan.success, scan.message, scan.blockCount, scan.envelopeVolume,
+            scan.securityStationPos);
     }
 
     /**
@@ -61,20 +57,37 @@ public class ShipScanner {
     public static ShipScanResult captureShip(@Nonnull final World world,
                                               @Nonnull final BlockPos corePos,
                                               @Nonnull final int[] bounds) {
+		return captureShip(world, corePos, bounds, MAX_SHIP_SIZE);
+	}
+
+	/** Capture for a caller such as a higher-tier schematic scanner with its own mass ceiling. */
+	public static ShipScanResult captureShip(@Nonnull final World world,
+	                                         @Nonnull final BlockPos corePos,
+	                                         @Nonnull final int[] bounds,
+	                                         final int maxBlocks) {
         if (bounds.length != 6) {
             return new ShipScanResult(false, "Invalid ship bounds", Collections.emptyList(),
-                0, 0, 0, 0, 0, 0, corePos);
+                0, 0, 0, 0, 0, 0, corePos, 0);
         }
-        final BoxScan scan = scanBox(world, corePos, bounds, true);
+        final BoxScan scan = scanBox(world, corePos, bounds, true, Math.max(1, maxBlocks));
         return new ShipScanResult(scan.success, scan.message,
             scan.success ? scan.blocks : Collections.emptyList(),
-            bounds[0], bounds[3], bounds[1], bounds[4], bounds[2], bounds[5], corePos);
+            bounds[0], bounds[3], bounds[1], bounds[4], bounds[2], bounds[5], corePos,
+            scan.blockCount);
     }
 
     private static BoxScan scanBox(@Nonnull final World world,
                                    @Nonnull final BlockPos corePos,
                                    @Nonnull final int[] bounds,
                                    final boolean captureBlocks) {
+		return scanBox(world, corePos, bounds, captureBlocks, MAX_SHIP_SIZE);
+	}
+
+	private static BoxScan scanBox(@Nonnull final World world,
+	                               @Nonnull final BlockPos corePos,
+	                               @Nonnull final int[] bounds,
+	                               final boolean captureBlocks,
+	                               final int maxBlocks) {
         if (bounds.length != 6) {
             return BoxScan.failure("Invalid ship bounds", 0);
         }
@@ -114,8 +127,11 @@ public class ShipScanner {
 
         final List<ShipBlock> blocks = captureBlocks ? new ArrayList<>() : Collections.emptyList();
         final BlockPos.Mutable mutablePos = new BlockPos.Mutable();
-        int blockCount = 0;
+		int movableBlockCount = 0;
+		int blockCount = 0;
         String anchorFailure = null;
+        BlockPos securityStationPos = null;
+        double securityStationDistance = Double.MAX_VALUE;
 
         // Chunk-major order avoids bouncing between chunk lookups for every neighbouring X/Z.
         for (int chunkX = minX >> 4; chunkX <= maxX >> 4; chunkX++) {
@@ -132,21 +148,42 @@ public class ShipScanner {
                             if (state.isAir()) {
                                 continue;
                             }
+							if (state.is(WarpDriveTags.SHIP_LEFT_BEHIND)) {
+								continue;
+							}
 
-                            blockCount++;
-                            if (blockCount > MAX_SHIP_SIZE) {
+							movableBlockCount++;
+							if (movableBlockCount > MAX_SHIP_SIZE) {
+								return BoxScan.failure(String.format(
+									"Ship contains more than %,d movable blocks", MAX_SHIP_SIZE),
+									blockCount, safeInt(envelope));
+							}
+							if (!state.is(WarpDriveTags.SHIP_NO_MASS)) blockCount++;
+                            if (blockCount > maxBlocks) {
                                 return BoxScan.failure(String.format(
-                                    "Ship is too large: more than %,d blocks", MAX_SHIP_SIZE),
+									"Ship mass exceeds %,d blocks", maxBlocks),
                                     blockCount, safeInt(envelope));
                             }
 
-                            if (anchorFailure == null && state.is(SHIP_ANCHORS)) {
+							if (anchorFailure == null && state.is(WarpDriveTags.SHIP_ANCHORS)) {
                                 anchorFailure = String.format("Anchor block %s at %d, %d, %d",
                                     registryName(state), x, y, z);
                             }
 
+                            TileEntity tileEntity = null;
+                            if (captureBlocks || state.getBlock() == Registration.SECURITY_STATION_BLOCK.get()) {
+                                tileEntity = world.getBlockEntity(mutablePos);
+                            }
+                            if (tileEntity instanceof SecurityStationTileEntity
+                             && ((SecurityStationTileEntity) tileEntity).isEnabled()) {
+                                final double distance = mutablePos.distSqr(corePos);
+                                if (distance < securityStationDistance) {
+                                    securityStationDistance = distance;
+                                    securityStationPos = mutablePos.immutable();
+                                }
+                            }
+
                             if (captureBlocks && anchorFailure == null) {
-                                final TileEntity tileEntity = world.getBlockEntity(mutablePos);
                                 blocks.add(new ShipBlock(mutablePos, state, tileEntity));
                             }
                         }
@@ -155,15 +192,31 @@ public class ShipScanner {
             }
         }
 
-        if (blockCount == 0) {
+		if (movableBlockCount == 0) {
             return BoxScan.failure("No ship blocks found", safeInt(envelope));
         }
         if (anchorFailure != null) {
             return BoxScan.failure(anchorFailure, blockCount, safeInt(envelope));
         }
-        return BoxScan.success(String.format("Valid - %,d blocks in a %,d block envelope",
-            blockCount, envelope), blockCount, safeInt(envelope), blocks);
+		if (captureBlocks) {
+			blocks.sort(Comparator.comparingInt(ShipScanner::placementPriority));
+		}
+		return BoxScan.success(String.format(
+			"Valid - mass %,d across %,d movable blocks in a %,d block envelope",
+			blockCount, movableBlockCount, envelope), blockCount, safeInt(envelope), blocks,
+			securityStationPos);
     }
+
+	/** Placement is earliest-to-latest; source removal walks the resulting list backwards. */
+	static int placementPriority(@Nonnull final ShipBlock shipBlock) {
+		final BlockState state = shipBlock.state;
+		if (state.is(WarpDriveTags.PLACE_EARLIEST)) return 0;
+		if (state.is(WarpDriveTags.PLACE_EARLIER)) return 1;
+		if (state.is(WarpDriveTags.PLACE_NORMAL)) return 2;
+		if (state.is(WarpDriveTags.PLACE_LATER)) return 3;
+		if (state.is(WarpDriveTags.PLACE_LATEST)) return 4;
+		return shipBlock.tileEntityNBT == null ? 2 : 3;
+	}
 
     private static String registryName(final BlockState state) {
         return state.getBlock().getRegistryName() == null
@@ -181,19 +234,23 @@ public class ShipScanner {
         private final int blockCount;
         private final int envelopeVolume;
         private final List<ShipBlock> blocks;
+        @Nullable private final BlockPos securityStationPos;
 
         private BoxScan(final boolean success, final String message, final int blockCount,
-                        final int envelopeVolume, final List<ShipBlock> blocks) {
+                        final int envelopeVolume, final List<ShipBlock> blocks,
+                        @Nullable final BlockPos securityStationPos) {
             this.success = success;
             this.message = message;
             this.blockCount = blockCount;
             this.envelopeVolume = envelopeVolume;
             this.blocks = blocks;
+            this.securityStationPos = securityStationPos;
         }
 
         private static BoxScan success(final String message, final int blockCount,
-                                       final int envelopeVolume, final List<ShipBlock> blocks) {
-            return new BoxScan(true, message, blockCount, envelopeVolume, blocks);
+                                       final int envelopeVolume, final List<ShipBlock> blocks,
+                                       @Nullable final BlockPos securityStationPos) {
+            return new BoxScan(true, message, blockCount, envelopeVolume, blocks, securityStationPos);
         }
 
         private static BoxScan failure(final String message, final int envelopeVolume) {
@@ -202,7 +259,8 @@ public class ShipScanner {
 
         private static BoxScan failure(final String message, final int blockCount,
                                        final int envelopeVolume) {
-            return new BoxScan(false, message, blockCount, envelopeVolume, Collections.emptyList());
+            return new BoxScan(false, message, blockCount, envelopeVolume,
+                Collections.emptyList(), null);
         }
     }
 
@@ -211,13 +269,21 @@ public class ShipScanner {
         public final String message;
         public final int blockCount;
         public final int envelopeVolume;
+        @Nullable public final BlockPos securityStationPos;
 
         public ShipInspection(final boolean success, final String message,
                               final int blockCount, final int envelopeVolume) {
+            this(success, message, blockCount, envelopeVolume, null);
+        }
+
+        public ShipInspection(final boolean success, final String message,
+                              final int blockCount, final int envelopeVolume,
+                              @Nullable final BlockPos securityStationPos) {
             this.success = success;
             this.message = message;
             this.blockCount = blockCount;
             this.envelopeVolume = envelopeVolume;
+            this.securityStationPos = securityStationPos;
         }
     }
 
@@ -233,7 +299,9 @@ public class ShipScanner {
 
         Set<BlockPos> scanned = new HashSet<>();
         Queue<BlockPos> toScan = new ArrayDeque<>();
-        List<ShipBlock> shipBlocks = new ArrayList<>();
+		List<ShipBlock> shipBlocks = new ArrayList<>();
+		int mass = 0;
+		String anchorFailure = null;
 
         // Start from core
         toScan.add(corePos);
@@ -263,6 +331,14 @@ public class ShipScanner {
             if (state.isAir()) {
                 continue;
             }
+			if (state.is(WarpDriveTags.SHIP_LEFT_BEHIND)) {
+				continue;
+			}
+			if (state.is(WarpDriveTags.SHIP_ANCHORS) && anchorFailure == null) {
+				anchorFailure = String.format("Anchor block %s at %d, %d, %d",
+					registryName(state), pos.getX(), pos.getY(), pos.getZ());
+			}
+			if (!state.is(WarpDriveTags.SHIP_NO_MASS)) mass++;
 
             // Add to ship
             TileEntity te = world.getBlockEntity(pos);
@@ -290,9 +366,13 @@ public class ShipScanner {
             }
         }
 
-        boolean success = shipBlocks.size() > 0 && shipBlocks.size() < MAX_SHIP_SIZE;
+		shipBlocks.sort(Comparator.comparingInt(ShipScanner::placementPriority));
+		boolean success = !shipBlocks.isEmpty() && shipBlocks.size() < MAX_SHIP_SIZE
+			&& anchorFailure == null;
         String message;
-        if (shipBlocks.size() == 0) {
+		if (anchorFailure != null) {
+			message = anchorFailure;
+		} else if (shipBlocks.size() == 0) {
             message = "No blocks found";
         } else if (shipBlocks.size() >= MAX_SHIP_SIZE) {
             message = String.format("Ship too large! Max %d blocks", MAX_SHIP_SIZE);
@@ -310,7 +390,8 @@ public class ShipScanner {
             minX, maxX,
             minY, maxY,
             minZ, maxZ,
-            corePos
+			corePos,
+			mass
         );
     }
 
@@ -325,10 +406,11 @@ public class ShipScanner {
         public final int minY, maxY;
         public final int minZ, maxZ;
         public final BlockPos corePos;
+		private final int blockCount;
 
         public ShipScanResult(boolean success, String message, List<ShipBlock> blocks,
                               int minX, int maxX, int minY, int maxY, int minZ, int maxZ,
-                              BlockPos corePos) {
+							  BlockPos corePos, int blockCount) {
             this.success = success;
             this.message = message;
             this.blocks = Collections.unmodifiableList(new ArrayList<>(blocks));
@@ -339,6 +421,7 @@ public class ShipScanner {
             this.minZ = minZ;
             this.maxZ = maxZ;
             this.corePos = corePos.immutable();
+			this.blockCount = Math.max(0, blockCount);
         }
 
         public int getVolume() {
@@ -349,7 +432,7 @@ public class ShipScanner {
         }
 
         public int getBlockCount() {
-            return blocks.size();
+			return blockCount;
         }
     }
 

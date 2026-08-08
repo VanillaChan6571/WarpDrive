@@ -1,7 +1,16 @@
 {
-    "variants":  {
-                     "":  {
-                              "model":  "warpdrive:block/catalog/enan_reactor_laser"
-                          }
-                 }
+  "variants": {
+    "active=false,facing=north": { "model": "warpdrive:block/energy/enan_reactor_laser_inactive" },
+    "active=false,facing=south": { "model": "warpdrive:block/energy/enan_reactor_laser_inactive", "y": 180 },
+    "active=false,facing=west": { "model": "warpdrive:block/energy/enan_reactor_laser_inactive", "y": 270 },
+    "active=false,facing=east": { "model": "warpdrive:block/energy/enan_reactor_laser_inactive", "y": 90 },
+    "active=false,facing=up": { "model": "warpdrive:block/energy/enan_reactor_laser_inactive", "x": 270 },
+    "active=false,facing=down": { "model": "warpdrive:block/energy/enan_reactor_laser_inactive", "x": 90 },
+    "active=true,facing=north": { "model": "warpdrive:block/energy/enan_reactor_laser_active" },
+    "active=true,facing=south": { "model": "warpdrive:block/energy/enan_reactor_laser_active", "y": 180 },
+    "active=true,facing=west": { "model": "warpdrive:block/energy/enan_reactor_laser_active", "y": 270 },
+    "active=true,facing=east": { "model": "warpdrive:block/energy/enan_reactor_laser_active", "y": 90 },
+    "active=true,facing=up": { "model": "warpdrive:block/energy/enan_reactor_laser_active", "x": 270 },
+    "active=true,facing=down": { "model": "warpdrive:block/energy/enan_reactor_laser_active", "x": 90 }
+  }
 }

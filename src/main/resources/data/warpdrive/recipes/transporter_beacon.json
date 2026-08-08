@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:machines",
+  "pattern": [
+    " e ",
+    " m ",
+    "sds"
+  ],
+  "key": {
+    "e": {
+      "item": "minecraft:ender_pearl"
+    },
+    "d": {
+      "item": "warpdrive:component-diamond_crystal"
+    },
+    "m": {
+      "item": "warpdrive:component-memory_crystal"
+    },
+    "s": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "item": "warpdrive:transporter_beacon"
+  }
+}

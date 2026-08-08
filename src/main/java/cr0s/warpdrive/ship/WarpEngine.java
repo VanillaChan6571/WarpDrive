@@ -5,6 +5,7 @@ import cr0s.warpdrive.block.ShipCoreBlock;
 import cr0s.warpdrive.block.breathing.AbstractAirBlock;
 import cr0s.warpdrive.data.AirData;
 import cr0s.warpdrive.data.ChunkData;
+import cr0s.warpdrive.data.WarpDriveTags;
 import cr0s.warpdrive.debug.DebugLog;
 import cr0s.warpdrive.event.ChunkHandler;
 import net.minecraft.block.BlockState;
@@ -142,7 +143,16 @@ public class WarpEngine {
             scanResult.minX, scanResult.minY, scanResult.minZ,
             scanResult.maxX + 1, scanResult.maxY + 1, scanResult.maxZ + 1
         );
-        List<Entity> entities = sourceWorld.getEntities((Entity) null, shipBounds);
+		final List<Entity> entities = new ArrayList<>();
+		for (final Entity entity : sourceWorld.getEntities((Entity) null, shipBounds)) {
+			if (entity.getType().is(WarpDriveTags.SHIP_ENTITY_ANCHORS)) {
+				return new WarpResult(false, String.format("Anchor entity %s at %.1f, %.1f, %.1f",
+					entity.getType().getRegistryName(), entity.getX(), entity.getY(), entity.getZ()));
+			}
+			if (!entity.getType().is(WarpDriveTags.SHIP_ENTITIES_LEFT_BEHIND)) {
+				entities.add(entity);
+			}
+		}
         WarpDrive.logger.info("Found {} entities on ship", entities.size());
 
         // Phase 2: Check destination collision
@@ -163,10 +173,17 @@ public class WarpEngine {
             // Check for collision (if block at destination is not part of ship)
             // Across worlds the ship vacates nothing at the destination, so there is no exemption
             BlockState destState = destWorld.getBlockState(newPos);
-            if (!destState.isAir() && (crossWorld || !isVacatedByShip(newPos, sourcePositions))) {
-                WarpDrive.logger.warn("Warp failed: collision at {}", newPos);
-                return new WarpResult(false, String.format("Collision at %d, %d, %d",
-                    newPos.getX(), newPos.getY(), newPos.getZ()));
+			if (!destState.isAir() && (crossWorld || !isVacatedByShip(newPos, sourcePositions))) {
+				if (destState.is(WarpDriveTags.SHIP_ANCHORS)) {
+					return new WarpResult(false, String.format("Anchor collision at %d, %d, %d",
+						newPos.getX(), newPos.getY(), newPos.getZ()));
+				}
+				if (!shipBlock.state.is(WarpDriveTags.SHIP_EXPANDABLE)
+				 && !destState.is(WarpDriveTags.SHIP_EXPANDABLE)) {
+					WarpDrive.logger.warn("Warp failed: collision at {}", newPos);
+					return new WarpResult(false, String.format("Collision at %d, %d, %d",
+						newPos.getX(), newPos.getY(), newPos.getZ()));
+				}
             }
         }
 
@@ -200,6 +217,7 @@ public class WarpEngine {
 
         // Phase 4: Place blocks at new positions
         WarpDrive.logger.info("Phase 4: Placing blocks at destination...");
+		final Set<BlockPos> squishedSourcePositions = new HashSet<>();
         for (ShipScanner.ShipBlock shipBlock : scanResult.blocks) {
             BlockPos newPos = destinationOf(shipBlock.pos, scanResult, rotation, destX, destY, destZ);
             String blockName = shipBlock.state.getBlock().getRegistryName() != null
@@ -212,6 +230,16 @@ public class WarpEngine {
              && newState.getBlock() instanceof ShipCoreBlock) {
                 newState = newState.setValue(ShipCoreBlock.ACTIVE, false);
             }
+
+			// Expandable source material (snow, gas, leaves, etc.) is squished by a solid target;
+			// expandable target material is replaced by the arriving block.
+			final BlockState existingState = destWorld.getBlockState(newPos);
+			if (!existingState.isAir()
+			 && shipBlock.state.is(WarpDriveTags.SHIP_EXPANDABLE)
+			 && !existingState.is(WarpDriveTags.SHIP_EXPANDABLE)) {
+				squishedSourcePositions.add(shipBlock.pos);
+				continue;
+			}
 
             // Build the destination on the server without publishing the freshly-created, empty
             // TileEntity to clients yet. Its saved NBT is restored immediately below, and the
@@ -286,6 +314,7 @@ public class WarpEngine {
         // constructor defaults. This also applies to inventories and third-party TileEntities,
         // not only WarpDrive's Ship Core.
         for (ShipScanner.ShipBlock shipBlock : scanResult.blocks) {
+			if (squishedSourcePositions.contains(shipBlock.pos)) continue;
             final BlockPos newPos = destinationOf(
                 shipBlock.pos, scanResult, rotation, destX, destY, destZ);
             final BlockState restoredState = destWorld.getBlockState(newPos);
@@ -507,7 +536,8 @@ public class WarpEngine {
     }
 
     private static void clearSource(final World sourceWorld, final ShipScanner.ShipScanResult scanResult) {
-        for (final ShipScanner.ShipBlock shipBlock : scanResult.blocks) {
+		for (int index = scanResult.blocks.size() - 1; index >= 0; index--) {
+			final ShipScanner.ShipBlock shipBlock = scanResult.blocks.get(index);
             // The validated snapshot already contains this block entity's complete NBT. Detach the
             // live instance before replacing its block, otherwise vanilla inventory blocks execute
             // onRemove() while their chest/shulker/modded inventory is still accessible and spill a

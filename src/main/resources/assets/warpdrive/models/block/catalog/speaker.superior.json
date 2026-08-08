@@ -1,3 +1,6 @@
 {
-    "parent":  "warpdrive:block/detection/speaker"
+  "parent": "warpdrive:block/detection/speaker",
+  "textures": {
+    "side": "warpdrive:blocks/detection/speaker.superior-side"
+  }
 }

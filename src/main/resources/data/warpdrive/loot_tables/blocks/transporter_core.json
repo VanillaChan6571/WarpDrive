@@ -1,0 +1,38 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "warpdrive:transporter_core",
+          "functions": [
+            {
+              "function": "minecraft:copy_nbt",
+              "source": "block_entity",
+              "ops": [
+                { "source": "energy", "target": "BlockEntityTag.energy", "op": "replace" },
+                { "source": "enabled", "target": "BlockEntityTag.enabled", "op": "replace" },
+                { "source": "beamFrequency", "target": "BlockEntityTag.beamFrequency", "op": "replace" },
+                { "source": "remoteType", "target": "BlockEntityTag.remoteType", "op": "replace" },
+                { "source": "remoteX", "target": "BlockEntityTag.remoteX", "op": "replace" },
+                { "source": "remoteY", "target": "BlockEntityTag.remoteY", "op": "replace" },
+                { "source": "remoteZ", "target": "BlockEntityTag.remoteZ", "op": "replace" },
+                { "source": "remoteUuid", "target": "BlockEntityTag.remoteUuid", "op": "replace" },
+                { "source": "remotePlayer", "target": "BlockEntityTag.remotePlayer", "op": "replace" },
+                { "source": "energyFactor", "target": "BlockEntityTag.energyFactor", "op": "replace" },
+                { "source": "signatureUuid", "target": "BlockEntityTag.signatureUuid", "op": "replace" },
+                { "source": "name", "target": "BlockEntityTag.name", "op": "replace" },
+                { "source": "upgradeEnergy", "target": "BlockEntityTag.upgradeEnergy", "op": "replace" },
+                { "source": "upgradeFocus", "target": "BlockEntityTag.upgradeFocus", "op": "replace" },
+                { "source": "upgradeRange", "target": "BlockEntityTag.upgradeRange", "op": "replace" }
+              ]
+            }
+          ]
+        }
+      ],
+      "conditions": [ { "condition": "minecraft:survives_explosion" } ]
+    }
+  ]
+}

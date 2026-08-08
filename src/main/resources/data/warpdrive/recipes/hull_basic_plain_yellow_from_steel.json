@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:hulls",
+  "pattern": [
+    "cbc",
+    "bXb",
+    "cbc"
+  ],
+  "key": {
+    "b": {
+      "tag": "forge:ingots/iron"
+    },
+    "c": {
+      "tag": "forge:stone"
+    },
+    "X": {
+      "tag": "forge:dyes/yellow"
+    }
+  },
+  "result": {
+    "item": "warpdrive:hull.basic.plain-yellow",
+    "count": 10
+  }
+}

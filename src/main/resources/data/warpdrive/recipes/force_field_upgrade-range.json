@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:components",
+  "pattern": [
+    "CCC",
+    "RMR",
+    "   "
+  ],
+  "key": {
+    "M": {
+      "item": "warpdrive:component-memory_crystal"
+    },
+    "R": {
+      "tag": "forge:storage_blocks/redstone"
+    },
+    "C": {
+      "item": "warpdrive:component-diamond_coil"
+    }
+  },
+  "result": {
+    "item": "warpdrive:force_field_upgrade-range"
+  }
+}

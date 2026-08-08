@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "warpdrive:tainted_hulls",
+  "pattern": [
+    "cbc",
+    "b b",
+    "cbc"
+  ],
+  "key": {
+    "b": {
+      "item": "warpdrive:hull.basic.plain-red"
+    },
+    "c": {
+      "item": "minecraft:obsidian"
+    }
+  },
+  "result": {
+    "item": "warpdrive:hull.advanced.plain-red",
+    "count": 4
+  }
+}

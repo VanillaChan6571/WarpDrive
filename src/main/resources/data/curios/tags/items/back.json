@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "warpdrive:air_tank.canister",
+    "warpdrive:air_tank.basic",
+    "warpdrive:air_tank.advanced",
+    "warpdrive:air_tank.superior"
+  ]
+}

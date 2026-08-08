@@ -1,3 +1,8 @@
 {
-    "parent":  "warpdrive:block/transporter_slab"
+  "parent": "warpdrive:block/transporter_slab",
+  "textures": {
+    "bottom": "warpdrive:blocks/movement/transporter_containment-bottom",
+    "top": "warpdrive:blocks/movement/transporter_containment-top",
+    "side": "warpdrive:blocks/movement/transporter_containment-side"
+  }
 }
