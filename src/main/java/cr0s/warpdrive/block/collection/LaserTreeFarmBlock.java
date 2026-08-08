@@ -1,5 +1,6 @@
 package cr0s.warpdrive.block.collection;
 
+import cr0s.warpdrive.block.MachineStatusText;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -13,7 +14,6 @@ import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 
@@ -51,8 +51,10 @@ public class LaserTreeFarmBlock extends Block {
 		if (!(tile instanceof LaserTreeFarmTileEntity)) return ActionResultType.PASS;
 		if (!world.isClientSide) {
 			final LaserTreeFarmTileEntity farm = (LaserTreeFarmTileEntity) tile;
-			player.displayClientMessage(new TranslationTextComponent("warpdrive.laser_tree_farm.status",
-				farm.getStatusText(), farm.getLaserMediumEnergyStored(), farm.getTotalHarvested()), false);
+			final int energyStored = farm.getLaserMediumEnergyStored();
+			player.displayClientMessage(MachineStatusText.laserTreeFarm(
+				getName(), farm.getStatusTranslationKey(), farm.isInsufficientEnergy(energyStored),
+				energyStored, farm.getLaserMediumMaxStorage(), farm.getTotalHarvested()), false);
 		}
 		return ActionResultType.sidedSuccess(world.isClientSide);
 	}

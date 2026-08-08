@@ -159,7 +159,7 @@ public class LiftTileEntity extends AbstractEnergyTileEntity implements ITickabl
 			PacketDistributor.NEAR.with(() -> new PacketDistributor.TargetPoint(
 				getBlockPos().getX(), getBlockPos().getY(), getBlockPos().getZ(),
 				128.0D, level.dimension())),
-			new BeamEffectPacket(source, target, red, green, blue, 0));
+			new BeamEffectPacket(source, target, red, green, blue, 0, 40));
 	}
 
 	private void setBlockMode(final LiftMode newMode) {

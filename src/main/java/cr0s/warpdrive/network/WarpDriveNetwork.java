@@ -10,7 +10,7 @@ import net.minecraftforge.fml.network.simple.SimpleChannel;
  */
 public final class WarpDriveNetwork {
 
-	private static final String PROTOCOL_VERSION = "5";
+	private static final String PROTOCOL_VERSION = "6";
 
 	public static SimpleChannel CHANNEL;
 

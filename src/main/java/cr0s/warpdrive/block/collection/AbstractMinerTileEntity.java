@@ -78,7 +78,10 @@ public abstract class AbstractMinerTileEntity extends AbstractLaserTileEntity {
 			expectedState, serverWorld, targetPos, targetTile, fakePlayer, tool));
 		serverWorld.levelEvent(2001, targetPos, Block.getId(expectedState));
 		serverWorld.removeBlock(targetPos, false);
-		if (outputDrops(drops)) setEnabled(false);
+		// Legacy collectors only remain disabled after overflow when a Computer Interface is
+		// installed. Collector interface upgrades are not ported yet, so the observable default
+		// is to eject leftovers and keep running.
+		outputDrops(drops);
 		return true;
 	}
 
@@ -133,13 +136,23 @@ public abstract class AbstractMinerTileEntity extends AbstractLaserTileEntity {
 	}
 
 	protected void sendBeam(final Vector3d target, final float red, final float green, final float blue) {
+		sendBeam(Vector3d.atCenterOf(getBlockPos()), target, red, green, blue, 10);
+	}
+
+	protected void sendBeam(final Vector3d source, final Vector3d target,
+	                        final float red, final float green, final float blue) {
+		sendBeam(source, target, red, green, blue, 10);
+	}
+
+	protected void sendBeam(final Vector3d source, final Vector3d target,
+	                        final float red, final float green, final float blue,
+	                        final int durationTicks) {
 		if (level == null || level.isClientSide) return;
-		final Vector3d source = Vector3d.atCenterOf(getBlockPos());
 		WarpDriveNetwork.CHANNEL.send(
 			PacketDistributor.NEAR.with(() -> new PacketDistributor.TargetPoint(
 				getBlockPos().getX(), getBlockPos().getY(), getBlockPos().getZ(),
 				128.0D, level.dimension())),
-			new BeamEffectPacket(source, target, red, green, blue, 0));
+			new BeamEffectPacket(source, target, red, green, blue, 0, durationTicks));
 	}
 
 	public boolean isEnabled() {

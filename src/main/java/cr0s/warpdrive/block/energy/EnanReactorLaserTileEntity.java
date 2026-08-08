@@ -174,7 +174,7 @@ public class EnanReactorLaserTileEntity extends AbstractLaserTileEntity
 		WarpDriveNetwork.CHANNEL.send(
 			PacketDistributor.NEAR.with(() -> new PacketDistributor.TargetPoint(
 				source.x, source.y, source.z, 100.0D, level.dimension())),
-			new BeamEffectPacket(source, target, 0.1F, 0.2F, 1.0F, energy));
+			new BeamEffectPacket(source, target, 0.1F, 0.2F, 1.0F, energy, 25));
 	}
 
 	public Object[] name(@Nullable final String value) {

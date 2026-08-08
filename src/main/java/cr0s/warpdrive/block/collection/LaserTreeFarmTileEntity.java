@@ -15,6 +15,7 @@ import net.minecraft.block.SweetBerryBushBlock;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.particles.ParticleTypes;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
@@ -23,6 +24,7 @@ import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
@@ -55,6 +57,7 @@ public class LaserTreeFarmTileEntity extends AbstractMinerTileEntity implements 
 	private int logEnergy = 1;
 	private int leafEnergy = 1;
 	private int taskTicks;
+	private double scanOutlineY;
 	private boolean powered;
 	private int totalHarvested;
 	private final List<BlockPos> soils = new ArrayList<>();
@@ -88,7 +91,12 @@ public class LaserTreeFarmTileEntity extends AbstractMinerTileEntity implements 
 			break;
 		case WARMING_UP:
 			setMode(powered ? LaserTreeFarmMode.SCANNING_POWERED : LaserTreeFarmMode.SCANNING_LOW_POWER);
-			if (!areaLoaded() || isJammed()) {
+			if (!areaLoaded()) {
+				taskTicks = WARMUP_TICKS;
+				break;
+			}
+			if (isJammed()) {
+				spawnJammedParticles();
 				taskTicks = WARMUP_TICKS;
 				break;
 			}
@@ -100,6 +108,7 @@ public class LaserTreeFarmTileEntity extends AbstractMinerTileEntity implements 
 			state = State.SCANNING;
 			taskTicks = SCAN_TICKS;
 			setMode(LaserTreeFarmMode.SCANNING_POWERED);
+			scanOutlineY = getBlockPos().getY() + level.random.nextInt(9);
 			sendScanOutline();
 			break;
 		case SCANNING:
@@ -206,6 +215,14 @@ public class LaserTreeFarmTileEntity extends AbstractMinerTileEntity implements 
 		final BlockState stateAbove = level.getBlockState(above);
 		return !stateAbove.isAir(level, above)
 		    && !stateAbove.is(BlockTags.LOGS) && !stateAbove.is(BlockTags.LEAVES);
+	}
+
+	private void spawnJammedParticles() {
+		if (!(level instanceof ServerWorld)) return;
+		final BlockPos above = getBlockPos().above();
+		((ServerWorld) level).sendParticles(ParticleTypes.ANGRY_VILLAGER,
+			above.getX() + 0.5D, above.getY() + 0.5D, above.getZ() + 0.5D,
+			5, 0.3D, 0.5D, 0.3D, 0.0D);
 	}
 
 	private void scanArea() {
@@ -330,7 +347,7 @@ public class LaserTreeFarmTileEntity extends AbstractMinerTileEntity implements 
 
 	private boolean tapJungleLog(final BlockPos target) {
 		final ItemStack rubber = new ItemStack(Registration.COMPONENTS.get("raw_rubber").get());
-		if (outputDrops(java.util.Collections.singletonList(rubber))) setEnabled(false);
+		outputDrops(java.util.Collections.singletonList(rubber));
 		level.removeBlock(target, false);
 		sendBeam(Vector3d.atCenterOf(target), 0.8F, 0.8F, 0.2F);
 		level.playSound(null, getBlockPos(), Registration.SOUND_LASER_LOW.get(),
@@ -339,11 +356,18 @@ public class LaserTreeFarmTileEntity extends AbstractMinerTileEntity implements 
 	}
 
 	private void sendScanOutline() {
-		final double y = getBlockPos().getY() + 1.0D;
-		sendBeam(new Vector3d(getBlockPos().getX() - actualRadiusX, y,
-			getBlockPos().getZ() - actualRadiusZ), 0.3F, 0.0F, 1.0F);
-		sendBeam(new Vector3d(getBlockPos().getX() + actualRadiusX + 1, y,
-			getBlockPos().getZ() + actualRadiusZ + 1), 0.3F, 0.0F, 1.0F);
+		final double xMin = getBlockPos().getX() - actualRadiusX;
+		final double xMax = getBlockPos().getX() + actualRadiusX + 1.0D;
+		final double zMin = getBlockPos().getZ() - actualRadiusZ;
+		final double zMax = getBlockPos().getZ() + actualRadiusZ + 1.0D;
+		final Vector3d minMin = new Vector3d(xMin, scanOutlineY, zMin);
+		final Vector3d maxMin = new Vector3d(xMax, scanOutlineY, zMin);
+		final Vector3d maxMax = new Vector3d(xMax, scanOutlineY, zMax);
+		final Vector3d minMax = new Vector3d(xMin, scanOutlineY, zMax);
+		sendBeam(minMin, maxMin, 0.3F, 0.0F, 1.0F, SCAN_TICKS);
+		sendBeam(maxMin, maxMax, 0.3F, 0.0F, 1.0F, SCAN_TICKS);
+		sendBeam(maxMax, minMax, 0.3F, 0.0F, 1.0F, SCAN_TICKS);
+		sendBeam(minMax, minMin, 0.3F, 0.0F, 1.0F, SCAN_TICKS);
 	}
 
 	private void setMode(final LaserTreeFarmMode mode) {
@@ -371,6 +395,32 @@ public class LaserTreeFarmTileEntity extends AbstractMinerTileEntity implements 
 		if (state == State.SCANNING) return "scanning";
 		if (state == State.PLANTING) return powered ? "planting" : "planting - insufficient energy";
 		return powered ? "harvesting" : "harvesting - insufficient energy";
+	}
+
+	String getStatusTranslationKey() {
+		if (!enabled || state == State.IDLE) {
+			return "warpdrive.laser_tree_farm.status_line.idle";
+		}
+		if (state == State.WARMING_UP) {
+			return "warpdrive.laser_tree_farm.status_line.warming_up";
+		}
+		if (state == State.SCANNING) {
+			return breakLeaves
+				? "warpdrive.laser_tree_farm.status_line.scanning_all"
+				: "warpdrive.laser_tree_farm.status_line.scanning_logs";
+		}
+		if (state == State.PLANTING) {
+			return "warpdrive.laser_tree_farm.status_line.planting";
+		}
+		final String action = tapTrees ? "tapping" : "harvesting";
+		final String targets = breakLeaves ? "all" : "logs";
+		return "warpdrive.laser_tree_farm.status_line." + action + '_' + targets
+			+ (silkTouch ? "_with_silktouch" : "");
+	}
+
+	boolean isInsufficientEnergy(final int energyStored) {
+		return energyStored <= 0
+			|| (state != State.IDLE && state != State.WARMING_UP && !powered);
 	}
 
 	public int getTotalHarvested() { return totalHarvested; }

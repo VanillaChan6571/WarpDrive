@@ -437,7 +437,7 @@ public class LaserTileEntity extends AbstractLaserTileEntity
 			PacketDistributor.NEAR.with(() -> new PacketDistributor.TargetPoint(
 				getBlockPos().getX(), getBlockPos().getY(), getBlockPos().getZ(),
 				Math.max(96.0D, originalRange + 32.0D), level.dimension())),
-			new BeamEffectPacket(source, target, color.x(), color.y(), color.z(), remainingEnergy));
+			new BeamEffectPacket(source, target, color.x(), color.y(), color.z(), remainingEnergy, 50));
 	}
 
 	@Override
