@@ -1,5 +1,6 @@
 package cr0s.warpdrive.block.movement;
 
+import cr0s.warpdrive.block.MachineStatusText;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -18,7 +19,6 @@ import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
-import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 
@@ -97,7 +97,7 @@ public class TransporterBeaconBlock extends Block {
 		final TransporterBeaconTileEntity beacon = (TransporterBeaconTileEntity) tileEntity;
 		if (!world.isClientSide) {
 			if (player.isShiftKeyDown()) beacon.setEnabled(!beacon.isEnabled());
-			player.displayClientMessage(new StringTextComponent(beacon.getStatus()), false);
+			player.displayClientMessage(MachineStatusText.status(getName(), beacon.getStatus()), false);
 		}
 		return ActionResultType.sidedSuccess(world.isClientSide);
 	}

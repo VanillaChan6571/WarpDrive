@@ -236,6 +236,24 @@ public class MiningLaserTileEntity extends AbstractMinerTileEntity implements IT
 		return powered ? "scanning" : "scanning - insufficient energy";
 	}
 
+	String getStatusTranslationKey() {
+		if (!enabled || state == State.IDLE) {
+			return "warpdrive.mining_laser.status_line.idle";
+		}
+		if (state == State.WARMING_UP) {
+			return "warpdrive.mining_laser.status_line.warming_up";
+		}
+		final String action = state == State.MINING ? "mining" : "scanning";
+		final String targets = mineAllBlocks ? "all" : "ores";
+		return "warpdrive.mining_laser.status_line." + action + '_' + targets
+			+ (state == State.MINING && silkTouch ? "_with_silktouch" : "");
+	}
+
+	boolean isInsufficientEnergy(final int energyStored) {
+		return energyStored <= 0
+			|| (state != State.IDLE && state != State.WARMING_UP && !powered);
+	}
+
 	public Object[] state() {
 		return new Object[]{ getStatusText(), state != State.IDLE, getLaserMediumEnergyStored(),
 			currentLayer, state == State.IDLE ? 0 : targetIndex, state == State.IDLE ? 0 : targets.size() };

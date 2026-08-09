@@ -1,5 +1,6 @@
 package cr0s.warpdrive.block.detection;
 
+import cr0s.warpdrive.block.MachineStatusText;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -12,13 +13,17 @@ import net.minecraft.state.DirectionProperty;
 import net.minecraft.state.StateContainer;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
+import net.minecraft.util.Hand;
 import net.minecraft.util.Mirror;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.world.IBlockReader;
+import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -82,6 +87,21 @@ public class EnvironmentalSensorBlock extends Block {
 	public TileEntity createTileEntity(@Nonnull final BlockState blockState,
 	                                   @Nonnull final IBlockReader world) {
 		return new EnvironmentalSensorTileEntity();
+	}
+
+	@Nonnull
+	@Override
+	@SuppressWarnings("deprecation")
+	public ActionResultType use(@Nonnull final BlockState blockState, @Nonnull final World world,
+	                            @Nonnull final BlockPos blockPos, @Nonnull final PlayerEntity player,
+	                            @Nonnull final Hand hand, @Nonnull final BlockRayTraceResult hit) {
+		if (hand != Hand.MAIN_HAND || player.isShiftKeyDown()
+		 || !player.getItemInHand(hand).isEmpty()
+		 || !(world.getBlockEntity(blockPos) instanceof EnvironmentalSensorTileEntity)) {
+			return ActionResultType.PASS;
+		}
+		if (!world.isClientSide) player.displayClientMessage(MachineStatusText.name(getName()), false);
+		return ActionResultType.sidedSuccess(world.isClientSide);
 	}
 
 	@Override

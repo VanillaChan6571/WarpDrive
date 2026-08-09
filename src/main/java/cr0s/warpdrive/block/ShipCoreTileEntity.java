@@ -1383,7 +1383,7 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 			DebugLog.log("JUMP", "final integrity check failed: {}", dimensionScan.message);
 			playShipSound(Registration.SOUND_COLLISION.get(), 1.0F, 1.0F);
 			broadcastToOnboard(new StringTextComponent(
-				TextFormatting.RED + "âœ– WARP FAILED: " + dimensionScan.message));
+				TextFormatting.RED + "✖ WARP FAILED: " + dimensionScan.message));
 			forceDestinationChunks(false);
 			beginCooldown();
 			return;
@@ -1396,7 +1396,7 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 			DebugLog.log("JUMP", "final snapshot requires more energy than is available ({} < {})",
 				energyStored, required);
 			broadcastToOnboard(new StringTextComponent(TextFormatting.RED + String.format(
-				"âœ– WARP FAILED: insufficient energy after integrity check (%,d/%,d FE)",
+				"✖ WARP FAILED: insufficient energy after integrity check (%,d/%,d FE)",
 				energyStored, required)));
 			forceDestinationChunks(false);
 			beginCooldown();
@@ -1406,7 +1406,7 @@ public class ShipCoreTileEntity extends TileEntity implements ITickableTileEntit
 		if (destinationProblem != null) {
 			playShipSound(Registration.SOUND_COLLISION.get(), 1.0F, 1.0F);
 			broadcastToOnboard(new StringTextComponent(
-				TextFormatting.RED + "âœ– WARP FAILED: " + destinationProblem));
+				TextFormatting.RED + "✖ WARP FAILED: " + destinationProblem));
 			forceDestinationChunks(false);
 			beginCooldown();
 			return;

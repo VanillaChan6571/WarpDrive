@@ -1,12 +1,19 @@
 package cr0s.warpdrive.block.weapon;
 
+import cr0s.warpdrive.block.MachineStatusText;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ActionResultType;
+import net.minecraft.util.Hand;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.IBlockReader;
+import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -31,5 +38,25 @@ public class LaserBlock extends Block {
 	public TileEntity createTileEntity(@Nonnull final BlockState blockState,
 	                                   @Nonnull final IBlockReader world) {
 		return new LaserTileEntity();
+	}
+
+	@Nonnull
+	@Override
+	@SuppressWarnings("deprecation")
+	public ActionResultType use(@Nonnull final BlockState blockState, @Nonnull final World world,
+	                            @Nonnull final BlockPos blockPos, @Nonnull final PlayerEntity player,
+	                            @Nonnull final Hand hand, @Nonnull final BlockRayTraceResult hit) {
+		if (hand != Hand.MAIN_HAND || player.isShiftKeyDown()
+		 || !player.getItemInHand(hand).isEmpty()) {
+			return ActionResultType.PASS;
+		}
+		final TileEntity tileEntity = world.getBlockEntity(blockPos);
+		if (!(tileEntity instanceof LaserTileEntity)) return ActionResultType.PASS;
+		if (!world.isClientSide) {
+			final LaserTileEntity laser = (LaserTileEntity) tileEntity;
+			player.displayClientMessage(MachineStatusText.laser(getName(), laser.getBeamFrequency(),
+				null, laser.getLaserMediumEnergyStored(), laser.getLaserMediumMaxStorage()), false);
+		}
+		return ActionResultType.sidedSuccess(world.isClientSide);
 	}
 }

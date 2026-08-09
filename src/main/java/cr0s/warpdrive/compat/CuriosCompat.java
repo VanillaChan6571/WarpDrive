@@ -88,9 +88,12 @@ public final class CuriosCompat {
 			final Object builder = classPreset.getMethod("getMessageBuilder").invoke(presetBack);
 			final Object message = builder.getClass().getMethod("build").invoke(builder);
 			InterModComms.sendTo(MOD_ID, "register_type", () -> message);
+			WarpDrive.logger.info("Requested the Curios 'back' slot for air tanks");
 		} catch (final ClassNotFoundException | NoSuchMethodException
 		             | IllegalAccessException | InvocationTargetException exception) {
-			WarpDrive.logger.warn("Unable to register the Curios back slot ({})", exception.toString());
+			// Not fatal: the curios:curio tag still lets tanks go in whatever slots exist
+			WarpDrive.logger.warn("Unable to request the Curios back slot, so air tanks will only "
+			                    + "fit slots other mods provide ({})", exception.toString());
 		}
 	}
 

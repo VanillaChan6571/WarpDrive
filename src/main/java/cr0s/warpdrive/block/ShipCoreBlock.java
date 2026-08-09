@@ -99,16 +99,22 @@ public class ShipCoreBlock extends HorizontalBlock {
 	@Override
 	public ActionResultType use(BlockState state, World world, BlockPos pos,
 	                             PlayerEntity player, Hand hand, BlockRayTraceResult hit) {
-		// Only process main hand to prevent double-toggling
-		if (player.isShiftKeyDown() && hand == Hand.MAIN_HAND) {
-			TileEntity te = world.getBlockEntity(pos);
-			if (te instanceof ShipCoreTileEntity) {
-				ShipCoreTileEntity shipCore = (ShipCoreTileEntity) te;
-				shipCore.toggleBoundingBoxDisplay(player);
-				return ActionResultType.SUCCESS;
-			}
+		if (hand != Hand.MAIN_HAND || !player.getItemInHand(hand).isEmpty()) {
+			return ActionResultType.PASS;
 		}
-		return ActionResultType.PASS;
+		final TileEntity tileEntity = world.getBlockEntity(pos);
+		if (!(tileEntity instanceof ShipCoreTileEntity)) return ActionResultType.PASS;
+		final ShipCoreTileEntity shipCore = (ShipCoreTileEntity) tileEntity;
+		if (player.isShiftKeyDown()) {
+			shipCore.toggleBoundingBoxDisplay(player);
+		} else if (!world.isClientSide) {
+			final Object[] statusState = shipCore.state();
+			final Object[] energyStatus = shipCore.getEnergyStatus();
+			player.displayClientMessage(MachineStatusText.stateAndEnergy(getName(),
+				String.valueOf(statusState[0]), ((Number) energyStatus[0]).intValue(),
+				((Number) energyStatus[1]).intValue()), false);
+		}
+		return ActionResultType.sidedSuccess(world.isClientSide);
 	}
 
 	@Override

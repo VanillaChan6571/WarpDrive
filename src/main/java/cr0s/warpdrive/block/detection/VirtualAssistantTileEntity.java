@@ -129,6 +129,8 @@ public class VirtualAssistantTileEntity extends AbstractEnergyTileEntity impleme
 			: new Object[]{ true, lastCommand };
 	}
 
+	public String getLastCommandText() { return lastCommand; }
+
 	public Object[] pullLastCommand() {
 		if (lastCommand.isEmpty()) return new Object[]{ false, "No command received." };
 		final String command = lastCommand;

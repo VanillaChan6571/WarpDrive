@@ -1,5 +1,6 @@
 package cr0s.warpdrive.block.breathing;
 
+import cr0s.warpdrive.block.MachineStatusText;
 import cr0s.warpdrive.api.IAirContainerItem;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
@@ -84,8 +85,25 @@ public class AirGeneratorBlock extends Block {
 	                            @Nonnull final Hand hand, @Nonnull final BlockRayTraceResult hit) {
 		// off-hand clicks fall through, so the main hand always decides the interaction
 		final ItemStack itemStackHeld = player.getItemInHand(hand);
-		if ( hand != Hand.MAIN_HAND
-		  || !(itemStackHeld.getItem() instanceof IAirContainerItem) ) {
+		if (hand != Hand.MAIN_HAND) {
+			return super.use(blockState, world, blockPos, player, hand, hit);
+		}
+		final TileEntity tileEntity = world.getBlockEntity(blockPos);
+		if (itemStackHeld.isEmpty()) {
+			if (player.isShiftKeyDown()) {
+				return super.use(blockState, world, blockPos, player, hand, hit);
+			}
+			if (!(tileEntity instanceof AirGeneratorTileEntity)) {
+				return super.use(blockState, world, blockPos, player, hand, hit);
+			}
+			if (!world.isClientSide) {
+				final AirGeneratorTileEntity airGenerator = (AirGeneratorTileEntity) tileEntity;
+				player.displayClientMessage(MachineStatusText.energy(getName(),
+					airGenerator.getEnergyStored(), airGenerator.getMaxEnergyStored()), false);
+			}
+			return ActionResultType.sidedSuccess(world.isClientSide);
+		}
+		if (!(itemStackHeld.getItem() instanceof IAirContainerItem)) {
 			return super.use(blockState, world, blockPos, player, hand, hit);
 		}
 
@@ -100,7 +118,6 @@ public class AirGeneratorBlock extends Block {
 			return ActionResultType.SUCCESS;
 		}
 
-		final TileEntity tileEntity = world.getBlockEntity(blockPos);
 		if (!(tileEntity instanceof AirGeneratorTileEntity)) {
 			return super.use(blockState, world, blockPos, player, hand, hit);
 		}

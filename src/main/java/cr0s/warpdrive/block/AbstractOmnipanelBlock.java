@@ -96,8 +96,13 @@ public abstract class AbstractOmnipanelBlock extends Block {
 	public static int getConnectionMask(final IBlockReader world, final BlockPos blockPos, final Direction facing) {
 		final BlockState blockState = world.getBlockState(blockPos);
 		final Block block = blockState.getBlock();
-		final boolean joins = block instanceof AbstractOmnipanelBlock
-		                   || block instanceof PaneBlock
+		// Omnipanels join each other but are never solid faces. Asking isFaceSturdy() here would
+		// request this neighbour's dynamic collision shape, which computes its connection mask and
+		// recursively asks for our shape again until both the server and client overflow their stacks.
+		if (block instanceof AbstractOmnipanelBlock) {
+			return 1;
+		}
+		final boolean joins = block instanceof PaneBlock
 		                   || blockState.getMaterial() == Material.GLASS
 		                   || blockState.isCollisionShapeFullBlock(world, blockPos);
 		return (joins ? 1 : 0)

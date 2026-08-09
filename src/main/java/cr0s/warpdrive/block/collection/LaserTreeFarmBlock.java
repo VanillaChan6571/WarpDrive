@@ -46,7 +46,8 @@ public class LaserTreeFarmBlock extends Block {
 	public ActionResultType use(@Nonnull final BlockState state, @Nonnull final World world,
 	                            @Nonnull final BlockPos pos, @Nonnull final PlayerEntity player,
 	                            @Nonnull final Hand hand, @Nonnull final BlockRayTraceResult hit) {
-		if (hand != Hand.MAIN_HAND || !player.getItemInHand(hand).isEmpty()) return ActionResultType.PASS;
+		if (hand != Hand.MAIN_HAND || player.isShiftKeyDown()
+		 || !player.getItemInHand(hand).isEmpty()) return ActionResultType.PASS;
 		final TileEntity tile = world.getBlockEntity(pos);
 		if (!(tile instanceof LaserTreeFarmTileEntity)) return ActionResultType.PASS;
 		if (!world.isClientSide) {

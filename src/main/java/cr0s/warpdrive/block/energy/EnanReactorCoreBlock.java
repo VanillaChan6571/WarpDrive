@@ -1,5 +1,6 @@
 package cr0s.warpdrive.block.energy;
 
+import cr0s.warpdrive.block.MachineStatusText;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -14,7 +15,6 @@ import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ToolType;
@@ -68,7 +68,7 @@ public class EnanReactorCoreBlock extends Block {
 		if (!world.isClientSide) {
 			final EnanReactorCoreTileEntity core = (EnanReactorCoreTileEntity) tileEntity;
 			if (player.isShiftKeyDown()) core.enable(!core.isEnabled());
-			player.displayClientMessage(new StringTextComponent(core.getStatus()), false);
+			player.displayClientMessage(MachineStatusText.status(getName(), core.getStatus()), false);
 		}
 		return ActionResultType.sidedSuccess(world.isClientSide);
 	}

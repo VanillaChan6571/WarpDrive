@@ -1,5 +1,6 @@
 package cr0s.warpdrive.block.forcefield;
 
+import cr0s.warpdrive.block.MachineStatusText;
 import cr0s.warpdrive.data.Registration;
 import cr0s.warpdrive.item.CatalogVariantBlockItem;
 import net.minecraft.block.AbstractBlock;
@@ -183,10 +184,12 @@ public class ForceFieldProjectorBlock extends Block {
 		}
 
 		if (held.isEmpty()) {
-			if (!world.isClientSide) player.displayClientMessage(new TranslationTextComponent(
-				"warpdrive.force_field.projector.status", projector.getBeamFrequency(),
-				projector.getShape().getSerializedName(), projector.getEnergyStored(),
-				projector.getMaxEnergyStored()), false);
+			if (!world.isClientSide) player.displayClientMessage(MachineStatusText.status(getName(),
+				new TranslationTextComponent("warpdrive.force_field.projector.status",
+					MachineStatusText.value(projector.getBeamFrequency()),
+					MachineStatusText.value(projector.getShape().getSerializedName()),
+					MachineStatusText.value(projector.getEnergyStored()),
+					MachineStatusText.value(projector.getMaxEnergyStored()))), false);
 			return ActionResultType.sidedSuccess(world.isClientSide);
 		}
 		return ActionResultType.PASS;

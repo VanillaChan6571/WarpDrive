@@ -1,5 +1,6 @@
 package cr0s.warpdrive.block.forcefield;
 
+import cr0s.warpdrive.block.MachineStatusText;
 import cr0s.warpdrive.data.Registration;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
@@ -132,8 +133,10 @@ public class ForceFieldRelayBlock extends Block {
 		}
 		if (held.isEmpty()) {
 			if (!world.isClientSide) {
-				player.displayClientMessage(new TranslationTextComponent("warpdrive.force_field.relay.status",
-					relay.getBeamFrequency(), relay.getUpgrade().getSerializedName()), false);
+				player.displayClientMessage(MachineStatusText.status(getName(),
+					new TranslationTextComponent("warpdrive.force_field.relay.status",
+						MachineStatusText.value(relay.getBeamFrequency()),
+						MachineStatusText.value(relay.getUpgrade().getSerializedName()))), false);
 			}
 			return ActionResultType.sidedSuccess(world.isClientSide);
 		}

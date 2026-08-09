@@ -6,7 +6,8 @@
 		"side": "warpdrive:blocks/forcefield/projector.basic-side",
 		"front": "warpdrive:blocks/forcefield/projector-front",
 		"inside": "warpdrive:blocks/forcefield/projector-inside",
-		"faces": "warpdrive:blocks/forcefield/projector-faces"
+		"faces": "warpdrive:blocks/forcefield/projector-faces",
+		"missing": "minecraft:block/glass"
 	},
 	"elements": [
 		{

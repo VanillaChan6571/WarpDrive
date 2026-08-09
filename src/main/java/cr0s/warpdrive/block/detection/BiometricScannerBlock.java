@@ -1,5 +1,6 @@
 package cr0s.warpdrive.block.detection;
 
+import cr0s.warpdrive.block.MachineStatusText;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -20,7 +21,6 @@ import net.minecraft.util.Mirror;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 
@@ -76,7 +76,8 @@ public class BiometricScannerBlock extends Block {
 		if (!(tileEntity instanceof BiometricScannerTileEntity)) return ActionResultType.PASS;
 		if (!world.isClientSide) {
 			final Object[] result = ((BiometricScannerTileEntity) tileEntity).startScanning(player);
-			player.displayClientMessage(new StringTextComponent(String.valueOf(result[1])), false);
+			player.displayClientMessage(MachineStatusText.status(getName(),
+				String.valueOf(result[1])), false);
 		}
 		return ActionResultType.sidedSuccess(world.isClientSide);
 	}

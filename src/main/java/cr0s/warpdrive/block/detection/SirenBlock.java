@@ -1,17 +1,22 @@
 package cr0s.warpdrive.block.detection;
 
+import cr0s.warpdrive.block.MachineStatusText;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.EnumProperty;
 import net.minecraft.state.StateContainer;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.world.IBlockReader;
@@ -124,5 +129,22 @@ public class SirenBlock extends Block {
 	public TileEntity createTileEntity(@Nonnull final BlockState blockState,
 	                                   @Nonnull final IBlockReader world) {
 		return new SirenTileEntity();
+	}
+
+	@Nonnull
+	@Override
+	@SuppressWarnings("deprecation")
+	public ActionResultType use(@Nonnull final BlockState blockState, @Nonnull final World world,
+	                            @Nonnull final BlockPos blockPos, @Nonnull final PlayerEntity player,
+	                            @Nonnull final Hand hand, @Nonnull final BlockRayTraceResult hit) {
+		if (hand != Hand.MAIN_HAND || player.isShiftKeyDown()
+		 || !player.getItemInHand(hand).isEmpty()
+		 || !(world.getBlockEntity(blockPos) instanceof SirenTileEntity)) {
+			return ActionResultType.PASS;
+		}
+		if (!world.isClientSide) {
+			player.displayClientMessage(MachineStatusText.name(getName()), false);
+		}
+		return ActionResultType.sidedSuccess(world.isClientSide);
 	}
 }

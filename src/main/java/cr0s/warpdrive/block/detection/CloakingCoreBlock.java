@@ -1,5 +1,6 @@
 package cr0s.warpdrive.block.detection;
 
+import cr0s.warpdrive.block.MachineStatusText;
 import cr0s.warpdrive.data.Registration;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
@@ -15,7 +16,6 @@ import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 
@@ -80,7 +80,7 @@ public class CloakingCoreBlock extends Block {
 				core.enable(!core.isEnabled());
 				message = core.getStatus();
 			}
-			player.displayClientMessage(new StringTextComponent(message), false);
+			player.displayClientMessage(MachineStatusText.status(getName(), message), false);
 		}
 		return ActionResultType.sidedSuccess(world.isClientSide);
 	}

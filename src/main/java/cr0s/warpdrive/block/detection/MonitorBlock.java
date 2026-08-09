@@ -1,5 +1,6 @@
 package cr0s.warpdrive.block.detection;
 
+import cr0s.warpdrive.block.MachineStatusText;
 import cr0s.warpdrive.client.CameraViewController;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
@@ -77,8 +78,9 @@ public class MonitorBlock extends Block {
 			DistExecutor.unsafeRunWhenOn(Dist.CLIENT,
 				() -> () -> ClientAccess.open(blockPos, monitor.getVideoChannel()));
 		} else if (!world.isClientSide && player.isShiftKeyDown()) {
-			player.displayClientMessage(new TranslationTextComponent("warpdrive.monitor.status",
-				monitor.getVideoChannel()), false);
+			player.displayClientMessage(MachineStatusText.status(getName(),
+				new TranslationTextComponent("warpdrive.monitor.status",
+					MachineStatusText.value(monitor.getVideoChannel()))), false);
 		}
 		return ActionResultType.sidedSuccess(world.isClientSide);
 	}

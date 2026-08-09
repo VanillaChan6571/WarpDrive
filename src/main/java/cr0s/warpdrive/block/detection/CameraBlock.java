@@ -1,5 +1,6 @@
 package cr0s.warpdrive.block.detection;
 
+import cr0s.warpdrive.block.MachineStatusText;
 import cr0s.warpdrive.data.Registration;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
@@ -87,10 +88,13 @@ public class CameraBlock extends Block {
 		}
 		if (!held.isEmpty()) return ActionResultType.PASS;
 		if (!world.isClientSide) {
-			player.displayClientMessage(new TranslationTextComponent("warpdrive.camera.status",
-				camera.getVideoChannel(), camera.getRecognitionUpgrades(),
-				camera.getRecognitionUpgrades() * CameraTileEntity.RANGE_PER_UPGRADE,
-				camera.getResultsCount()[0]), false);
+			player.displayClientMessage(MachineStatusText.status(getName(),
+				new TranslationTextComponent("warpdrive.camera.status",
+				MachineStatusText.value(camera.getVideoChannel()),
+				MachineStatusText.value(camera.getRecognitionUpgrades()),
+				MachineStatusText.value(camera.getRecognitionUpgrades()
+					* CameraTileEntity.RANGE_PER_UPGRADE),
+				MachineStatusText.value((Integer) camera.getResultsCount()[0]))), false);
 		}
 		return ActionResultType.sidedSuccess(world.isClientSide);
 	}

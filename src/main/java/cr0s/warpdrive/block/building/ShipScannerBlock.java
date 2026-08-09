@@ -1,5 +1,6 @@
 package cr0s.warpdrive.block.building;
 
+import cr0s.warpdrive.block.MachineStatusText;
 import cr0s.warpdrive.item.ShipTokenItem;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
@@ -76,7 +77,7 @@ public class ShipScannerBlock extends Block {
 		} else if (player.isShiftKeyDown() && held.isEmpty()) {
 			scanner.startScan((ServerPlayerEntity) player);
 		} else if (held.isEmpty() || held.getItem() instanceof ShipTokenItem) {
-			player.displayClientMessage(scanner.getStatusText(), false);
+			player.displayClientMessage(MachineStatusText.status(getName(), scanner.getStatusText()), false);
 		} else {
 			return ActionResultType.PASS;
 		}

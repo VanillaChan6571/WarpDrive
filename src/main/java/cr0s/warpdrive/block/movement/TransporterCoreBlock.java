@@ -1,5 +1,6 @@
 package cr0s.warpdrive.block.movement;
 
+import cr0s.warpdrive.block.MachineStatusText;
 import cr0s.warpdrive.data.Registration;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
@@ -15,7 +16,6 @@ import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ToolType;
@@ -76,7 +76,8 @@ public class TransporterCoreBlock extends Block {
 				} else if (core.addUpgrade(upgrade) && !player.abilities.instabuild) {
 					held.shrink(1);
 				}
-				player.displayClientMessage(new StringTextComponent(core.getUpgradeStatus()), true);
+				player.displayClientMessage(MachineStatusText.status(getName(),
+					core.getUpgradeStatus()), true);
 			}
 			return ActionResultType.sidedSuccess(world.isClientSide);
 		}
@@ -84,7 +85,7 @@ public class TransporterCoreBlock extends Block {
 		if (!held.isEmpty()) return ActionResultType.PASS;
 		if (!world.isClientSide) {
 			if (player.isShiftKeyDown()) core.setEnabled(!core.isEnabled());
-			player.displayClientMessage(new StringTextComponent(core.getStatus()), false);
+			player.displayClientMessage(MachineStatusText.status(getName(), core.getStatus()), false);
 		}
 		return ActionResultType.sidedSuccess(world.isClientSide);
 	}

@@ -93,9 +93,17 @@ space is the single most-felt friction in the breathing loop.
   mod loads normally without it.
 - **Slot**: the `back` preset, requested by IMC `register_type` during inter-mod enqueue. A tank is
   worn on the back rather than as a charm.
-- **What may be equipped**: the item tag `curios:back`
-  (`data/curios/tags/items/back.json`) lists the four air tanks. Curios validates by tag, so the
-  tanks need no `ICurio` capability of their own.
+- **What may be equipped**: item tags, not a capability. `CuriosHelper.isStackValid` reduces to
+  `tags.contains(slotId) || tags.contains("curio")`, where the tags are the item's tags in the
+  `curios` namespace. So the tanks are listed in **two** files:
+  `data/curios/tags/items/back.json` (the intended home) and `data/curios/tags/items/curio.json`
+  (the wildcard, valid in any slot).
+
+  The wildcard is deliberate rather than lazy. Curios 4.0.8.2 has no datapack slot loader — IMC is
+  the only way a slot can exist — so if the `back` request does not land, a tank tagged only `back`
+  is equippable **nowhere**, which is exactly how the first version failed. The wildcard means the
+  tanks still work in whatever slots a pack happens to provide, and the log line above says whether
+  the back request was made.
 - **Dependency**: `runtimeOnly` from `maven.theillusivec4.top`, pinned by `Curios_version` in
   build.properties, plus an optional entry in mods.toml. Development only — it is not shipped.
 

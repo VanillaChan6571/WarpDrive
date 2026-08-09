@@ -1,5 +1,6 @@
 package cr0s.warpdrive.block.energy;
 
+import cr0s.warpdrive.block.MachineStatusText;
 import cr0s.warpdrive.data.SideMode;
 import cr0s.warpdrive.item.WrenchItem;
 import net.minecraft.block.AbstractBlock;
@@ -67,14 +68,31 @@ public class CapacitorBlock extends Block {
 	                            @Nonnull final BlockPos blockPos, @Nonnull final PlayerEntity player,
 	                            @Nonnull final Hand hand, @Nonnull final BlockRayTraceResult hit) {
 		final ItemStack itemStackHeld = player.getItemInHand(hand);
-		if (hand != Hand.MAIN_HAND || !(itemStackHeld.getItem() instanceof WrenchItem)) {
+		if (hand != Hand.MAIN_HAND) {
+			return super.use(blockState, world, blockPos, player, hand, hit);
+		}
+		final TileEntity tileEntity = world.getBlockEntity(blockPos);
+		if (itemStackHeld.isEmpty()) {
+			if (player.isShiftKeyDown()) {
+				return super.use(blockState, world, blockPos, player, hand, hit);
+			}
+			if (!(tileEntity instanceof CapacitorTileEntity)) {
+				return super.use(blockState, world, blockPos, player, hand, hit);
+			}
+			if (!world.isClientSide) {
+				final CapacitorTileEntity capacitor = (CapacitorTileEntity) tileEntity;
+				player.displayClientMessage(MachineStatusText.energy(getName(),
+					capacitor.getEnergyStored(), capacitor.getMaxEnergyStored()), false);
+			}
+			return ActionResultType.sidedSuccess(world.isClientSide);
+		}
+		if (!(itemStackHeld.getItem() instanceof WrenchItem)) {
 			return super.use(blockState, world, blockPos, player, hand, hit);
 		}
 		if (world.isClientSide) {
 			return ActionResultType.SUCCESS;
 		}
 
-		final TileEntity tileEntity = world.getBlockEntity(blockPos);
 		if (!(tileEntity instanceof CapacitorTileEntity)) {
 			return super.use(blockState, world, blockPos, player, hand, hit);
 		}

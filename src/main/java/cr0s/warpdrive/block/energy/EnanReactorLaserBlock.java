@@ -1,5 +1,6 @@
 package cr0s.warpdrive.block.energy;
 
+import cr0s.warpdrive.block.MachineStatusText;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -16,7 +17,6 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ToolType;
@@ -58,13 +58,14 @@ public class EnanReactorLaserBlock extends Block {
 	public ActionResultType use(@Nonnull final BlockState state, @Nonnull final World world,
 	                            @Nonnull final BlockPos blockPos, @Nonnull final PlayerEntity player,
 	                            @Nonnull final Hand hand, @Nonnull final BlockRayTraceResult hit) {
-		if (hand != Hand.MAIN_HAND || !player.getItemInHand(hand).isEmpty()) {
+		if (hand != Hand.MAIN_HAND || player.isShiftKeyDown()
+		 || !player.getItemInHand(hand).isEmpty()) {
 			return ActionResultType.PASS;
 		}
 		final TileEntity tileEntity = world.getBlockEntity(blockPos);
 		if (!(tileEntity instanceof EnanReactorLaserTileEntity)) return ActionResultType.PASS;
 		if (!world.isClientSide) {
-			player.displayClientMessage(new StringTextComponent(
+			player.displayClientMessage(MachineStatusText.status(getName(),
 				((EnanReactorLaserTileEntity) tileEntity).getStatus()), false);
 		}
 		return ActionResultType.sidedSuccess(world.isClientSide);

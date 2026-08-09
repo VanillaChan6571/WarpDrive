@@ -66,7 +66,8 @@ public class LaserMediumBlock extends Block {
 	public ActionResultType use(@Nonnull final BlockState blockState, @Nonnull final World world,
 	                            @Nonnull final BlockPos blockPos, @Nonnull final PlayerEntity player,
 	                            @Nonnull final Hand hand, @Nonnull final BlockRayTraceResult hit) {
-		if (hand != Hand.MAIN_HAND || !player.getItemInHand(hand).isEmpty()) {
+		if (hand != Hand.MAIN_HAND || player.isShiftKeyDown()
+		 || !player.getItemInHand(hand).isEmpty()) {
 			return ActionResultType.PASS;
 		}
 		final TileEntity tileEntity = world.getBlockEntity(blockPos);

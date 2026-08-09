@@ -1,5 +1,6 @@
 package cr0s.warpdrive.block.collection;
 
+import cr0s.warpdrive.block.MachineStatusText;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -14,7 +15,6 @@ import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 
@@ -64,8 +64,10 @@ public class MiningLaserBlock extends Block {
 		}
 		if (!held.isEmpty()) return ActionResultType.PASS;
 		if (!world.isClientSide) {
-			player.displayClientMessage(new TranslationTextComponent("warpdrive.mining_laser.status",
-				miner.getStatusText(), miner.getLaserMediumEnergyStored(), miner.getPumpCount()), false);
+			final int energyStored = miner.getLaserMediumEnergyStored();
+			player.displayClientMessage(MachineStatusText.miningLaser(getName(),
+				miner.getStatusTranslationKey(), miner.isInsufficientEnergy(energyStored),
+				energyStored, miner.getLaserMediumMaxStorage(), miner.getPumpCount()), false);
 		}
 		return ActionResultType.sidedSuccess(world.isClientSide);
 	}
